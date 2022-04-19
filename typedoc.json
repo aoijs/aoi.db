@@ -1,0 +1,8 @@
+{
+    "entryPoints": [
+        "lib/index.ts"
+    ],
+    "out": "docs",
+    "tsconfig": "tsconfig.json",
+    "entryPointStrategy": "resolve"
+}
