@@ -1,0 +1,6 @@
+src
+docs
+.github
+.idea
+.vscode
+*/**/config.json
