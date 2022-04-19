@@ -1,0 +1,49 @@
+{
+  "name": "aoi.db",
+  "version": "0.0.1",
+  "description": "aoi.db - Database Management System with different types of databases.",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "type": "commonjs",
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.js"
+  },
+  "scripts": {
+    "test": "node tests/keyValue/keyValuecjs.js && node tests/keyValue/keyValuemjs.mjs && node tests/widecolumn/widecolcjs.js && node tests/widecolumn/widecolmjs.mjs && node tests/readdata.js",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && npm run createpack",
+    "createpack": "node tests/pack.js",
+    "exec": "node executions/keyvalue/exec.js && node executions/widecolumn/exec.js",
+    "docs": "typedoc"
+  },
+  "engines": {
+    "node": ">=16.x"
+  },
+  "license": "MIT",
+  "keywords": [
+    "dbd.js",
+    "dbdjs",
+    "dbd",
+    "aoi.js",
+    "aoi",
+    "json",
+    "database",
+    "discord"
+  ],
+  "devDependencies": {
+    "@types/benchmark": "^2.1.1",
+    "@types/node": "^17.0.21",
+    "benchmark": "^2.1.4",
+    "discord.js": "^13.6.0",
+    "typedoc": "^0.22.13",
+    "typescript": "^4.6.2"
+  },
+  "dependencies": {
+    "tiny-typed-emitter": "^2.1.0"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ]
+}
