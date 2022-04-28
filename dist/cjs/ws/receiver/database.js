@@ -4,11 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Receiver = void 0;
+const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const ws_1 = __importDefault(require("ws"));
 const database_js_1 = require("../../column/database.js");
 const database_js_2 = require("../../keyvalue/database.js");
 const enums_js_1 = require("../../typings/enums.js");
-class Receiver {
+class Receiver extends tiny_typed_emitter_1.TypedEmitter {
     connection;
     options;
     clients = new Map();
@@ -18,6 +19,7 @@ class Receiver {
     db;
     databaseType;
     constructor(options) {
+        super();
         this.connection = new ws_1.default.Server(options.wsOptions);
         this.options = options;
         this.databaseType = options.databaseType;
@@ -36,9 +38,13 @@ class Receiver {
                 socket.close(3000, "Ip Not Whitelisted");
                 return;
             }
+            this.emit(enums_js_1.WsEventsList.CONNECT);
+            socket.on("open", () => {
+            });
             this.clients.set(request.socket.remoteAddress || socket.url, {});
             socket.on("message", async (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.TransmitterOp.REQUEST) {
                     this._currentSequence += 1;
                     const sendData = {
@@ -64,6 +70,15 @@ class Receiver {
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.BULK_TABLE_OPEN) {
                     this.load(request.socket.remoteAddress || socket.url, parsedData.data);
+                    this._currentSequence += 1;
+                    const sendData = {
+                        op: enums_js_1.ReceiverOp.ACK_TABLES,
+                        sequence: this._currentSequence,
+                        timestamp: Date.now(),
+                        databaseType: this.databaseType,
+                        data: "Tables Opened",
+                    };
+                    socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.SET) {
                     const sk = this.clients.get(request.socket.remoteAddress || socket.url);

@@ -1,8 +1,9 @@
+import { TypedEmitter } from "tiny-typed-emitter";
 import ws from "ws";
 import { WideColumn } from "../../column/database.js";
 import { KeyValue } from "../../keyvalue/database.js";
-import { ReceiverOp, TransmitterFlags, TransmitterOp, } from "../../typings/enums.js";
-export class Receiver {
+import { ReceiverOp, TransmitterFlags, TransmitterOp, WsEventsList as ReceiverEvents, } from "../../typings/enums.js";
+export class Receiver extends TypedEmitter {
     connection;
     options;
     clients = new Map();
@@ -12,6 +13,7 @@ export class Receiver {
     db;
     databaseType;
     constructor(options) {
+        super();
         this.connection = new ws.Server(options.wsOptions);
         this.options = options;
         this.databaseType = options.databaseType;
@@ -30,9 +32,13 @@ export class Receiver {
                 socket.close(3000, "Ip Not Whitelisted");
                 return;
             }
+            this.emit(ReceiverEvents.CONNECT);
+            socket.on("open", () => {
+            });
             this.clients.set(request.socket.remoteAddress || socket.url, {});
             socket.on("message", async (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(ReceiverEvents.MESSAGE, parsedData);
                 if (parsedData.op === TransmitterOp.REQUEST) {
                     this._currentSequence += 1;
                     const sendData = {
@@ -58,6 +64,15 @@ export class Receiver {
                 }
                 else if (parsedData.op === TransmitterOp.BULK_TABLE_OPEN) {
                     this.load(request.socket.remoteAddress || socket.url, parsedData.data);
+                    this._currentSequence += 1;
+                    const sendData = {
+                        op: ReceiverOp.ACK_TABLES,
+                        sequence: this._currentSequence,
+                        timestamp: Date.now(),
+                        databaseType: this.databaseType,
+                        data: "Tables Opened",
+                    };
+                    socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === TransmitterOp.SET) {
                     const sk = this.clients.get(request.socket.remoteAddress || socket.url);

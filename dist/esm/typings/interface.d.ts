@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { ClientOptions, ServerOptions } from "ws";
 import { Column } from "../column/column.js";
 import { Table } from "../keyvalue/table.js";
@@ -176,5 +177,15 @@ export interface ReceiverOptions {
         limit?: number;
     };
     dbOptions: KeyValueDatabaseOption | ColumnDatabaseOptions;
+}
+export interface WsEvents {
+    ready(): void;
+    disconnect(): void;
+    debug(message: string): void;
+    message(message: ReceiverData): void;
+    open(): void;
+    close(code: number, reason?: Buffer): void;
+    error(error: Error): void;
+    connect(): void;
 }
 //# sourceMappingURL=interface.d.ts.map

@@ -203,3 +203,14 @@ export interface ReceiverOptions {
   };
   dbOptions : KeyValueDatabaseOption | ColumnDatabaseOptions;
 }
+
+export interface WsEvents {
+  ready(): void;
+  disconnect(): void;
+  debug(message: string): void;
+  message(message: ReceiverData): void;
+  open(): void;
+  close(code:number,reason?:Buffer): void;
+  error(error:Error): void;
+  connect(): void;
+}

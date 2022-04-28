@@ -1,17 +1,22 @@
+import { TypedEmitter } from "tiny-typed-emitter";
 import ws from "ws";
 import { WideColumnMemMap } from "../../column/cacher.js";
 import { WideColumnData } from "../../column/data.js";
 import { Cacher } from "../../keyvalue/cacher.js";
 import { Data } from "../../keyvalue/data.js";
-import { ReceiverOp, TransmitterOp } from "../../typings/enums.js";
-import { TransmitterOptions } from "../../typings/interface.js";
+import {
+  ReceiverOp,
+  WsEventsList as TransmitterEvents,
+  TransmitterOp,
+} from "../../typings/enums.js";
+import { WsEvents, TransmitterOptions } from "../../typings/interface.js";
 import {
   KeyValueDataValueType,
   ReceiverTypes,
   WideColumnDataValueType,
 } from "../../typings/type.js";
 
-export class Transmitter {
+export class Transmitter extends TypedEmitter<WsEvents> {
   connection: ws;
   cache?: Cacher | Map<WideColumnDataValueType, WideColumnMemMap>;
   options: TransmitterOptions;
@@ -20,11 +25,13 @@ export class Transmitter {
   sequence: number = 0;
   databaseType!: "KeyValue" | "WideColumn" | "Relational";
   constructor(options: TransmitterOptions) {
+    super();
     this.connection = new ws(options.path, options.wsOptions);
     this.options = options;
   }
   connect() {
     this.connection.on("open", () => {
+      this.emit(TransmitterEvents.OPEN);
       this.connection.send(
         JSON.stringify({
           op: TransmitterOp.REQUEST,
@@ -33,7 +40,9 @@ export class Transmitter {
     });
     this.connection.on("message", (data: string) => {
       const parsedData = JSON.parse(data);
+      this.emit(TransmitterEvents.MESSAGE, parsedData);
       if (parsedData.op === ReceiverOp.ACK_CONNECTION) {
+        this.emit(TransmitterEvents.CONNECT);
         this.databaseType = parsedData.databaseType;
         const sendData = {
           op: TransmitterOp.BULK_TABLE_OPEN,
@@ -44,6 +53,11 @@ export class Transmitter {
         };
         this.connection.send(JSON.stringify(sendData));
       } else if (parsedData.op === ReceiverOp.ACK_TABLES) {
+        const sendData = {
+          op: TransmitterOp.PING,
+        };
+        this.connection.send(JSON.stringify(sendData));
+        this.lastPingTimestamp = Date.now();
         setInterval(() => {
           const sendData = {
             op: TransmitterOp.PING,
@@ -131,8 +145,14 @@ export class Transmitter {
         }
       }
     });
+    this.connection.on("close", (code ,reason) => {
+      this.emit(TransmitterEvents.CLOSE, code, reason);
+    });
+    this.connection.on("error",err => {
+      this.emit(TransmitterEvents.ERROR, err);
+    })
   }
-  set(table: string, key: unknown, data: unknown) {
+  async set(table: string, key: unknown, data: unknown) {
     const sendData = {
       op: TransmitterOp.SET,
       data: {
@@ -142,6 +162,16 @@ export class Transmitter {
       },
     };
     this.connection.send(JSON.stringify(sendData));
+    return new Promise((resolve, reject) => {
+      this.connection.once("message", (data: string) => {
+        const parsedData = JSON.parse(data);
+        if (parsedData.op === ReceiverOp.ACK_SET) {
+          resolve(parsedData.data);
+        } else if (parsedData.op === ReceiverOp.ERROR) {
+          reject(parsedData.data);
+        }
+      });
+    });
   }
   async get(
     table: string,
@@ -163,7 +193,7 @@ export class Transmitter {
         if (parsedData.op === ReceiverOp.ACK_GET) {
           resolve(parsedData.data);
         } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.error);
+          reject(parsedData.data);
         }
       });
     });
