@@ -1,5 +1,7 @@
+import { ClientOptions, ServerOptions } from "ws";
 import { Column } from "../column/column.js";
 import { Table } from "../keyvalue/table.js";
+import { ReceiverOp, TransmitterFlags } from "./enums.js";
 import { CacheReferenceType, KeyValueDataValueType, RelationalDataValueType, WideColumnTypes } from "./type.js";
 export interface KeyValueDataOption {
     value: KeyValueDataValueType;
@@ -129,5 +131,50 @@ export interface CacherOptions {
     sortOrder?: "ASC" | "DESC";
     cacheReference?: CacheReferenceType;
     sorted?: boolean;
+}
+export interface TransmitterOptions {
+    flags: TransmitterFlags.READ_ONLY | TransmitterFlags.READ_WRITE | TransmitterFlags.WRITE_ONLY;
+    path: string;
+    wsOptions: ClientOptions;
+    tables: (string | ColumnTableOptions | RelationalTableOptions)[];
+    type: "KeyValue" | "Relational" | "WideColumn";
+    cacheOption?: {
+        limit?: number;
+    };
+}
+export interface ReceiverData {
+    op: ReceiverOp;
+    data: any;
+    databaseType: "KeyValue" | "WideColumn" | "Relational";
+    sequence: number;
+    timestamp: number;
+}
+export interface ColumnTableOptions {
+    name: string;
+    columns: Column[];
+}
+export interface ColumnDbColumnData {
+    sortOrder?: "ASC" | "DESC";
+    name: string;
+    primary: boolean;
+    type: WideColumnTypes;
+}
+export interface CacherOptions {
+    limit?: number;
+    sortOrder?: "ASC" | "DESC";
+    cacheReference?: CacheReferenceType;
+    sorted?: boolean;
+}
+export interface ReceiverOptions {
+    whitelistedIps: "*" | string[];
+    databaseType: "KeyValue" | "WideColumn";
+    path: string;
+    wsOptions: ServerOptions;
+    tables: (string | ColumnTableOptions | RelationalTableOptions)[];
+    type: "KeyValue" | "Relational" | "WideColumn";
+    cacheOption?: {
+        limit?: number;
+    };
+    dbOptions: KeyValueDatabaseOption | ColumnDatabaseOptions;
 }
 //# sourceMappingURL=interface.d.ts.map

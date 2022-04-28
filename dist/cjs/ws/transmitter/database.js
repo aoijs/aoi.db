@@ -1,0 +1,173 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Transmitter = void 0;
+const ws_1 = __importDefault(require("ws"));
+const cacher_js_1 = require("../../column/cacher.js");
+const data_js_1 = require("../../column/data.js");
+const cacher_js_2 = require("../../keyvalue/cacher.js");
+const data_js_2 = require("../../keyvalue/data.js");
+const enums_js_1 = require("../../typings/enums.js");
+class Transmitter {
+    connection;
+    cache;
+    options;
+    _ping = -1;
+    lastPingTimestamp = -1;
+    sequence = 0;
+    databaseType;
+    constructor(options) {
+        this.connection = new ws_1.default(options.path, options.wsOptions);
+        this.options = options;
+    }
+    connect() {
+        this.connection.on("open", () => {
+            this.connection.send(JSON.stringify({
+                op: enums_js_1.TransmitterOp.REQUEST,
+            }));
+        });
+        this.connection.on("message", (data) => {
+            const parsedData = JSON.parse(data);
+            if (parsedData.op === enums_js_1.ReceiverOp.ACK_CONNECTION) {
+                this.databaseType = parsedData.databaseType;
+                const sendData = {
+                    op: enums_js_1.TransmitterOp.BULK_TABLE_OPEN,
+                    data: {
+                        tables: this.options.tables,
+                        flags: this.options.flags,
+                    },
+                };
+                this.connection.send(JSON.stringify(sendData));
+            }
+            else if (parsedData.op === enums_js_1.ReceiverOp.ACK_TABLES) {
+                setInterval(() => {
+                    const sendData = {
+                        op: enums_js_1.TransmitterOp.PING,
+                    };
+                    this.connection.send(JSON.stringify(sendData));
+                    this.lastPingTimestamp = Date.now();
+                }, 41250);
+            }
+            else if (parsedData.op === enums_js_1.ReceiverOp.ACK_PING) {
+                this._ping = Date.now() - this.lastPingTimestamp;
+            }
+            else if (parsedData.op === enums_js_1.ReceiverOp.ACK_CACHE) {
+                if (this.options.type === "KeyValue") {
+                    const cache = new cacher_js_2.Cacher(this.options.cacheOption ?? { limit: 10000 });
+                    this.cache = cache;
+                    parsedData.data.forEach((x) => {
+                        this.cache?.set(x.key, 
+                        // @ts-ignore
+                        new data_js_2.Data({
+                            value: x.value,
+                            file: x.file,
+                            type: x.type,
+                            ttl: x.ttl,
+                            key: x.key,
+                        }));
+                    });
+                }
+                else {
+                    const cache = new Map();
+                    parsedData.data.forEach((x) => {
+                        if (cache.get(x.primaryColumnValue)) {
+                            if (!cache.get(x.primaryColumnValue)?.get(x.secondaryColumnValue)) {
+                                cache.get(x.primaryColumnValue)?.set(x.secondaryColumnValue, new data_js_1.WideColumnData({
+                                    primaryColumnName: x.primaryColumnName,
+                                    primaryColumnValue: x.primaryColumnValue,
+                                    secondaryColumnName: x.secondaryColumnName,
+                                    secondaryColumnValue: x.secondaryColumnValue,
+                                    primaryColumnType: x.primaryColumnType,
+                                    secondaryColumnType: x.secondaryColumnType,
+                                }));
+                            }
+                        }
+                        cache?.set(x.primaryColumnName, new cacher_js_1.WideColumnMemMap(this.options.cacheOption ?? { limit: 10000 }));
+                        cache?.get(x.primaryColumnName)?.set(x.secondaryColumnValue, new data_js_1.WideColumnData({
+                            primaryColumnName: x.primaryColumnName,
+                            primaryColumnValue: x.primaryColumnValue,
+                            secondaryColumnName: x.secondaryColumnName,
+                            secondaryColumnValue: x.secondaryColumnValue,
+                            primaryColumnType: x.primaryColumnType,
+                            secondaryColumnType: x.secondaryColumnType,
+                        }));
+                    });
+                }
+            }
+        });
+    }
+    set(table, key, data) {
+        const sendData = {
+            op: enums_js_1.TransmitterOp.SET,
+            data: {
+                table,
+                key,
+                data,
+            },
+        };
+        this.connection.send(JSON.stringify(sendData));
+    }
+    async get(table, key, id) {
+        const sendData = {
+            op: enums_js_1.TransmitterOp.GET,
+            data: {
+                table,
+                key,
+                primary: id,
+            },
+        };
+        this.connection.send(JSON.stringify(sendData));
+        return new Promise((resolve, reject) => {
+            this.connection.once("message", (data) => {
+                const parsedData = JSON.parse(data);
+                if (parsedData.op === enums_js_1.ReceiverOp.ACK_GET) {
+                    resolve(parsedData.data);
+                }
+                else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
+                    reject(parsedData.error);
+                }
+            });
+        });
+    }
+    delete(table, key, primary) {
+        const sendData = {
+            op: enums_js_1.TransmitterOp.DELETE,
+            data: {
+                table,
+                key,
+                primary,
+            },
+        };
+        this.connection.send(JSON.stringify(sendData));
+    }
+    async all(table, { filter, limit, column, } = {}) {
+        const sendData = {
+            op: enums_js_1.TransmitterOp.ALL,
+            data: {
+                table,
+                filter,
+                limit,
+                column,
+            },
+        };
+        this.connection.send(JSON.stringify(sendData));
+        return new Promise((resolve, reject) => {
+            this.connection.once("message", (data) => {
+                const parsedData = JSON.parse(data);
+                if (parsedData.op === enums_js_1.ReceiverOp.ACK_ALL) {
+                    resolve(parsedData.data);
+                }
+                else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
+                    reject(parsedData.error);
+                }
+            });
+        });
+    }
+    get ping() {
+        return this._ping;
+    }
+}
+exports.Transmitter = Transmitter;
+//# sourceMappingURL=database.js.map

@@ -37,3 +37,5 @@ export type RelationalDataValueType =
   | Date
   | boolean;
 export type BigBuffer = Buffer | ArrayBuffer | bigint | Blob | ReadableStream;
+
+export type ReceiverTypes = "connection" | "bulkTableOpened" | "bulkTableClosed" ;
