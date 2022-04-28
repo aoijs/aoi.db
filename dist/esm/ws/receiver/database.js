@@ -175,7 +175,6 @@ export class Receiver extends TypedEmitter {
                     let all;
                     if (this.databaseType === "KeyValue") {
                         all = await this.db.all(parsedData.d.table, parsedData.d.filter, parsedData.d.limit, parsedData.d.sortOrder);
-                        console.log({ all, data: parsedData.d });
                     }
                     else if (this.databaseType === "WideColumn") {
                         all = await (parsedData.d.column
