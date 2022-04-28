@@ -60,3 +60,15 @@ export enum WsEventsList {
   CLOSE = "close",
   READY = "ready",
 }
+
+export enum WsDBTypes {
+  KeyValue,
+  WideColumn,
+  Relational,
+}
+
+export const TransmitterDBTypes: ["KeyValue", "WideColumn", "Relational"] = [
+  "KeyValue",
+  "WideColumn",
+  "Relational",
+];

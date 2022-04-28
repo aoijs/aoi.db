@@ -39,8 +39,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                 return;
             }
             this.emit(enums_js_1.WsEventsList.CONNECT);
-            socket.on("open", () => {
-            });
+            socket.on("open", () => { });
             this.clients.set(request.socket.remoteAddress || socket.url, {});
             socket.on("message", async (data) => {
                 const parsedData = JSON.parse(data);
@@ -49,10 +48,10 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     this._currentSequence += 1;
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_CONNECTION,
-                        databaseType: this.databaseType,
-                        data: "Request Accepted",
-                        timestamp: Date.now(),
-                        sequence: this._currentSequence,
+                        db: enums_js_1.WsDBTypes[this.databaseType],
+                        d: "Request Accepted",
+                        t: Date.now(),
+                        s: this._currentSequence,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -61,22 +60,22 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     this._currentSequence += 1;
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_PING,
-                        sequence: this._currentSequence,
-                        timestamp: Date.now(),
-                        databaseType: this.databaseType,
-                        data: "Ping Acknowledged",
+                        s: this._currentSequence,
+                        t: Date.now(),
+                        db: enums_js_1.WsDBTypes[this.databaseType],
+                        d: "Ping Acknowledged",
                     };
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.BULK_TABLE_OPEN) {
-                    this.load(request.socket.remoteAddress || socket.url, parsedData.data);
+                    this.load(request.socket.remoteAddress || socket.url, parsedData.d);
                     this._currentSequence += 1;
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_TABLES,
-                        sequence: this._currentSequence,
-                        timestamp: Date.now(),
-                        databaseType: this.databaseType,
-                        data: "Tables Opened",
+                        s: this._currentSequence,
+                        t: Date.now(),
+                        db: enums_js_1.WsDBTypes[this.databaseType],
+                        d: "Tables Opened",
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -85,22 +84,22 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
-                            sequence: this._currentSequence,
-                            timestamp: Date.now(),
-                            databaseType: this.databaseType,
-                            data: "Database is read only",
+                            s: this._currentSequence,
+                            t: Date.now(),
+                            db: enums_js_1.WsDBTypes[this.databaseType],
+                            d: "Database is read only",
                         };
                         socket.send(JSON.stringify(sendData));
                         return;
                     }
                     this._currentSequence += 1;
-                    await this.db.set(parsedData.data.table, parsedData.data.key, parsedData.data.data);
+                    await this.db.set(parsedData.d.table, parsedData.d.key, parsedData.d.data);
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_SET,
-                        sequence: this._currentSequence,
-                        timestamp: Date.now(),
-                        databaseType: this.databaseType,
-                        data: "Set Acknowledged",
+                        s: this._currentSequence,
+                        t: Date.now(),
+                        db: enums_js_1.WsDBTypes[this.databaseType],
+                        d: "Set Acknowledged",
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -110,10 +109,10 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     if (sk?.flags === enums_js_1.TransmitterFlags.WRITE_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
-                            sequence: this._currentSequence,
-                            timestamp: Date.now(),
-                            databaseType: this.databaseType,
-                            data: "Database is write only",
+                            s: this._currentSequence,
+                            t: Date.now(),
+                            db: enums_js_1.WsDBTypes[this.databaseType],
+                            d: "Database is write only",
                         };
                         socket.send(JSON.stringify(sendData));
                         return;
@@ -121,18 +120,18 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     let get;
                     if (this.databaseType === "KeyValue") {
                         const db = this.db;
-                        get = await db.get(parsedData.data.table, parsedData.data.key);
+                        get = await db.get(parsedData.d.table, parsedData.d.key);
                     }
                     else {
                         const db = this.db;
-                        get = await db.get(parsedData.data.table, parsedData.data.key, parsedData.data.primary);
+                        get = await db.get(parsedData.d.table, parsedData.d.key, parsedData.d.primary);
                     }
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_GET,
-                        sequence: this._currentSequence,
-                        timestamp: Date.now(),
-                        databaseType: this.databaseType,
-                        data: get,
+                        s: this._currentSequence,
+                        t: Date.now(),
+                        db: enums_js_1.WsDBTypes[this.databaseType],
+                        d: get,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -141,20 +140,20 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
-                            sequence: this._currentSequence,
-                            timestamp: Date.now(),
-                            databaseType: this.databaseType,
-                            data: "Database is read only",
+                            s: this._currentSequence,
+                            t: Date.now(),
+                            db: enums_js_1.WsDBTypes[this.databaseType],
+                            d: "Database is read only",
                         };
                         socket.send(JSON.stringify(sendData));
                         return;
                     }
                     this._currentSequence += 1;
                     if (this.databaseType === "KeyValue") {
-                        await this.db.delete(parsedData.data.table, parsedData.data.key);
+                        await this.db.delete(parsedData.d.table, parsedData.d.key);
                     }
                     else if (this.databaseType === "WideColumn") {
-                        await this.db.delete(parsedData.data.table, parsedData.data.key, parsedData.data.primary);
+                        await this.db.delete(parsedData.d.table, parsedData.d.key, parsedData.d.primary);
                     }
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.ALL) {
@@ -162,10 +161,10 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
-                            sequence: this._currentSequence,
-                            timestamp: Date.now(),
-                            databaseType: this.databaseType,
-                            data: "Database is read only",
+                            s: this._currentSequence,
+                            t: Date.now(),
+                            db: enums_js_1.WsDBTypes[this.databaseType],
+                            d: "Database is read only",
                         };
                         socket.send(JSON.stringify(sendData));
                         return;
@@ -173,19 +172,19 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     this._currentSequence += 1;
                     let all;
                     if (this.databaseType === "KeyValue") {
-                        all = await this.db.all(parsedData.data.table);
+                        all = await this.db.all(parsedData.d.table, parsedData.d.filter, parsedData.d.limit, parsedData.d.sortOrder);
                     }
                     else if (this.databaseType === "WideColumn") {
-                        all = await (parsedData.data.column
-                            ? this.db.all(parsedData.data.table, parsedData.data.column, parsedData.data.filter, parsedData.data.limit)
-                            : this.db.allData(parsedData.data.table));
+                        all = await (parsedData.d.column
+                            ? this.db.all(parsedData.d.table, parsedData.d.column, parsedData.d.filter, parsedData.d.limit)
+                            : this.db.allData(parsedData.d.table));
                     }
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_ALL,
-                        sequence: this._currentSequence,
-                        timestamp: Date.now(),
-                        databaseType: this.databaseType,
-                        data: all,
+                        s: this._currentSequence,
+                        t: Date.now(),
+                        db: enums_js_1.WsDBTypes[this.databaseType],
+                        d: all,
                     };
                     socket.send(JSON.stringify(sendData));
                 }

@@ -62,4 +62,15 @@ export var WsEventsList;
     WsEventsList["CLOSE"] = "close";
     WsEventsList["READY"] = "ready";
 })(WsEventsList || (WsEventsList = {}));
+export var WsDBTypes;
+(function (WsDBTypes) {
+    WsDBTypes[WsDBTypes["KeyValue"] = 0] = "KeyValue";
+    WsDBTypes[WsDBTypes["WideColumn"] = 1] = "WideColumn";
+    WsDBTypes[WsDBTypes["Relational"] = 2] = "Relational";
+})(WsDBTypes || (WsDBTypes = {}));
+export const TransmitterDBTypes = [
+    "KeyValue",
+    "WideColumn",
+    "Relational",
+];
 //# sourceMappingURL=enums.js.map

@@ -167,10 +167,10 @@ export interface TransmitterOptions {
 
 export interface ReceiverData {
   op: ReceiverOp;
-  data: any;
-  databaseType: "KeyValue" | "WideColumn" | "Relational";
-  sequence: number;
-  timestamp: number;
+  d: any;
+  db: 0 | 1 | 2;
+  s: number;
+  t: number;
 }
 
 export interface ColumnTableOptions {

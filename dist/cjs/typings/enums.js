@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WsEventsList = exports.TransmitterOp = exports.ReceiverOp = exports.TransmitterFlags = exports.DatabaseEvents = void 0;
+exports.TransmitterDBTypes = exports.WsDBTypes = exports.WsEventsList = exports.TransmitterOp = exports.ReceiverOp = exports.TransmitterFlags = exports.DatabaseEvents = void 0;
 var DatabaseEvents;
 (function (DatabaseEvents) {
     DatabaseEvents["READY"] = "ready";
@@ -65,4 +65,15 @@ var WsEventsList;
     WsEventsList["CLOSE"] = "close";
     WsEventsList["READY"] = "ready";
 })(WsEventsList = exports.WsEventsList || (exports.WsEventsList = {}));
+var WsDBTypes;
+(function (WsDBTypes) {
+    WsDBTypes[WsDBTypes["KeyValue"] = 0] = "KeyValue";
+    WsDBTypes[WsDBTypes["WideColumn"] = 1] = "WideColumn";
+    WsDBTypes[WsDBTypes["Relational"] = 2] = "Relational";
+})(WsDBTypes = exports.WsDBTypes || (exports.WsDBTypes = {}));
+exports.TransmitterDBTypes = [
+    "KeyValue",
+    "WideColumn",
+    "Relational",
+];
 //# sourceMappingURL=enums.js.map

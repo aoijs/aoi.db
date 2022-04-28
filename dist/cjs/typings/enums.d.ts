@@ -57,4 +57,10 @@ export declare enum WsEventsList {
     CLOSE = "close",
     READY = "ready"
 }
+export declare enum WsDBTypes {
+    KeyValue = 0,
+    WideColumn = 1,
+    Relational = 2
+}
+export declare const TransmitterDBTypes: ["KeyValue", "WideColumn", "Relational"];
 //# sourceMappingURL=enums.d.ts.map

@@ -36,10 +36,10 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
             if (parsedData.op === enums_js_1.ReceiverOp.ACK_CONNECTION) {
                 this.emit(enums_js_1.WsEventsList.CONNECT);
-                this.databaseType = parsedData.databaseType;
+                this.databaseType = enums_js_1.TransmitterDBTypes[parsedData.db];
                 const sendData = {
                     op: enums_js_1.TransmitterOp.BULK_TABLE_OPEN,
-                    data: {
+                    d: {
                         tables: this.options.tables,
                         flags: this.options.flags,
                     },
@@ -64,10 +64,10 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
                 this._ping = Date.now() - this.lastPingTimestamp;
             }
             else if (parsedData.op === enums_js_1.ReceiverOp.ACK_CACHE) {
-                if (this.options.type === "KeyValue") {
+                if (this.databaseType === "KeyValue") {
                     const cache = new cacher_js_2.Cacher(this.options.cacheOption ?? { limit: 10000 });
                     this.cache = cache;
-                    parsedData.data.forEach((x) => {
+                    parsedData.d.forEach((x) => {
                         this.cache?.set(x.key, 
                         // @ts-ignore
                         new data_js_2.Data({
@@ -81,7 +81,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 else {
                     const cache = new Map();
-                    parsedData.data.forEach((x) => {
+                    parsedData.d.forEach((x) => {
                         if (cache.get(x.primaryColumnValue)) {
                             if (!cache.get(x.primaryColumnValue)?.get(x.secondaryColumnValue)) {
                                 cache.get(x.primaryColumnValue)?.set(x.secondaryColumnValue, new data_js_1.WideColumnData({
@@ -110,14 +110,14 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         this.connection.on("close", (code, reason) => {
             this.emit(enums_js_1.WsEventsList.CLOSE, code, reason);
         });
-        this.connection.on("error", err => {
+        this.connection.on("error", (err) => {
             this.emit(enums_js_1.WsEventsList.ERROR, err);
         });
     }
     async set(table, key, data) {
         const sendData = {
             op: enums_js_1.TransmitterOp.SET,
-            data: {
+            d: {
                 table,
                 key,
                 data,
@@ -128,10 +128,10 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_SET) {
-                    resolve(parsedData.data);
+                    resolve(parsedData.d);
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
-                    reject(parsedData.data);
+                    reject(parsedData.d);
                 }
             });
         });
@@ -139,7 +139,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     async get(table, key, id) {
         const sendData = {
             op: enums_js_1.TransmitterOp.GET,
-            data: {
+            d: {
                 table,
                 key,
                 primary: id,
@@ -150,10 +150,10 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_GET) {
-                    resolve(parsedData.data);
+                    resolve(parsedData.d);
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
-                    reject(parsedData.data);
+                    reject(parsedData.d);
                 }
             });
         });
@@ -161,7 +161,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     delete(table, key, primary) {
         const sendData = {
             op: enums_js_1.TransmitterOp.DELETE,
-            data: {
+            d: {
                 table,
                 key,
                 primary,
@@ -169,14 +169,15 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         };
         this.connection.send(JSON.stringify(sendData));
     }
-    async all(table, { filter, limit, column, } = {}) {
+    async all(table, { filter, limit, column, sortOrder, } = {}) {
         const sendData = {
             op: enums_js_1.TransmitterOp.ALL,
-            data: {
+            d: {
                 table,
                 filter,
                 limit,
                 column,
+                sortOrder,
             },
         };
         this.connection.send(JSON.stringify(sendData));
@@ -184,10 +185,10 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_ALL) {
-                    resolve(parsedData.data);
+                    resolve(parsedData.d);
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
-                    reject(parsedData.error);
+                    reject(parsedData.d);
                 }
             });
         });

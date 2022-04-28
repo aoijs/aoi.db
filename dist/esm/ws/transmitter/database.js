@@ -4,7 +4,7 @@ import { WideColumnMemMap } from "../../column/cacher.js";
 import { WideColumnData } from "../../column/data.js";
 import { Cacher } from "../../keyvalue/cacher.js";
 import { Data } from "../../keyvalue/data.js";
-import { ReceiverOp, WsEventsList as TransmitterEvents, TransmitterOp, } from "../../typings/enums.js";
+import { ReceiverOp, WsEventsList as TransmitterEvents, TransmitterOp, TransmitterDBTypes, } from "../../typings/enums.js";
 export class Transmitter extends TypedEmitter {
     connection;
     cache;
@@ -30,10 +30,10 @@ export class Transmitter extends TypedEmitter {
             this.emit(TransmitterEvents.MESSAGE, parsedData);
             if (parsedData.op === ReceiverOp.ACK_CONNECTION) {
                 this.emit(TransmitterEvents.CONNECT);
-                this.databaseType = parsedData.databaseType;
+                this.databaseType = TransmitterDBTypes[parsedData.db];
                 const sendData = {
                     op: TransmitterOp.BULK_TABLE_OPEN,
-                    data: {
+                    d: {
                         tables: this.options.tables,
                         flags: this.options.flags,
                     },
@@ -58,10 +58,10 @@ export class Transmitter extends TypedEmitter {
                 this._ping = Date.now() - this.lastPingTimestamp;
             }
             else if (parsedData.op === ReceiverOp.ACK_CACHE) {
-                if (this.options.type === "KeyValue") {
+                if (this.databaseType === "KeyValue") {
                     const cache = new Cacher(this.options.cacheOption ?? { limit: 10000 });
                     this.cache = cache;
-                    parsedData.data.forEach((x) => {
+                    parsedData.d.forEach((x) => {
                         this.cache?.set(x.key, 
                         // @ts-ignore
                         new Data({
@@ -75,7 +75,7 @@ export class Transmitter extends TypedEmitter {
                 }
                 else {
                     const cache = new Map();
-                    parsedData.data.forEach((x) => {
+                    parsedData.d.forEach((x) => {
                         if (cache.get(x.primaryColumnValue)) {
                             if (!cache.get(x.primaryColumnValue)?.get(x.secondaryColumnValue)) {
                                 cache.get(x.primaryColumnValue)?.set(x.secondaryColumnValue, new WideColumnData({
@@ -104,14 +104,14 @@ export class Transmitter extends TypedEmitter {
         this.connection.on("close", (code, reason) => {
             this.emit(TransmitterEvents.CLOSE, code, reason);
         });
-        this.connection.on("error", err => {
+        this.connection.on("error", (err) => {
             this.emit(TransmitterEvents.ERROR, err);
         });
     }
     async set(table, key, data) {
         const sendData = {
             op: TransmitterOp.SET,
-            data: {
+            d: {
                 table,
                 key,
                 data,
@@ -122,10 +122,10 @@ export class Transmitter extends TypedEmitter {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === ReceiverOp.ACK_SET) {
-                    resolve(parsedData.data);
+                    resolve(parsedData.d);
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {
-                    reject(parsedData.data);
+                    reject(parsedData.d);
                 }
             });
         });
@@ -133,7 +133,7 @@ export class Transmitter extends TypedEmitter {
     async get(table, key, id) {
         const sendData = {
             op: TransmitterOp.GET,
-            data: {
+            d: {
                 table,
                 key,
                 primary: id,
@@ -144,10 +144,10 @@ export class Transmitter extends TypedEmitter {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === ReceiverOp.ACK_GET) {
-                    resolve(parsedData.data);
+                    resolve(parsedData.d);
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {
-                    reject(parsedData.data);
+                    reject(parsedData.d);
                 }
             });
         });
@@ -155,7 +155,7 @@ export class Transmitter extends TypedEmitter {
     delete(table, key, primary) {
         const sendData = {
             op: TransmitterOp.DELETE,
-            data: {
+            d: {
                 table,
                 key,
                 primary,
@@ -163,14 +163,15 @@ export class Transmitter extends TypedEmitter {
         };
         this.connection.send(JSON.stringify(sendData));
     }
-    async all(table, { filter, limit, column, } = {}) {
+    async all(table, { filter, limit, column, sortOrder, } = {}) {
         const sendData = {
             op: TransmitterOp.ALL,
-            data: {
+            d: {
                 table,
                 filter,
                 limit,
                 column,
+                sortOrder,
             },
         };
         this.connection.send(JSON.stringify(sendData));
@@ -178,10 +179,10 @@ export class Transmitter extends TypedEmitter {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === ReceiverOp.ACK_ALL) {
-                    resolve(parsedData.data);
+                    resolve(parsedData.d);
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {
-                    reject(parsedData.error);
+                    reject(parsedData.d);
                 }
             });
         });

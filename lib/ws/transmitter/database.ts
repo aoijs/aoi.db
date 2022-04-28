@@ -8,8 +8,14 @@ import {
   ReceiverOp,
   WsEventsList as TransmitterEvents,
   TransmitterOp,
+  WsDBTypes,
+  TransmitterDBTypes,
 } from "../../typings/enums.js";
-import { WsEvents, TransmitterOptions } from "../../typings/interface.js";
+import {
+  WsEvents,
+  TransmitterOptions,
+  ReceiverData,
+} from "../../typings/interface.js";
 import {
   KeyValueDataValueType,
   ReceiverTypes,
@@ -39,14 +45,14 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       );
     });
     this.connection.on("message", (data: string) => {
-      const parsedData = JSON.parse(data);
+      const parsedData: ReceiverData = JSON.parse(data);
       this.emit(TransmitterEvents.MESSAGE, parsedData);
       if (parsedData.op === ReceiverOp.ACK_CONNECTION) {
         this.emit(TransmitterEvents.CONNECT);
-        this.databaseType = parsedData.databaseType;
+        this.databaseType = TransmitterDBTypes[parsedData.db];
         const sendData = {
           op: TransmitterOp.BULK_TABLE_OPEN,
-          data: {
+          d: {
             tables: this.options.tables,
             flags: this.options.flags,
           },
@@ -68,12 +74,12 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       } else if (parsedData.op === ReceiverOp.ACK_PING) {
         this._ping = Date.now() - this.lastPingTimestamp;
       } else if (parsedData.op === ReceiverOp.ACK_CACHE) {
-        if (this.options.type === "KeyValue") {
+        if (this.databaseType === "KeyValue") {
           const cache: Cacher = new Cacher(
             this.options.cacheOption ?? { limit: 10000 },
           );
           this.cache = cache;
-          parsedData.data.forEach(
+          parsedData.d.forEach(
             (x: {
               key: string;
               value: KeyValueDataValueType;
@@ -97,7 +103,7 @@ export class Transmitter extends TypedEmitter<WsEvents> {
         } else {
           const cache: Map<WideColumnDataValueType, WideColumnMemMap> =
             new Map();
-          parsedData.data.forEach(
+          parsedData.d.forEach(
             (x: {
               primaryColumnName: any;
               primaryColumnValue: any;
@@ -145,17 +151,17 @@ export class Transmitter extends TypedEmitter<WsEvents> {
         }
       }
     });
-    this.connection.on("close", (code ,reason) => {
+    this.connection.on("close", (code, reason) => {
       this.emit(TransmitterEvents.CLOSE, code, reason);
     });
-    this.connection.on("error",err => {
+    this.connection.on("error", (err) => {
       this.emit(TransmitterEvents.ERROR, err);
-    })
+    });
   }
   async set(table: string, key: unknown, data: unknown) {
     const sendData = {
       op: TransmitterOp.SET,
-      data: {
+      d: {
         table,
         key,
         data,
@@ -166,9 +172,9 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       this.connection.once("message", (data: string) => {
         const parsedData = JSON.parse(data);
         if (parsedData.op === ReceiverOp.ACK_SET) {
-          resolve(parsedData.data);
+          resolve(parsedData.d);
         } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.data);
+          reject(parsedData.d);
         }
       });
     });
@@ -180,7 +186,7 @@ export class Transmitter extends TypedEmitter<WsEvents> {
   ) {
     const sendData = {
       op: TransmitterOp.GET,
-      data: {
+      d: {
         table,
         key,
         primary: id,
@@ -191,9 +197,9 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       this.connection.once("message", (data: string) => {
         const parsedData = JSON.parse(data);
         if (parsedData.op === ReceiverOp.ACK_GET) {
-          resolve(parsedData.data);
+          resolve(parsedData.d);
         } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.data);
+          reject(parsedData.d);
         }
       });
     });
@@ -205,7 +211,7 @@ export class Transmitter extends TypedEmitter<WsEvents> {
   ) {
     const sendData = {
       op: TransmitterOp.DELETE,
-      data: {
+      d: {
         table,
         key,
         primary,
@@ -219,29 +225,32 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       filter,
       limit,
       column,
+      sortOrder,
     }: {
       filter?: (...args: any) => boolean;
       limit?: number;
       column?: string;
+      sortOrder?: "asc" | "desc";
     } = {},
   ) {
     const sendData = {
       op: TransmitterOp.ALL,
-      data: {
+      d: {
         table,
         filter,
         limit,
         column,
+        sortOrder,
       },
     };
     this.connection.send(JSON.stringify(sendData));
     return new Promise((resolve, reject) => {
       this.connection.once("message", (data: string) => {
-        const parsedData = JSON.parse(data);
+        const parsedData: ReceiverData = JSON.parse(data);
         if (parsedData.op === ReceiverOp.ACK_ALL) {
-          resolve(parsedData.data);
+          resolve(parsedData.d);
         } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.error);
+          reject(parsedData.d);
         }
       });
     });
