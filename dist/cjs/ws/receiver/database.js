@@ -11,8 +11,8 @@ const enums_js_1 = require("../../typings/enums.js");
 class Receiver {
     connection;
     options;
+    clients = new Map();
     _ping = -1;
-    flags;
     lastPingTimestamp = -1;
     _currentSequence = 0;
     db;
@@ -27,6 +27,7 @@ class Receiver {
         else {
             this.db = new database_js_1.WideColumn(options.dbOptions);
         }
+        this.db.connect();
     }
     connect() {
         this.connection.on("connection", (socket, request) => {
@@ -35,6 +36,7 @@ class Receiver {
                 socket.close(3000, "Ip Not Whitelisted");
                 return;
             }
+            this.clients.set(request.socket.remoteAddress || socket.url, {});
             socket.on("message", async (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === enums_js_1.TransmitterOp.REQUEST) {
@@ -61,10 +63,11 @@ class Receiver {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.BULK_TABLE_OPEN) {
-                    this.load(parsedData.data);
+                    this.load(request.socket.remoteAddress || socket.url, parsedData.data);
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.SET) {
-                    if (this.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
+                    const sk = this.clients.get(request.socket.remoteAddress || socket.url);
+                    if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
                             sequence: this._currentSequence,
@@ -88,7 +91,8 @@ class Receiver {
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.GET) {
                     this._currentSequence += 1;
-                    if (this.flags === enums_js_1.TransmitterFlags.WRITE_ONLY) {
+                    const sk = this.clients.get(request.socket.remoteAddress || socket.url);
+                    if (sk?.flags === enums_js_1.TransmitterFlags.WRITE_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
                             sequence: this._currentSequence,
@@ -118,7 +122,8 @@ class Receiver {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.DELETE) {
-                    if (this.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
+                    const sk = this.clients.get(request.socket.remoteAddress || socket.url);
+                    if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
                             sequence: this._currentSequence,
@@ -138,7 +143,8 @@ class Receiver {
                     }
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.ALL) {
-                    if (this.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
+                    const sk = this.clients.get(request.socket.remoteAddress || socket.url);
+                    if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
                             sequence: this._currentSequence,
@@ -171,10 +177,11 @@ class Receiver {
             });
         });
     }
-    load({ tables, flags, }) {
-        this.db.options.tables = tables;
-        this.flags = flags;
-        this.db.connect();
+    load(socket, { tables, flags, }) {
+        this.clients.set(socket, {
+            tables,
+            flags,
+        });
     }
 }
 exports.Receiver = Receiver;

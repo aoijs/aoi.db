@@ -18,8 +18,11 @@ import {
 export class Receiver {
   connection: ws.Server;
   options: ReceiverOptions;
+  clients: Map<
+    string,
+    { tables?: string[] | ColumnTableOptions[]; flags?: TransmitterFlags }
+  > = new Map();
   _ping: number = -1;
-  flags!: TransmitterFlags;
   lastPingTimestamp: number = -1;
   _currentSequence: number = 0;
   db: KeyValue | WideColumn;
@@ -33,6 +36,7 @@ export class Receiver {
     } else {
       this.db = new WideColumn(<ColumnDatabaseOptions>options.dbOptions);
     }
+    this.db.connect();
   }
   connect() {
     this.connection.on("connection", (socket, request) => {
@@ -45,6 +49,7 @@ export class Receiver {
         socket.close(3000, "Ip Not Whitelisted");
         return;
       }
+      this.clients.set(request.socket.remoteAddress || socket.url, {});
       socket.on("message", async (data: string) => {
         const parsedData = JSON.parse(data);
         if (parsedData.op === TransmitterOp.REQUEST) {
@@ -69,9 +74,15 @@ export class Receiver {
           };
           socket.send(JSON.stringify(sendData));
         } else if (parsedData.op === TransmitterOp.BULK_TABLE_OPEN) {
-          this.load(parsedData.data);
+          this.load(
+            request.socket.remoteAddress || socket.url,
+            parsedData.data,
+          );
         } else if (parsedData.op === TransmitterOp.SET) {
-          if (this.flags === TransmitterFlags.READ_ONLY) {
+          const sk = this.clients.get(
+            request.socket.remoteAddress || socket.url,
+          );
+          if (sk?.flags === TransmitterFlags.READ_ONLY) {
             const sendData: ReceiverData = {
               op: ReceiverOp.ERROR,
               sequence: this._currentSequence,
@@ -98,7 +109,10 @@ export class Receiver {
           socket.send(JSON.stringify(sendData));
         } else if (parsedData.op === TransmitterOp.GET) {
           this._currentSequence += 1;
-          if (this.flags === TransmitterFlags.WRITE_ONLY) {
+          const sk = this.clients.get(
+            request.socket.remoteAddress || socket.url,
+          );
+          if (sk?.flags === TransmitterFlags.WRITE_ONLY) {
             const sendData: ReceiverData = {
               op: ReceiverOp.ERROR,
               sequence: this._currentSequence,
@@ -130,7 +144,10 @@ export class Receiver {
           };
           socket.send(JSON.stringify(sendData));
         } else if (parsedData.op === TransmitterOp.DELETE) {
-          if (this.flags === TransmitterFlags.READ_ONLY) {
+          const sk = this.clients.get(
+            request.socket.remoteAddress || socket.url,
+          );
+          if (sk?.flags === TransmitterFlags.READ_ONLY) {
             const sendData: ReceiverData = {
               op: ReceiverOp.ERROR,
               sequence: this._currentSequence,
@@ -155,7 +172,10 @@ export class Receiver {
             );
           }
         } else if (parsedData.op === TransmitterOp.ALL) {
-          if (this.flags === TransmitterFlags.READ_ONLY) {
+          const sk = this.clients.get(
+            request.socket.remoteAddress || socket.url,
+          );
+          if (sk?.flags === TransmitterFlags.READ_ONLY) {
             const sendData: ReceiverData = {
               op: ReceiverOp.ERROR,
               sequence: this._currentSequence,
@@ -192,15 +212,19 @@ export class Receiver {
       });
     });
   }
-  load({
-    tables,
-    flags,
-  }: {
-    tables: string[] | ColumnTableOptions[];
-    flags: TransmitterFlags;
-  }) {
-    this.db.options.tables = tables;
-    this.flags = flags;
-    this.db.connect();
+  load(
+    socket: string,
+    {
+      tables,
+      flags,
+    }: {
+      tables: string[] | ColumnTableOptions[];
+      flags: TransmitterFlags;
+    },
+  ) {
+    this.clients.set(socket, {
+      tables,
+      flags,
+    });
   }
 }

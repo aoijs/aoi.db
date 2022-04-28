@@ -6,15 +6,18 @@ import { ColumnTableOptions, ReceiverOptions } from "../../typings/interface.js"
 export declare class Receiver {
     connection: ws.Server;
     options: ReceiverOptions;
+    clients: Map<string, {
+        tables?: string[] | ColumnTableOptions[];
+        flags?: TransmitterFlags;
+    }>;
     _ping: number;
-    flags: TransmitterFlags;
     lastPingTimestamp: number;
     _currentSequence: number;
     db: KeyValue | WideColumn;
     databaseType: "KeyValue" | "WideColumn";
     constructor(options: ReceiverOptions);
     connect(): void;
-    load({ tables, flags, }: {
+    load(socket: string, { tables, flags, }: {
         tables: string[] | ColumnTableOptions[];
         flags: TransmitterFlags;
     }): void;
