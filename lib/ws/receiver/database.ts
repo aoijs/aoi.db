@@ -33,12 +33,6 @@ export class Receiver {
     } else {
       this.db = new WideColumn(<ColumnDatabaseOptions>options.dbOptions);
     }
-    if (!existsSync(`${this.options.dbOptions.path}/sequences.log`)) {
-      writeFileSync(
-        `${this.options.dbOptions.path}/sequences.log`,
-        JSON.stringify({}),
-      );
-    }
   }
   connect() {
     this.connection.on("connection", (socket, request) => {

@@ -1,4 +1,3 @@
-import { existsSync, writeFileSync } from "fs";
 import ws from "ws";
 import { WideColumn } from "../../column/database.js";
 import { KeyValue } from "../../keyvalue/database.js";
@@ -21,9 +20,6 @@ export class Receiver {
         }
         else {
             this.db = new WideColumn(options.dbOptions);
-        }
-        if (!existsSync(`${this.options.dbOptions.path}/sequences.log`)) {
-            writeFileSync(`${this.options.dbOptions.path}/sequences.log`, JSON.stringify({}));
         }
     }
     connect() {

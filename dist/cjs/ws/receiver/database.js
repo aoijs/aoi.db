@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Receiver = void 0;
-const fs_1 = require("fs");
 const ws_1 = __importDefault(require("ws"));
 const database_js_1 = require("../../column/database.js");
 const database_js_2 = require("../../keyvalue/database.js");
@@ -27,9 +26,6 @@ class Receiver {
         }
         else {
             this.db = new database_js_1.WideColumn(options.dbOptions);
-        }
-        if (!(0, fs_1.existsSync)(`${this.options.dbOptions.path}/sequences.log`)) {
-            (0, fs_1.writeFileSync)(`${this.options.dbOptions.path}/sequences.log`, JSON.stringify({}));
         }
     }
     connect() {
