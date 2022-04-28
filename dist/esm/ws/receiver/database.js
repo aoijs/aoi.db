@@ -160,13 +160,13 @@ export class Receiver extends TypedEmitter {
                 }
                 else if (parsedData.op === TransmitterOp.ALL) {
                     const sk = this.clients.get(request.socket.remoteAddress || socket.url);
-                    if (sk?.flags === TransmitterFlags.READ_ONLY) {
+                    if (sk?.flags === TransmitterFlags.WRITE_ONLY) {
                         const sendData = {
                             op: ReceiverOp.ERROR,
                             s: this._currentSequence,
                             t: Date.now(),
                             db: WsDBTypes[this.databaseType],
-                            d: "Database is read only",
+                            d: "Database is write only",
                         };
                         socket.send(JSON.stringify(sendData));
                         return;
@@ -175,6 +175,7 @@ export class Receiver extends TypedEmitter {
                     let all;
                     if (this.databaseType === "KeyValue") {
                         all = await this.db.all(parsedData.d.table, parsedData.d.filter, parsedData.d.limit, parsedData.d.sortOrder);
+                        console.log({ all, data: parsedData.d });
                     }
                     else if (this.databaseType === "WideColumn") {
                         all = await (parsedData.d.column

@@ -352,7 +352,6 @@ export class Table {
         return res;
       }
     } else {
-      this.queue.queued.all = true;
       const referenceSize = await this.getReferenceSize();
       if (
         referenceSize <= this.db.options.cacheOption.limit &&
@@ -360,6 +359,8 @@ export class Table {
       ) {
         return [...this.cache.data.values()];
       }
+      this.queue.queued.all = true;
+
       this.files.forEach((file) => {
         const readData = readFileSync(`${this.path}/${file}`).toString();
         let JSONData;
@@ -561,7 +562,7 @@ export class Table {
     const encryptOption = this.db.options.encryptOption;
     if (typeof this.references === "string") {
       let readData = (await readFile(this.references)).toString();
-      if(encryptOption.enabled) {
+      if (encryptOption.enabled) {
         const HashData = JSONParser<HashData>(readData);
         if (HashData.iv) {
           readData = decrypt(HashData, encryptOption.securitykey);

@@ -333,12 +333,12 @@ export class Table {
             }
         }
         else {
-            this.queue.queued.all = true;
             const referenceSize = await this.getReferenceSize();
             if (referenceSize <= this.db.options.cacheOption.limit &&
                 referenceSize <= this.db.options.storeOption.maxDataPerFile) {
                 return [...this.cache.data.values()];
             }
+            this.queue.queued.all = true;
             this.files.forEach((file) => {
                 const readData = readFileSync(`${this.path}/${file}`).toString();
                 let JSONData;

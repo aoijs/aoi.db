@@ -166,13 +166,13 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.ALL) {
                     const sk = this.clients.get(request.socket.remoteAddress || socket.url);
-                    if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
+                    if (sk?.flags === enums_js_1.TransmitterFlags.WRITE_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
                             s: this._currentSequence,
                             t: Date.now(),
                             db: enums_js_1.WsDBTypes[this.databaseType],
-                            d: "Database is read only",
+                            d: "Database is write only",
                         };
                         socket.send(JSON.stringify(sendData));
                         return;
@@ -181,6 +181,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     let all;
                     if (this.databaseType === "KeyValue") {
                         all = await this.db.all(parsedData.d.table, parsedData.d.filter, parsedData.d.limit, parsedData.d.sortOrder);
+                        console.log({ all, data: parsedData.d });
                     }
                     else if (this.databaseType === "WideColumn") {
                         all = await (parsedData.d.column

@@ -197,13 +197,13 @@ export class Receiver extends TypedEmitter<WsEvents> {
           const sk = this.clients.get(
             request.socket.remoteAddress || socket.url,
           );
-          if (sk?.flags === TransmitterFlags.READ_ONLY) {
+          if (sk?.flags === TransmitterFlags.WRITE_ONLY) {
             const sendData: ReceiverData = {
               op: ReceiverOp.ERROR,
               s: this._currentSequence,
               t: Date.now(),
               db: WsDBTypes[this.databaseType],
-              d: "Database is read only",
+              d: "Database is write only",
             };
             socket.send(JSON.stringify(sendData));
             return;
@@ -217,6 +217,7 @@ export class Receiver extends TypedEmitter<WsEvents> {
               parsedData.d.limit,
               parsedData.d.sortOrder,
             );
+            console.log({all,data:parsedData.d})
           } else if (this.databaseType === "WideColumn") {
             all = await (parsedData.d.column
               ? (<WideColumn>this.db).all(
