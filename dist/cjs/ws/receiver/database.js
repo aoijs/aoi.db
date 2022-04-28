@@ -49,7 +49,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_CONNECTION,
                         db: enums_js_1.WsDBTypes[this.databaseType],
-                        d: "Request Accepted",
+                        d: null,
                         t: Date.now(),
                         s: this._currentSequence,
                     };
@@ -63,7 +63,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         s: this._currentSequence,
                         t: Date.now(),
                         db: enums_js_1.WsDBTypes[this.databaseType],
-                        d: "Ping Acknowledged",
+                        d: null,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -75,7 +75,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         s: this._currentSequence,
                         t: Date.now(),
                         db: enums_js_1.WsDBTypes[this.databaseType],
-                        d: "Tables Opened",
+                        d: null,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -99,7 +99,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         s: this._currentSequence,
                         t: Date.now(),
                         db: enums_js_1.WsDBTypes[this.databaseType],
-                        d: "Set Acknowledged",
+                        d: null,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -155,6 +155,14 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     else if (this.databaseType === "WideColumn") {
                         await this.db.delete(parsedData.d.table, parsedData.d.key, parsedData.d.primary);
                     }
+                    const sendData = {
+                        op: enums_js_1.ReceiverOp.ACK_DELETE,
+                        s: this._currentSequence,
+                        t: Date.now(),
+                        db: enums_js_1.WsDBTypes[this.databaseType],
+                        d: null,
+                    };
+                    socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.ALL) {
                     const sk = this.clients.get(request.socket.remoteAddress || socket.url);

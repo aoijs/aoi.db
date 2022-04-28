@@ -43,7 +43,7 @@ export class Receiver extends TypedEmitter {
                     const sendData = {
                         op: ReceiverOp.ACK_CONNECTION,
                         db: WsDBTypes[this.databaseType],
-                        d: "Request Accepted",
+                        d: null,
                         t: Date.now(),
                         s: this._currentSequence,
                     };
@@ -57,7 +57,7 @@ export class Receiver extends TypedEmitter {
                         s: this._currentSequence,
                         t: Date.now(),
                         db: WsDBTypes[this.databaseType],
-                        d: "Ping Acknowledged",
+                        d: null,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -69,7 +69,7 @@ export class Receiver extends TypedEmitter {
                         s: this._currentSequence,
                         t: Date.now(),
                         db: WsDBTypes[this.databaseType],
-                        d: "Tables Opened",
+                        d: null,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -93,7 +93,7 @@ export class Receiver extends TypedEmitter {
                         s: this._currentSequence,
                         t: Date.now(),
                         db: WsDBTypes[this.databaseType],
-                        d: "Set Acknowledged",
+                        d: null,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -149,6 +149,14 @@ export class Receiver extends TypedEmitter {
                     else if (this.databaseType === "WideColumn") {
                         await this.db.delete(parsedData.d.table, parsedData.d.key, parsedData.d.primary);
                     }
+                    const sendData = {
+                        op: ReceiverOp.ACK_DELETE,
+                        s: this._currentSequence,
+                        t: Date.now(),
+                        db: WsDBTypes[this.databaseType],
+                        d: null,
+                    };
+                    socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === TransmitterOp.ALL) {
                     const sk = this.clients.get(request.socket.remoteAddress || socket.url);
