@@ -16,13 +16,14 @@ export declare class Transmitter extends TypedEmitter<WsEvents> {
     connect(): void;
     set(table: string, key: unknown, data: unknown): Promise<unknown>;
     get(table: string, key: WideColumnDataValueType, id?: WideColumnDataValueType): Promise<unknown>;
-    delete(table: string, key: WideColumnDataValueType, primary: WideColumnDataValueType): void;
+    delete(table: string, key: WideColumnDataValueType, primary: WideColumnDataValueType): Promise<unknown>;
     all(table: string, { filter, limit, column, sortOrder, }?: {
         filter?: (...args: any) => boolean;
         limit?: number;
         column?: string;
         sortOrder?: "asc" | "desc";
     }): Promise<unknown>;
+    clear(table: string): Promise<unknown>;
     get ping(): number;
 }
 //# sourceMappingURL=database.d.ts.map

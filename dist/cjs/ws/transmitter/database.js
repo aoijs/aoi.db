@@ -158,7 +158,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             });
         });
     }
-    delete(table, key, primary) {
+    async delete(table, key, primary) {
         const sendData = {
             op: enums_js_1.TransmitterOp.DELETE,
             d: {
@@ -168,6 +168,17 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             },
         };
         this.connection.send(JSON.stringify(sendData));
+        return new Promise((resolve, reject) => {
+            this.connection.once("message", (data) => {
+                const parsedData = JSON.parse(data);
+                if (parsedData.op === enums_js_1.ReceiverOp.ACK_DELETE) {
+                    resolve(parsedData.d);
+                }
+                else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
+                    reject(parsedData.d);
+                }
+            });
+        });
     }
     async all(table, { filter, limit, column, sortOrder, } = {}) {
         const sendData = {
@@ -185,6 +196,26 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_ALL) {
+                    resolve(parsedData.d);
+                }
+                else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
+                    reject(parsedData.d);
+                }
+            });
+        });
+    }
+    async clear(table) {
+        const sendData = {
+            op: enums_js_1.TransmitterOp.CLEAR,
+            d: {
+                table,
+            },
+        };
+        this.connection.send(JSON.stringify(sendData));
+        return new Promise((resolve, reject) => {
+            this.connection.once("message", (data) => {
+                const parsedData = JSON.parse(data);
+                if (parsedData.op === enums_js_1.ReceiverOp.ACK_CLEAR) {
                     resolve(parsedData.d);
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {

@@ -152,7 +152,7 @@ export class Transmitter extends TypedEmitter {
             });
         });
     }
-    delete(table, key, primary) {
+    async delete(table, key, primary) {
         const sendData = {
             op: TransmitterOp.DELETE,
             d: {
@@ -162,6 +162,17 @@ export class Transmitter extends TypedEmitter {
             },
         };
         this.connection.send(JSON.stringify(sendData));
+        return new Promise((resolve, reject) => {
+            this.connection.once("message", (data) => {
+                const parsedData = JSON.parse(data);
+                if (parsedData.op === ReceiverOp.ACK_DELETE) {
+                    resolve(parsedData.d);
+                }
+                else if (parsedData.op === ReceiverOp.ERROR) {
+                    reject(parsedData.d);
+                }
+            });
+        });
     }
     async all(table, { filter, limit, column, sortOrder, } = {}) {
         const sendData = {
@@ -179,6 +190,26 @@ export class Transmitter extends TypedEmitter {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
                 if (parsedData.op === ReceiverOp.ACK_ALL) {
+                    resolve(parsedData.d);
+                }
+                else if (parsedData.op === ReceiverOp.ERROR) {
+                    reject(parsedData.d);
+                }
+            });
+        });
+    }
+    async clear(table) {
+        const sendData = {
+            op: TransmitterOp.CLEAR,
+            d: {
+                table,
+            },
+        };
+        this.connection.send(JSON.stringify(sendData));
+        return new Promise((resolve, reject) => {
+            this.connection.once("message", (data) => {
+                const parsedData = JSON.parse(data);
+                if (parsedData.op === ReceiverOp.ACK_CLEAR) {
                     resolve(parsedData.d);
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {

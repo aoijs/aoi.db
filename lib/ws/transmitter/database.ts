@@ -204,7 +204,7 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       });
     });
   }
-  delete(
+  async delete(
     table: string,
     key: WideColumnDataValueType,
     primary: WideColumnDataValueType,
@@ -218,6 +218,16 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       },
     };
     this.connection.send(JSON.stringify(sendData));
+    return new Promise((resolve, reject) => {
+      this.connection.once("message", (data: string) => {
+        const parsedData = JSON.parse(data);
+        if (parsedData.op === ReceiverOp.ACK_DELETE) {
+          resolve(parsedData.d);
+        } else if (parsedData.op === ReceiverOp.ERROR) {
+          reject(parsedData.d);
+        }
+      });
+    });
   }
   async all(
     table: string,
@@ -248,6 +258,25 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       this.connection.once("message", (data: string) => {
         const parsedData: ReceiverData = JSON.parse(data);
         if (parsedData.op === ReceiverOp.ACK_ALL) {
+          resolve(parsedData.d);
+        } else if (parsedData.op === ReceiverOp.ERROR) {
+          reject(parsedData.d);
+        }
+      });
+    });
+  }
+  async clear(table : string ) {
+    const sendData = {
+      op: TransmitterOp.CLEAR,
+      d: {
+        table,
+      },
+    };
+    this.connection.send(JSON.stringify(sendData));
+    return new Promise((resolve, reject) => {
+      this.connection.once("message", (data: string) => {
+        const parsedData: ReceiverData = JSON.parse(data);
+        if (parsedData.op === ReceiverOp.ACK_CLEAR) {
           resolve(parsedData.d);
         } else if (parsedData.op === ReceiverOp.ERROR) {
           reject(parsedData.d);

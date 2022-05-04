@@ -10,7 +10,9 @@ export enum TransmitterFlags {
   READ_WRITE = "readWrite",
 }
 
-export enum ReceiverOp {
+
+export enum ReceiverOp
+{
   ACK_CONNECTION,
   ACK_SET,
   ACK_GET,
@@ -22,6 +24,7 @@ export enum ReceiverOp {
   ACK_ROWS,
   ERROR,
   ACK_CACHE,
+  ACK_CLEAR
 }
 
 export enum TransmitterOp {
@@ -42,6 +45,7 @@ export enum TransmitterOp {
   SET,
   GET,
   DELETE,
+  CLEAR,
   ALL,
   PING,
   LOGS,

@@ -157,9 +157,8 @@ export class Column {
         });
 
         this.memMap.set(primaryColumnValue, data);
-      } else {
+      } else if (method === "[delete]") {
         const [primaryColumnRawValue, secondaryColumnRawValue] = value;
-
         const primaryColumnValue = primaryColumn.parse(primaryColumnRawValue);
 
         this.memMap.delete(primaryColumnValue);
