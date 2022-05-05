@@ -15,6 +15,8 @@ import {
   WsEvents,
   TransmitterOptions,
   ReceiverData,
+  KeyValueDatabaseOption,
+  ColumnDatabaseOptions,
 } from "../../typings/interface.js";
 import {
   KeyValueDataValueType,
@@ -25,8 +27,6 @@ import {
 export class Transmitter extends TypedEmitter<WsEvents> {
   #name: string;
   #pass: string;
-  #path: string;
-
   connection: ws;
   cache?: Cacher | Map<WideColumnDataValueType, WideColumnMemMap>;
   options: TransmitterOptions;
@@ -35,13 +35,14 @@ export class Transmitter extends TypedEmitter<WsEvents> {
   sequence: number = 0;
   databaseType: "KeyValue" | "WideColumn" | "Relational";
   #pingTimeout!: NodeJS.Timer;
+  #dbOptions: KeyValueDatabaseOption | ColumnDatabaseOptions;
   constructor(options: TransmitterOptions) {
     super();
     this.connection = new ws(options.path, options.wsOptions);
     this.options = options;
     this.#name = options.name;
     this.#pass = options.pass;
-    this.#path = options.path;
+    this.#dbOptions = options.dbOptions;
     this.databaseType = options.databaseType;
   }
   connect() {
@@ -52,9 +53,7 @@ export class Transmitter extends TypedEmitter<WsEvents> {
         JSON.stringify({
           op: TransmitterOp.REQUEST,
           d: {
-            options: {
-              path: this.#path,
-            },
+            options: this.#dbOptions,
             name: this.#name,
             pass: this.#pass,
             dbtype: WsDBTypes[this.databaseType],

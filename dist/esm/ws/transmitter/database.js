@@ -8,7 +8,6 @@ import { ReceiverOp, WsEventsList as TransmitterEvents, TransmitterOp, WsDBTypes
 export class Transmitter extends TypedEmitter {
     #name;
     #pass;
-    #path;
     connection;
     cache;
     options;
@@ -17,13 +16,14 @@ export class Transmitter extends TypedEmitter {
     sequence = 0;
     databaseType;
     #pingTimeout;
+    #dbOptions;
     constructor(options) {
         super();
         this.connection = new ws(options.path, options.wsOptions);
         this.options = options;
         this.#name = options.name;
         this.#pass = options.pass;
-        this.#path = options.path;
+        this.#dbOptions = options.dbOptions;
         this.databaseType = options.databaseType;
     }
     connect() {
@@ -33,9 +33,7 @@ export class Transmitter extends TypedEmitter {
             this.connection.send(JSON.stringify({
                 op: TransmitterOp.REQUEST,
                 d: {
-                    options: {
-                        path: this.#path,
-                    },
+                    options: this.#dbOptions,
                     name: this.#name,
                     pass: this.#pass,
                     dbtype: WsDBTypes[this.databaseType],

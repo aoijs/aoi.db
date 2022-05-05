@@ -136,6 +136,7 @@ export interface CacherOptions {
     sorted?: boolean;
 }
 export interface TransmitterOptions {
+    dbOptions: KeyValueDatabaseOption | ColumnDatabaseOptions;
     databaseType: "KeyValue" | "WideColumn" | "Relational";
     pass: string;
     name: string;
@@ -175,15 +176,10 @@ export interface ReceiverOptions {
     logEncrypt: string;
     logPath?: string;
     whitelistedIps: "*" | string[];
-    databaseType: "KeyValue" | "WideColumn";
-    path: string;
     wsOptions: ServerOptions;
-    tables: (string | ColumnTableOptions | RelationalTableOptions)[];
-    type: "KeyValue" | "Relational" | "WideColumn";
     cacheOption?: {
         limit?: number;
     };
-    dbOptions: KeyValueDatabaseOption | ColumnDatabaseOptions;
 }
 export interface WsEvents {
     ready(): void;

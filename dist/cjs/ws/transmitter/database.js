@@ -14,7 +14,6 @@ const enums_js_1 = require("../../typings/enums.js");
 class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     #name;
     #pass;
-    #path;
     connection;
     cache;
     options;
@@ -23,13 +22,14 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     sequence = 0;
     databaseType;
     #pingTimeout;
+    #dbOptions;
     constructor(options) {
         super();
         this.connection = new ws_1.default(options.path, options.wsOptions);
         this.options = options;
         this.#name = options.name;
         this.#pass = options.pass;
-        this.#path = options.path;
+        this.#dbOptions = options.dbOptions;
         this.databaseType = options.databaseType;
     }
     connect() {
@@ -39,9 +39,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             this.connection.send(JSON.stringify({
                 op: enums_js_1.TransmitterOp.REQUEST,
                 d: {
-                    options: {
-                        path: this.#path,
-                    },
+                    options: this.#dbOptions,
                     name: this.#name,
                     pass: this.#pass,
                     dbtype: enums_js_1.WsDBTypes[this.databaseType],
