@@ -21,7 +21,8 @@ export declare enum ReceiverOp {
     ACK_ROWS = 8,
     ERROR = 9,
     ACK_CACHE = 10,
-    ACK_CLEAR = 11
+    ACK_CLEAR = 11,
+    ACK_LOGS = 12
 }
 export declare enum TransmitterOp {
     REQUEST = 0,

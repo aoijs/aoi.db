@@ -28,6 +28,7 @@ var ReceiverOp;
     ReceiverOp[ReceiverOp["ERROR"] = 9] = "ERROR";
     ReceiverOp[ReceiverOp["ACK_CACHE"] = 10] = "ACK_CACHE";
     ReceiverOp[ReceiverOp["ACK_CLEAR"] = 11] = "ACK_CLEAR";
+    ReceiverOp[ReceiverOp["ACK_LOGS"] = 12] = "ACK_LOGS";
 })(ReceiverOp = exports.ReceiverOp || (exports.ReceiverOp = {}));
 var TransmitterOp;
 (function (TransmitterOp) {

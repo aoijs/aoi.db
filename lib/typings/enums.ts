@@ -11,6 +11,8 @@ export enum TransmitterFlags {
 }
 
 
+
+
 export enum ReceiverOp
 {
   ACK_CONNECTION,
@@ -24,7 +26,8 @@ export enum ReceiverOp
   ACK_ROWS,
   ERROR,
   ACK_CACHE,
-  ACK_CLEAR
+  ACK_CLEAR,
+  ACK_LOGS
 }
 
 export enum TransmitterOp {

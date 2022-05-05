@@ -12,6 +12,9 @@ const cacher_js_2 = require("../../keyvalue/cacher.js");
 const data_js_2 = require("../../keyvalue/data.js");
 const enums_js_1 = require("../../typings/enums.js");
 class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
+    #name;
+    #pass;
+    #path;
     connection;
     cache;
     options;
@@ -19,18 +22,33 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     lastPingTimestamp = -1;
     sequence = 0;
     databaseType;
+    #pingTimeout;
     constructor(options) {
         super();
         this.connection = new ws_1.default(options.path, options.wsOptions);
         this.options = options;
+        this.#name = options.name;
+        this.#pass = options.pass;
+        this.#path = options.path;
+        this.databaseType = options.databaseType;
     }
     connect() {
         this.connection.on("open", () => {
+            this.#hearbeat();
             this.emit(enums_js_1.WsEventsList.OPEN);
             this.connection.send(JSON.stringify({
                 op: enums_js_1.TransmitterOp.REQUEST,
+                d: {
+                    options: {
+                        path: this.#path,
+                    },
+                    name: this.#name,
+                    pass: this.#pass,
+                    dbtype: enums_js_1.WsDBTypes[this.databaseType],
+                },
             }));
         });
+        this.connection.on("ping", this.#hearbeat);
         this.connection.on("message", (data) => {
             const parsedData = JSON.parse(data);
             this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
@@ -108,6 +126,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             }
         });
         this.connection.on("close", (code, reason) => {
+            this.#clearPingTimeout();
             this.emit(enums_js_1.WsEventsList.CLOSE, code, reason);
         });
         this.connection.on("error", (err) => {
@@ -204,11 +223,12 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             });
         });
     }
-    async clear(table) {
+    async clear(table, column) {
         const sendData = {
             op: enums_js_1.TransmitterOp.CLEAR,
             d: {
                 table,
+                column,
             },
         };
         this.connection.send(JSON.stringify(sendData));
@@ -226,6 +246,18 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     }
     get ping() {
         return this._ping;
+    }
+    #hearbeat() {
+        //@ts-ignore
+        clearTimeout(this.#pingTimeout);
+        // @ts-ignore
+        this.#pingTimeout = setTimeout(() => {
+            // @ts-ignore
+            this.terminate();
+        }, 60000);
+    }
+    #clearPingTimeout() {
+        clearTimeout(this.#pingTimeout);
     }
 }
 exports.Transmitter = Transmitter;

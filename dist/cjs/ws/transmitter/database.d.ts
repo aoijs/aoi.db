@@ -5,6 +5,7 @@ import { Cacher } from "../../keyvalue/cacher.js";
 import { WsEvents, TransmitterOptions } from "../../typings/interface.js";
 import { WideColumnDataValueType } from "../../typings/type.js";
 export declare class Transmitter extends TypedEmitter<WsEvents> {
+    #private;
     connection: ws;
     cache?: Cacher | Map<WideColumnDataValueType, WideColumnMemMap>;
     options: TransmitterOptions;
@@ -23,7 +24,7 @@ export declare class Transmitter extends TypedEmitter<WsEvents> {
         column?: string;
         sortOrder?: "asc" | "desc";
     }): Promise<unknown>;
-    clear(table: string): Promise<unknown>;
+    clear(table: string, column?: string): Promise<unknown>;
     get ping(): number;
 }
 //# sourceMappingURL=database.d.ts.map

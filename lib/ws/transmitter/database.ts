@@ -23,27 +23,47 @@ import {
 } from "../../typings/type.js";
 
 export class Transmitter extends TypedEmitter<WsEvents> {
+  #name: string;
+  #pass: string;
+  #path: string;
+
   connection: ws;
   cache?: Cacher | Map<WideColumnDataValueType, WideColumnMemMap>;
   options: TransmitterOptions;
   _ping: number = -1;
   lastPingTimestamp: number = -1;
   sequence: number = 0;
-  databaseType!: "KeyValue" | "WideColumn" | "Relational";
+  databaseType: "KeyValue" | "WideColumn" | "Relational";
+  #pingTimeout!: NodeJS.Timer;
   constructor(options: TransmitterOptions) {
     super();
     this.connection = new ws(options.path, options.wsOptions);
     this.options = options;
+    this.#name = options.name;
+    this.#pass = options.pass;
+    this.#path = options.path;
+    this.databaseType = options.databaseType;
   }
   connect() {
     this.connection.on("open", () => {
+      this.#hearbeat();
       this.emit(TransmitterEvents.OPEN);
       this.connection.send(
         JSON.stringify({
           op: TransmitterOp.REQUEST,
+          d: {
+            options: {
+              path: this.#path,
+            },
+            name: this.#name,
+            pass: this.#pass,
+            dbtype: WsDBTypes[this.databaseType],
+          },
         }),
       );
     });
+    this.connection.on("ping", this.#hearbeat);
+
     this.connection.on("message", (data: string) => {
       const parsedData: ReceiverData = JSON.parse(data);
       this.emit(TransmitterEvents.MESSAGE, parsedData);
@@ -152,6 +172,7 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       }
     });
     this.connection.on("close", (code, reason) => {
+      this.#clearPingTimeout();
       this.emit(TransmitterEvents.CLOSE, code, reason);
     });
     this.connection.on("error", (err) => {
@@ -265,11 +286,12 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       });
     });
   }
-  async clear(table : string ) {
+  async clear(table: string, column?: string) {
     const sendData = {
       op: TransmitterOp.CLEAR,
       d: {
         table,
+        column,
       },
     };
     this.connection.send(JSON.stringify(sendData));
@@ -286,5 +308,17 @@ export class Transmitter extends TypedEmitter<WsEvents> {
   }
   get ping() {
     return this._ping;
+  }
+  #hearbeat() {
+    //@ts-ignore
+    clearTimeout(this.#pingTimeout);
+    // @ts-ignore
+    this.#pingTimeout = setTimeout(() => {
+      // @ts-ignore
+      this.terminate();
+    }, 60000);
+  }
+  #clearPingTimeout() {
+    clearTimeout(this.#pingTimeout);
   }
 }

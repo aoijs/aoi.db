@@ -1,7 +1,9 @@
-import { ClientOptions,ServerOptions } from "ws";
+import { ClientOptions, ServerOptions } from "ws";
 import { Column } from "../column/column.js";
+import { WideColumn } from "../column/database.js";
+import { KeyValue } from "../keyvalue/database.js";
 import { Table } from "../keyvalue/table.js";
-import { ReceiverOp, TransmitterFlags } from "./enums.js";
+import { ReceiverOp, TransmitterFlags, WsDBTypes } from "./enums.js";
 import {
   CacheReferenceType,
   KeyValueDataValueType,
@@ -112,7 +114,7 @@ export interface TypedDatabaseEvents {
 }
 
 export interface ColumnDatabaseOptions {
-  encryptOption:{
+  encryptOption: {
     securitykey: string;
   };
   tables: ColumnTableOptions[];
@@ -152,6 +154,9 @@ export interface CacherOptions {
 }
 
 export interface TransmitterOptions {
+  databaseType: "KeyValue" | "WideColumn" | "Relational";
+  pass: string;
+  name: string;
   flags:
     | TransmitterFlags.READ_ONLY
     | TransmitterFlags.READ_WRITE
@@ -192,8 +197,10 @@ export interface CacherOptions {
 }
 
 export interface ReceiverOptions {
+  logEncrypt: string;
+  logPath?: string;
   whitelistedIps: "*" | string[];
-  databaseType: "KeyValue" | "WideColumn" ;
+  databaseType: "KeyValue" | "WideColumn";
   path: string;
   wsOptions: ServerOptions;
   tables: (string | ColumnTableOptions | RelationalTableOptions)[];
@@ -201,7 +208,7 @@ export interface ReceiverOptions {
   cacheOption?: {
     limit?: number;
   };
-  dbOptions : KeyValueDatabaseOption | ColumnDatabaseOptions;
+  dbOptions: KeyValueDatabaseOption | ColumnDatabaseOptions;
 }
 
 export interface WsEvents {
@@ -210,7 +217,14 @@ export interface WsEvents {
   debug(message: string): void;
   message(message: ReceiverData): void;
   open(): void;
-  close(code:number,reason?:Buffer): void;
-  error(error:Error): void;
+  close(code: number, reason?: Buffer): void;
+  error(error: Error): void;
   connect(): void;
+}
+
+export interface SocketData {
+  tables?: string[] | ColumnTableOptions[];
+  flags?: TransmitterFlags;
+  databaseType: WsDBTypes;
+  db: KeyValue | WideColumn;
 }

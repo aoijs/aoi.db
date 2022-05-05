@@ -1,8 +1,10 @@
 /// <reference types="node" />
 import { ClientOptions, ServerOptions } from "ws";
 import { Column } from "../column/column.js";
+import { WideColumn } from "../column/database.js";
+import { KeyValue } from "../keyvalue/database.js";
 import { Table } from "../keyvalue/table.js";
-import { ReceiverOp, TransmitterFlags } from "./enums.js";
+import { ReceiverOp, TransmitterFlags, WsDBTypes } from "./enums.js";
 import { CacheReferenceType, KeyValueDataValueType, RelationalDataValueType, WideColumnTypes } from "./type.js";
 export interface KeyValueDataOption {
     value: KeyValueDataValueType;
@@ -134,6 +136,9 @@ export interface CacherOptions {
     sorted?: boolean;
 }
 export interface TransmitterOptions {
+    databaseType: "KeyValue" | "WideColumn" | "Relational";
+    pass: string;
+    name: string;
     flags: TransmitterFlags.READ_ONLY | TransmitterFlags.READ_WRITE | TransmitterFlags.WRITE_ONLY;
     path: string;
     wsOptions: ClientOptions;
@@ -167,6 +172,8 @@ export interface CacherOptions {
     sorted?: boolean;
 }
 export interface ReceiverOptions {
+    logEncrypt: string;
+    logPath?: string;
     whitelistedIps: "*" | string[];
     databaseType: "KeyValue" | "WideColumn";
     path: string;
@@ -187,5 +194,11 @@ export interface WsEvents {
     close(code: number, reason?: Buffer): void;
     error(error: Error): void;
     connect(): void;
+}
+export interface SocketData {
+    tables?: string[] | ColumnTableOptions[];
+    flags?: TransmitterFlags;
+    databaseType: WsDBTypes;
+    db: KeyValue | WideColumn;
 }
 //# sourceMappingURL=interface.d.ts.map

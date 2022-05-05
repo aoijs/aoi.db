@@ -4,8 +4,11 @@ import { WideColumnMemMap } from "../../column/cacher.js";
 import { WideColumnData } from "../../column/data.js";
 import { Cacher } from "../../keyvalue/cacher.js";
 import { Data } from "../../keyvalue/data.js";
-import { ReceiverOp, WsEventsList as TransmitterEvents, TransmitterOp, TransmitterDBTypes, } from "../../typings/enums.js";
+import { ReceiverOp, WsEventsList as TransmitterEvents, TransmitterOp, WsDBTypes, TransmitterDBTypes, } from "../../typings/enums.js";
 export class Transmitter extends TypedEmitter {
+    #name;
+    #pass;
+    #path;
     connection;
     cache;
     options;
@@ -13,18 +16,33 @@ export class Transmitter extends TypedEmitter {
     lastPingTimestamp = -1;
     sequence = 0;
     databaseType;
+    #pingTimeout;
     constructor(options) {
         super();
         this.connection = new ws(options.path, options.wsOptions);
         this.options = options;
+        this.#name = options.name;
+        this.#pass = options.pass;
+        this.#path = options.path;
+        this.databaseType = options.databaseType;
     }
     connect() {
         this.connection.on("open", () => {
+            this.#hearbeat();
             this.emit(TransmitterEvents.OPEN);
             this.connection.send(JSON.stringify({
                 op: TransmitterOp.REQUEST,
+                d: {
+                    options: {
+                        path: this.#path,
+                    },
+                    name: this.#name,
+                    pass: this.#pass,
+                    dbtype: WsDBTypes[this.databaseType],
+                },
             }));
         });
+        this.connection.on("ping", this.#hearbeat);
         this.connection.on("message", (data) => {
             const parsedData = JSON.parse(data);
             this.emit(TransmitterEvents.MESSAGE, parsedData);
@@ -102,6 +120,7 @@ export class Transmitter extends TypedEmitter {
             }
         });
         this.connection.on("close", (code, reason) => {
+            this.#clearPingTimeout();
             this.emit(TransmitterEvents.CLOSE, code, reason);
         });
         this.connection.on("error", (err) => {
@@ -198,11 +217,12 @@ export class Transmitter extends TypedEmitter {
             });
         });
     }
-    async clear(table) {
+    async clear(table, column) {
         const sendData = {
             op: TransmitterOp.CLEAR,
             d: {
                 table,
+                column,
             },
         };
         this.connection.send(JSON.stringify(sendData));
@@ -220,6 +240,18 @@ export class Transmitter extends TypedEmitter {
     }
     get ping() {
         return this._ping;
+    }
+    #hearbeat() {
+        //@ts-ignore
+        clearTimeout(this.#pingTimeout);
+        // @ts-ignore
+        this.#pingTimeout = setTimeout(() => {
+            // @ts-ignore
+            this.terminate();
+        }, 60000);
+    }
+    #clearPingTimeout() {
+        clearTimeout(this.#pingTimeout);
     }
 }
 //# sourceMappingURL=database.js.map
