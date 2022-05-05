@@ -12,3 +12,5 @@ benchmarking
 /.vscode
 /a.js
 /Receiverdatabase
+/db
+/logs

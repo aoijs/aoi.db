@@ -21,7 +21,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     lastPingTimestamp = -1;
     sequence = 0;
     databaseType;
-    #pingTimeout;
+    pingTimeout;
     #dbOptions;
     constructor(options) {
         super();
@@ -42,7 +42,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
                     options: this.#dbOptions,
                     name: this.#name,
                     pass: this.#pass,
-                    dbtype: enums_js_1.WsDBTypes[this.databaseType],
+                    dbType: enums_js_1.WsDBTypes[this.databaseType],
                 },
             }));
         });
@@ -246,16 +246,14 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return this._ping;
     }
     #hearbeat() {
-        //@ts-ignore
-        clearTimeout(this.#pingTimeout);
-        // @ts-ignore
-        this.#pingTimeout = setTimeout(() => {
-            // @ts-ignore
-            this.terminate();
+        if (this.pingTimeout)
+            clearTimeout(this.pingTimeout);
+        this.pingTimeout = setTimeout(() => {
+            this.connection.terminate();
         }, 60000);
     }
     #clearPingTimeout() {
-        clearTimeout(this.#pingTimeout);
+        clearTimeout(this.pingTimeout);
     }
 }
 exports.Transmitter = Transmitter;

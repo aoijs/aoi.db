@@ -1,11 +1,11 @@
 import { randomBytes } from "crypto";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, } from "fs";
 import { TypedEmitter } from "tiny-typed-emitter";
 import ws from "ws";
 import { WideColumn } from "../../column/database.js";
 import { KeyValue } from "../../keyvalue/database.js";
 import { ReceiverOp, TransmitterFlags, TransmitterOp, WsDBTypes, WsEventsList as ReceiverEvents, } from "../../typings/enums.js";
-import { encrypt } from "../../utils/functions.js";
+import { decrypt, encrypt, JSONParser, } from "../../utils/functions.js";
 function heartbeat(socket) {
     //@ts-ignore
     socket.isAlive = true;
@@ -26,16 +26,17 @@ export class Receiver extends TypedEmitter {
         this.logData = {
             currentLogFile: "",
             logs: {},
-            path: this.options.logPath ?? "./logs",
+            path: this.options.logPath ?? "./logs/",
             key: this.options.logEncrypt,
         };
     }
     connect() {
-        if (!existsSync(this.options.logPath ?? "./logs/")) {
+        if (!existsSync(this.logData.path)) {
+            mkdirSync(this.logData.path, { recursive: true });
             const iv = randomBytes(16).toString("hex");
-            writeFileSync(this.options.logPath ?? "./logs/1_1000.log", iv);
+            writeFileSync(this.logData.path + "1_1000.log", iv);
             this.logData.logs["1_1000.log"] = iv;
-            this.logData.currentLogFile = "./logs/1_1000.log";
+            this.logData.currentLogFile = this.logData.path + "1_1000.log";
         }
         else {
             const files = readdirSync(this.logData.path).sort((a, b) => Number(a.split("_")[0]) - Number(b.split("_")[0]));
@@ -65,12 +66,43 @@ export class Receiver extends TypedEmitter {
                 if (parsedData.op === TransmitterOp.REQUEST) {
                     let data;
                     if (parsedData.d.dbType === WsDBTypes.KeyValue) {
-                        const hash = encrypt(`name:${parsedData.d.name}@pass:${parsedData.d.pass}@path:${parsedData.d.options.path ?? "./database/"}@type:${parsedData.d.dbType}`, this.logData.key);
-                        (parsedData.d.options).path = `${hash.data}_${hash.iv}`;
+                        const path = `name:${parsedData.d.name}@pass:${parsedData.d.pass}@path:${parsedData.d.options.path ?? "./database/"}@type:${parsedData.d.dbType}`;
+                        const hash = encrypt(path, this.logData.key);
+                        console.log({ options: parsedData.d.options });
+                        if (existsSync(parsedData.d.options.path)) {
+                            const readData = JSONParser(readFileSync(parsedData.d.options.path + "owner.hsh").toString());
+                            const decrypted = decrypt(readData, this.logData.key);
+                            if (decrypted !== path) {
+                                const [_name, _pass, _path, _type] = decrypted.split("@");
+                                if (`name:${parsedData.d.name}` === _name &&
+                                    `pass:${parsedData.d.pass}` !== _pass &&
+                                    `path:${parsedData.d.options.path}` === _path &&
+                                    `type:${parsedData.d.dbType}` === _type) {
+                                    socket.close(3000, "Wrong Password");
+                                    return;
+                                }
+                                else if (`name:${parsedData.d.name}` === _name &&
+                                    `pass:${parsedData.d.pass}` === _pass &&
+                                    `path:${parsedData.d.options.path}` === _path &&
+                                    `type:${parsedData.d.dbType}` !== _type) {
+                                    socket.close(3000, "Wrong Type");
+                                    return;
+                                }
+                                else if (`name:${parsedData.d.name}` === _name &&
+                                    `pass:${parsedData.d.pass}` === _pass &&
+                                    `path:${parsedData.d.options.path}` !== _path) {
+                                    parsedData.d.options.path = parsedData.d.options.path + "_1";
+                                }
+                            }
+                        }
                         data = {
                             databaseType: WsDBTypes.KeyValue,
                             db: new KeyValue(parsedData.d.options),
                         };
+                        data.db.connect();
+                        if (!existsSync(parsedData.d.options.path + "/owner.hsh")) {
+                            writeFileSync(data.db.options.path + "/owner.hsh", JSON.stringify(hash));
+                        }
                         this.clients.set(request.socket.remoteAddress, data);
                     }
                     else {

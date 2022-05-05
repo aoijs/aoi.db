@@ -15,7 +15,7 @@ export class Transmitter extends TypedEmitter {
     lastPingTimestamp = -1;
     sequence = 0;
     databaseType;
-    #pingTimeout;
+    pingTimeout;
     #dbOptions;
     constructor(options) {
         super();
@@ -36,7 +36,7 @@ export class Transmitter extends TypedEmitter {
                     options: this.#dbOptions,
                     name: this.#name,
                     pass: this.#pass,
-                    dbtype: WsDBTypes[this.databaseType],
+                    dbType: WsDBTypes[this.databaseType],
                 },
             }));
         });
@@ -240,16 +240,14 @@ export class Transmitter extends TypedEmitter {
         return this._ping;
     }
     #hearbeat() {
-        //@ts-ignore
-        clearTimeout(this.#pingTimeout);
-        // @ts-ignore
-        this.#pingTimeout = setTimeout(() => {
-            // @ts-ignore
-            this.terminate();
+        if (this.pingTimeout)
+            clearTimeout(this.pingTimeout);
+        this.pingTimeout = setTimeout(() => {
+            this.connection.terminate();
         }, 60000);
     }
     #clearPingTimeout() {
-        clearTimeout(this.#pingTimeout);
+        clearTimeout(this.pingTimeout);
     }
 }
 //# sourceMappingURL=database.js.map

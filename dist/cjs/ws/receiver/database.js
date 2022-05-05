@@ -32,16 +32,17 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
         this.logData = {
             currentLogFile: "",
             logs: {},
-            path: this.options.logPath ?? "./logs",
+            path: this.options.logPath ?? "./logs/",
             key: this.options.logEncrypt,
         };
     }
     connect() {
-        if (!(0, fs_1.existsSync)(this.options.logPath ?? "./logs/")) {
+        if (!(0, fs_1.existsSync)(this.logData.path)) {
+            (0, fs_1.mkdirSync)(this.logData.path, { recursive: true });
             const iv = (0, crypto_1.randomBytes)(16).toString("hex");
-            (0, fs_1.writeFileSync)(this.options.logPath ?? "./logs/1_1000.log", iv);
+            (0, fs_1.writeFileSync)(this.logData.path + "1_1000.log", iv);
             this.logData.logs["1_1000.log"] = iv;
-            this.logData.currentLogFile = "./logs/1_1000.log";
+            this.logData.currentLogFile = this.logData.path + "1_1000.log";
         }
         else {
             const files = (0, fs_1.readdirSync)(this.logData.path).sort((a, b) => Number(a.split("_")[0]) - Number(b.split("_")[0]));
@@ -71,12 +72,43 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                 if (parsedData.op === enums_js_1.TransmitterOp.REQUEST) {
                     let data;
                     if (parsedData.d.dbType === enums_js_1.WsDBTypes.KeyValue) {
-                        const hash = (0, functions_js_1.encrypt)(`name:${parsedData.d.name}@pass:${parsedData.d.pass}@path:${parsedData.d.options.path ?? "./database/"}@type:${parsedData.d.dbType}`, this.logData.key);
-                        (parsedData.d.options).path = `${hash.data}_${hash.iv}`;
+                        const path = `name:${parsedData.d.name}@pass:${parsedData.d.pass}@path:${parsedData.d.options.path ?? "./database/"}@type:${parsedData.d.dbType}`;
+                        const hash = (0, functions_js_1.encrypt)(path, this.logData.key);
+                        console.log({ options: parsedData.d.options });
+                        if ((0, fs_1.existsSync)(parsedData.d.options.path)) {
+                            const readData = (0, functions_js_1.JSONParser)((0, fs_1.readFileSync)(parsedData.d.options.path + "owner.hsh").toString());
+                            const decrypted = (0, functions_js_1.decrypt)(readData, this.logData.key);
+                            if (decrypted !== path) {
+                                const [_name, _pass, _path, _type] = decrypted.split("@");
+                                if (`name:${parsedData.d.name}` === _name &&
+                                    `pass:${parsedData.d.pass}` !== _pass &&
+                                    `path:${parsedData.d.options.path}` === _path &&
+                                    `type:${parsedData.d.dbType}` === _type) {
+                                    socket.close(3000, "Wrong Password");
+                                    return;
+                                }
+                                else if (`name:${parsedData.d.name}` === _name &&
+                                    `pass:${parsedData.d.pass}` === _pass &&
+                                    `path:${parsedData.d.options.path}` === _path &&
+                                    `type:${parsedData.d.dbType}` !== _type) {
+                                    socket.close(3000, "Wrong Type");
+                                    return;
+                                }
+                                else if (`name:${parsedData.d.name}` === _name &&
+                                    `pass:${parsedData.d.pass}` === _pass &&
+                                    `path:${parsedData.d.options.path}` !== _path) {
+                                    parsedData.d.options.path = parsedData.d.options.path + "_1";
+                                }
+                            }
+                        }
                         data = {
                             databaseType: enums_js_1.WsDBTypes.KeyValue,
                             db: new database_js_2.KeyValue(parsedData.d.options),
                         };
+                        data.db.connect();
+                        if (!(0, fs_1.existsSync)(parsedData.d.options.path + "/owner.hsh")) {
+                            (0, fs_1.writeFileSync)(data.db.options.path + "/owner.hsh", JSON.stringify(hash));
+                        }
                         this.clients.set(request.socket.remoteAddress, data);
                     }
                     else {

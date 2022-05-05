@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { TypedEmitter } from "tiny-typed-emitter";
 import ws from "ws";
 import { WideColumnMemMap } from "../../column/cacher.js";
@@ -13,6 +14,7 @@ export declare class Transmitter extends TypedEmitter<WsEvents> {
     lastPingTimestamp: number;
     sequence: number;
     databaseType: "KeyValue" | "WideColumn" | "Relational";
+    pingTimeout: NodeJS.Timer;
     constructor(options: TransmitterOptions);
     connect(): void;
     set(table: string, key: unknown, data: unknown): Promise<unknown>;
