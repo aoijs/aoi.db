@@ -1,1 +1,0 @@
-  if ((testEval.match(reg) || testEval.toLowerCase().includes("process") || testEval.test(/require\(("|'|`)os("|'|`)\)/gi)) && message.author.id !== "715755977483223081")
