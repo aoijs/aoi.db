@@ -144,7 +144,6 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_SET) {
                     resolve({
                         o: performance.now() - start,
@@ -171,7 +170,6 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_GET) {
                     resolve({ o: performance.now() - start, ...parsedData });
                 }
@@ -195,7 +193,6 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_DELETE) {
                     resolve({
                         o: performance.now() - start,
@@ -224,7 +221,6 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_ALL) {
                     resolve({
                         o: performance.now() - start,
@@ -250,7 +246,6 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_CLEAR) {
                     resolve({
                         o: performance.now() - start,

@@ -150,7 +150,6 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_SET) {
                     resolve({
                         o: performance.now() - start,
@@ -177,7 +176,6 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_GET) {
                     resolve({ o: performance.now() - start, ...parsedData });
                 }
@@ -201,7 +199,6 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_DELETE) {
                     resolve({
                         o: performance.now() - start,
@@ -230,7 +227,6 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_ALL) {
                     resolve({
                         o: performance.now() - start,
@@ -256,7 +252,6 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
-                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_CLEAR) {
                     resolve({
                         o: performance.now() - start,
