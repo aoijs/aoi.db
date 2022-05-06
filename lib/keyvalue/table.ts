@@ -497,11 +497,11 @@ export class Table {
     this._createReferencePath();
   }
   getPing() {
-    if (this.#ping !== -1 && Date.now() - this.#lastPingTimestamp < 20000)
+    if (this.#ping !== -1 && Date.now() - this.#lastPingTimestamp < 60000)
       return this.#ping;
     else if (
       this.#ping === -1 ||
-      Date.now() - this.#lastPingTimestamp > 20000
+      Date.now() - this.#lastPingTimestamp > 60000
     ) {
       const randomFile =
         this.files[Math.floor(Math.random() * this.files.length)];

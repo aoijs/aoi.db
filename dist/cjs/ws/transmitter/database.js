@@ -11,6 +11,7 @@ const data_js_1 = require("../../column/data.js");
 const cacher_js_2 = require("../../keyvalue/cacher.js");
 const data_js_2 = require("../../keyvalue/data.js");
 const enums_js_1 = require("../../typings/enums.js");
+const functions_js_1 = require("../../utils/functions.js");
 class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     #name;
     #pass;
@@ -34,7 +35,7 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     }
     connect() {
         this.connection.on("open", () => {
-            this.#hearbeat();
+            this.#heartbeat();
             this.emit(enums_js_1.WsEventsList.OPEN);
             this.connection.send(JSON.stringify({
                 op: enums_js_1.TransmitterOp.REQUEST,
@@ -46,7 +47,10 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
                 },
             }));
         });
-        this.connection.on("ping", this.#hearbeat);
+        this.connection.on("ping", () => {
+            this.#heartbeat();
+            console.log("pinged!");
+        });
         this.connection.on("message", (data) => {
             const parsedData = JSON.parse(data);
             this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
@@ -131,29 +135,36 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
             this.emit(enums_js_1.WsEventsList.ERROR, err);
         });
     }
-    async set(table, key, data) {
+    async _set(table, key, data) {
+        const start = performance.now();
+        const stringifiedData = (0, functions_js_1.parseData)(data, enums_js_1.WsDBTypes[this.databaseType]);
         const sendData = {
             op: enums_js_1.TransmitterOp.SET,
             d: {
                 table,
                 key,
-                data,
+                data: stringifiedData,
             },
         };
         this.connection.send(JSON.stringify(sendData));
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_SET) {
-                    resolve(parsedData.d);
+                    resolve({
+                        o: performance.now() - start,
+                        ...parsedData,
+                    });
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
     }
-    async get(table, key, id) {
+    async _get(table, key, id) {
+        const start = performance.now();
         const sendData = {
             op: enums_js_1.TransmitterOp.GET,
             d: {
@@ -166,16 +177,18 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_GET) {
-                    resolve(parsedData.d);
+                    resolve({ o: performance.now() - start, ...parsedData });
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
     }
-    async delete(table, key, primary) {
+    async _delete(table, key, primary) {
+        const start = performance.now();
         const sendData = {
             op: enums_js_1.TransmitterOp.DELETE,
             d: {
@@ -188,16 +201,21 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_DELETE) {
-                    resolve(parsedData.d);
+                    resolve({
+                        o: performance.now() - start,
+                        ...parsedData,
+                    });
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
     }
-    async all(table, { filter, limit, column, sortOrder, } = {}) {
+    async _all(table, { filter, limit, column, sortOrder, } = {}) {
+        const start = performance.now();
         const sendData = {
             op: enums_js_1.TransmitterOp.ALL,
             d: {
@@ -212,16 +230,21 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_ALL) {
-                    resolve(parsedData.d);
+                    resolve({
+                        o: performance.now() - start,
+                        ...parsedData,
+                    });
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
     }
-    async clear(table, column) {
+    async _clear(table, column) {
+        const start = performance.now();
         const sendData = {
             op: enums_js_1.TransmitterOp.CLEAR,
             d: {
@@ -233,11 +256,15 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.ReceiverOp.ACK_CLEAR) {
-                    resolve(parsedData.d);
+                    resolve({
+                        o: performance.now() - start,
+                        ...parsedData,
+                    });
                 }
                 else if (parsedData.op === enums_js_1.ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
@@ -245,15 +272,51 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
     get ping() {
         return this._ping;
     }
-    #hearbeat() {
+    #heartbeat() {
         if (this.pingTimeout)
             clearTimeout(this.pingTimeout);
         this.pingTimeout = setTimeout(() => {
+            console.log("cleared");
             this.connection.terminate();
         }, 60000);
     }
     #clearPingTimeout() {
         clearTimeout(this.pingTimeout);
+    }
+    async analyze(method, data) {
+        if (method === "set") {
+            return await this._set(data.table, data.key, data.data);
+        }
+        else if (method === "get") {
+            return await this._get(data.table, data.key, data.id);
+        }
+        else if (method === "all") {
+            return await this._all(data.table, data);
+        }
+        else if (method === "delete") {
+            return await this._delete(data.table, data.key, data.primary);
+        }
+        else if (method === "clear") {
+            return await this.clear(data.table, data.column);
+        }
+        else {
+            throw new Error("Invalid method");
+        }
+    }
+    async set(table, key, data) {
+        return (await this._set(table, key, data)).d;
+    }
+    async get(table, key, id) {
+        return (await this._get(table, key, id)).d;
+    }
+    async delete(table, key, primary) {
+        return (await this._delete(table, key, primary)).d;
+    }
+    async all(table, { filter, limit, column, sortOrder, } = {}) {
+        return (await this._all(table, { filter, limit, column, sortOrder })).d;
+    }
+    async clear(table, column) {
+        return (await this._clear(table, column)).d;
     }
 }
 exports.Transmitter = Transmitter;

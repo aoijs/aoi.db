@@ -5,6 +5,7 @@ import { WideColumnData } from "../../column/data.js";
 import { Cacher } from "../../keyvalue/cacher.js";
 import { Data } from "../../keyvalue/data.js";
 import { ReceiverOp, WsEventsList as TransmitterEvents, TransmitterOp, WsDBTypes, TransmitterDBTypes, } from "../../typings/enums.js";
+import { parseData } from "../../utils/functions.js";
 export class Transmitter extends TypedEmitter {
     #name;
     #pass;
@@ -28,7 +29,7 @@ export class Transmitter extends TypedEmitter {
     }
     connect() {
         this.connection.on("open", () => {
-            this.#hearbeat();
+            this.#heartbeat();
             this.emit(TransmitterEvents.OPEN);
             this.connection.send(JSON.stringify({
                 op: TransmitterOp.REQUEST,
@@ -40,7 +41,10 @@ export class Transmitter extends TypedEmitter {
                 },
             }));
         });
-        this.connection.on("ping", this.#hearbeat);
+        this.connection.on("ping", () => {
+            this.#heartbeat();
+            console.log("pinged!");
+        });
         this.connection.on("message", (data) => {
             const parsedData = JSON.parse(data);
             this.emit(TransmitterEvents.MESSAGE, parsedData);
@@ -125,29 +129,36 @@ export class Transmitter extends TypedEmitter {
             this.emit(TransmitterEvents.ERROR, err);
         });
     }
-    async set(table, key, data) {
+    async _set(table, key, data) {
+        const start = performance.now();
+        const stringifiedData = parseData(data, WsDBTypes[this.databaseType]);
         const sendData = {
             op: TransmitterOp.SET,
             d: {
                 table,
                 key,
-                data,
+                data: stringifiedData,
             },
         };
         this.connection.send(JSON.stringify(sendData));
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_SET) {
-                    resolve(parsedData.d);
+                    resolve({
+                        o: performance.now() - start,
+                        ...parsedData,
+                    });
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
     }
-    async get(table, key, id) {
+    async _get(table, key, id) {
+        const start = performance.now();
         const sendData = {
             op: TransmitterOp.GET,
             d: {
@@ -160,16 +171,18 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_GET) {
-                    resolve(parsedData.d);
+                    resolve({ o: performance.now() - start, ...parsedData });
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
     }
-    async delete(table, key, primary) {
+    async _delete(table, key, primary) {
+        const start = performance.now();
         const sendData = {
             op: TransmitterOp.DELETE,
             d: {
@@ -182,16 +195,21 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_DELETE) {
-                    resolve(parsedData.d);
+                    resolve({
+                        o: performance.now() - start,
+                        ...parsedData,
+                    });
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
     }
-    async all(table, { filter, limit, column, sortOrder, } = {}) {
+    async _all(table, { filter, limit, column, sortOrder, } = {}) {
+        const start = performance.now();
         const sendData = {
             op: TransmitterOp.ALL,
             d: {
@@ -206,16 +224,21 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_ALL) {
-                    resolve(parsedData.d);
+                    resolve({
+                        o: performance.now() - start,
+                        ...parsedData,
+                    });
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
     }
-    async clear(table, column) {
+    async _clear(table, column) {
+        const start = performance.now();
         const sendData = {
             op: TransmitterOp.CLEAR,
             d: {
@@ -227,11 +250,15 @@ export class Transmitter extends TypedEmitter {
         return new Promise((resolve, reject) => {
             this.connection.once("message", (data) => {
                 const parsedData = JSON.parse(data);
+                this.emit(TransmitterEvents.MESSAGE, parsedData);
                 if (parsedData.op === ReceiverOp.ACK_CLEAR) {
-                    resolve(parsedData.d);
+                    resolve({
+                        o: performance.now() - start,
+                        ...parsedData,
+                    });
                 }
                 else if (parsedData.op === ReceiverOp.ERROR) {
-                    reject(parsedData.d);
+                    reject(parsedData);
                 }
             });
         });
@@ -239,15 +266,51 @@ export class Transmitter extends TypedEmitter {
     get ping() {
         return this._ping;
     }
-    #hearbeat() {
+    #heartbeat() {
         if (this.pingTimeout)
             clearTimeout(this.pingTimeout);
         this.pingTimeout = setTimeout(() => {
+            console.log("cleared");
             this.connection.terminate();
         }, 60000);
     }
     #clearPingTimeout() {
         clearTimeout(this.pingTimeout);
+    }
+    async analyze(method, data) {
+        if (method === "set") {
+            return await this._set(data.table, data.key, data.data);
+        }
+        else if (method === "get") {
+            return await this._get(data.table, data.key, data.id);
+        }
+        else if (method === "all") {
+            return await this._all(data.table, data);
+        }
+        else if (method === "delete") {
+            return await this._delete(data.table, data.key, data.primary);
+        }
+        else if (method === "clear") {
+            return await this.clear(data.table, data.column);
+        }
+        else {
+            throw new Error("Invalid method");
+        }
+    }
+    async set(table, key, data) {
+        return (await this._set(table, key, data)).d;
+    }
+    async get(table, key, id) {
+        return (await this._get(table, key, id)).d;
+    }
+    async delete(table, key, primary) {
+        return (await this._delete(table, key, primary)).d;
+    }
+    async all(table, { filter, limit, column, sortOrder, } = {}) {
+        return (await this._all(table, { filter, limit, column, sortOrder })).d;
+    }
+    async clear(table, column) {
+        return (await this._clear(table, column)).d;
     }
 }
 //# sourceMappingURL=database.js.map

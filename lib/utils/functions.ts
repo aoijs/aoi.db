@@ -1,7 +1,11 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { createReadStream } from "fs";
-import { HashData, KeyValueJSONOption } from "../typings/interface";
-import { WideColumnDataValueType } from "../typings/type";
+import { WsDBTypes } from "../typings/enums.js";
+import { HashData, KeyValueJSONOption } from "../typings/interface.js";
+import {
+  KeyValueDataValueType,
+  WideColumnDataValueType,
+} from "../typings/type.js";
 const algorithm = "aes-256-ctr";
 export function JSONParser<T>(readData: string) {
   let res: T;
@@ -79,40 +83,58 @@ export function decryptColumnFile(
   return decrpyted.toString();
 }
 
-export function stringify(data:WideColumnDataValueType) {
-  if(typeof data === "string") {
+export function stringify(data: WideColumnDataValueType) {
+  if (typeof data === "string") {
     return data;
-  } else if(typeof data === "number") {
+  } else if (typeof data === "number") {
     return data.toString();
-  } else if(typeof data === "boolean") {
+  } else if (typeof data === "boolean") {
     return data.toString();
-  } else if(data instanceof Date) {
+  } else if (data instanceof Date) {
     return data.toISOString();
-  } else if(typeof data === "object" && !(data instanceof Buffer || data instanceof ReadableStream)) {
+  } else if (
+    typeof data === "object" &&
+    !(data instanceof Buffer || data instanceof ReadableStream)
+  ) {
     return JSON.stringify(data);
-  } else if(typeof data === "bigint") {
+  } else if (typeof data === "bigint") {
     return data.toString();
-  } else if(data instanceof Buffer){
+  } else if (data instanceof Buffer) {
     return data.toString("hex");
   } else {
     return data.toString();
   }
-
 }
 
-export function countFileLines(filePath:string):Promise<number> {
+export function countFileLines(filePath: string): Promise<number> {
   return new Promise((resolve, reject) => {
-  let lineCount = 0;
-  createReadStream(filePath)
-    .on("data", (buffer:Buffer) => {
-      let idx = -1;
-      lineCount--; // Because the loop will run once for idx=-1
-      do {
-        idx = buffer.indexOf(10, idx+1);
-        lineCount++;
-      } while (idx !== -1);
-    }).on("end", () => {
-      resolve(lineCount);
-    }).on("error", reject);
+    let lineCount = 0;
+    createReadStream(filePath)
+      .on("data", (buffer: Buffer) => {
+        let idx = -1;
+        lineCount--; // Because the loop will run once for idx=-1
+        do {
+          idx = buffer.indexOf(10, idx + 1);
+          lineCount++;
+        } while (idx !== -1);
+      })
+      .on("end", () => {
+        resolve(lineCount);
+      })
+      .on("error", reject);
   });
-};
+}
+
+export function parseData(data: WideColumnDataValueType | KeyValueJSONOption, type: WsDBTypes) {
+  if (type === WsDBTypes.KeyValue) {
+    const value = (<KeyValueJSONOption>data).value;
+    const obj = {
+      type: value instanceof Date ? "date" : typeof value,
+      value: value?.toString(),
+    };
+    return obj;
+  }
+  else if(type === WsDBTypes.WideColumn) {
+    return stringify(<WideColumnDataValueType>data);
+  }
+}

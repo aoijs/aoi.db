@@ -224,17 +224,20 @@ export class Receiver extends TypedEmitter<WsEvents> {
             return;
           }
           this._currentSequence += 1;
+          const start = performance.now();
           await sk.db.set(
             parsedData.d.table,
             parsedData.d.key,
             parsedData.d.data,
           );
+          const end = performance.now()- start;
           const sendData: ReceiverData = {
             op: ReceiverOp.ACK_SET,
             s: this._currentSequence,
             t: Date.now(),
             db: sk.databaseType,
             d: null,
+            a:end,
           };
           socket.send(JSON.stringify(sendData));
         } else if (parsedData.op === TransmitterOp.GET) {
@@ -254,16 +257,21 @@ export class Receiver extends TypedEmitter<WsEvents> {
             return;
           }
           let get;
+          let searchTime;
           if (sk.databaseType === WsDBTypes.KeyValue) {
             const db = <KeyValue>sk.db;
+            const start = performance.now();
             get = await db.get(parsedData.d.table, parsedData.d.key);
+            searchTime = performance.now() - start;
           } else {
             const db = <WideColumn>sk.db;
+            const start = performance.now();
             get = await db.get(
               parsedData.d.table,
               parsedData.d.key,
               parsedData.d.primary,
             );
+            searchTime = performance.now() - start;
           }
           const sendData: ReceiverData = {
             op: ReceiverOp.ACK_GET,
@@ -271,6 +279,7 @@ export class Receiver extends TypedEmitter<WsEvents> {
             t: Date.now(),
             db: sk.databaseType,
             d: get,
+            a:searchTime,
           };
           socket.send(JSON.stringify(sendData));
         } else if (parsedData.op === TransmitterOp.DELETE) {
@@ -289,17 +298,22 @@ export class Receiver extends TypedEmitter<WsEvents> {
             return;
           }
           this._currentSequence += 1;
+          let searchTime;
           if (sk.databaseType === WsDBTypes.KeyValue) {
+            const start = performance.now();
             await (<KeyValue>sk.db).delete(
               parsedData.d.table,
               parsedData.d.key,
             );
+            searchTime = performance.now() - start;
           } else if (sk.databaseType === WsDBTypes.WideColumn) {
+            const start = performance.now();
             await (<WideColumn>sk.db).delete(
               parsedData.d.table,
               parsedData.d.key,
               parsedData.d.primary,
             );
+            searchTime = performance.now() - start;
           }
           const sendData: ReceiverData = {
             op: ReceiverOp.ACK_DELETE,
@@ -307,6 +321,7 @@ export class Receiver extends TypedEmitter<WsEvents> {
             t: Date.now(),
             db: sk.databaseType,
             d: null,
+            a:searchTime,
           };
           socket.send(JSON.stringify(sendData));
         } else if (parsedData.op === TransmitterOp.ALL) {
@@ -326,14 +341,18 @@ export class Receiver extends TypedEmitter<WsEvents> {
           }
           this._currentSequence += 1;
           let all;
+          let searchTime;
           if (sk?.databaseType === WsDBTypes.KeyValue) {
+            const start = performance.now();
             all = await (<KeyValue>sk.db).all(
               parsedData.d.table,
               parsedData.d.filter,
               parsedData.d.limit,
               parsedData.d.sortOrder,
             );
+            searchTime = performance.now() - start;
           } else if (sk?.databaseType === WsDBTypes.WideColumn) {
+            const start = performance.now();
             all = await (parsedData.d.column
               ? (<WideColumn>sk.db).all(
                   parsedData.d.table,
@@ -342,6 +361,7 @@ export class Receiver extends TypedEmitter<WsEvents> {
                   parsedData.d.limit,
                 )
               : (<WideColumn>sk.db).allData(parsedData.d.table));
+            searchTime = performance.now() - start;
           }
           const sendData: ReceiverData = {
             op: ReceiverOp.ACK_ALL,
@@ -349,6 +369,7 @@ export class Receiver extends TypedEmitter<WsEvents> {
             t: Date.now(),
             db: sk?.databaseType,
             d: all,
+            a:searchTime,
           };
           socket.send(JSON.stringify(sendData));
         } else if (parsedData.op === TransmitterOp.CLEAR) {
@@ -367,9 +388,13 @@ export class Receiver extends TypedEmitter<WsEvents> {
             return;
           }
           this._currentSequence += 1;
+          let searchTime;
           if (sk?.databaseType === WsDBTypes.KeyValue) {
+            const start = performance.now();
             (<KeyValue>sk.db).clear(parsedData.d.table);
+            searchTime = performance.now() - start;
           } else if (sk.databaseType === WsDBTypes.WideColumn) {
+            const start = performance.now();
             if (!parsedData.d.column) {
               (<WideColumn>sk.db).clearTable(parsedData.d.table);
             } else {
@@ -378,7 +403,17 @@ export class Receiver extends TypedEmitter<WsEvents> {
                 parsedData.d.column,
               );
             }
+            searchTime = performance.now() - start;
           }
+          const sendData: ReceiverData = {
+            op: ReceiverOp.ACK_CLEAR,
+            s: this._currentSequence,
+            t: Date.now(),
+            db: sk?.databaseType,
+            d: null,
+            a:searchTime,
+          };
+          socket.send(JSON.stringify(sendData));
         } else if (parsedData.op === TransmitterOp.LOGS) {
         }
       });

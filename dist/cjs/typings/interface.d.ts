@@ -155,6 +155,8 @@ export interface ReceiverData {
     db: 0 | 1 | 2;
     s: number;
     t: number;
+    a?: number;
+    o?: number;
 }
 export interface ColumnTableOptions {
     name: string;

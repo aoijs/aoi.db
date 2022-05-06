@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.countFileLines = exports.stringify = exports.decryptColumnFile = exports.encryptColumnData = exports.decrypt = exports.encrypt = exports.JSONParser = void 0;
+exports.parseData = exports.countFileLines = exports.stringify = exports.decryptColumnFile = exports.encryptColumnData = exports.decrypt = exports.encrypt = exports.JSONParser = void 0;
 const crypto_1 = require("crypto");
 const fs_1 = require("fs");
+const enums_js_1 = require("../typings/enums.js");
 const algorithm = "aes-256-ctr";
 function JSONParser(readData) {
     let res;
@@ -70,7 +71,8 @@ function stringify(data) {
     else if (data instanceof Date) {
         return data.toISOString();
     }
-    else if (typeof data === "object" && !(data instanceof Buffer || data instanceof ReadableStream)) {
+    else if (typeof data === "object" &&
+        !(data instanceof Buffer || data instanceof ReadableStream)) {
         return JSON.stringify(data);
     }
     else if (typeof data === "bigint") {
@@ -95,11 +97,26 @@ function countFileLines(filePath) {
                 idx = buffer.indexOf(10, idx + 1);
                 lineCount++;
             } while (idx !== -1);
-        }).on("end", () => {
+        })
+            .on("end", () => {
             resolve(lineCount);
-        }).on("error", reject);
+        })
+            .on("error", reject);
     });
 }
 exports.countFileLines = countFileLines;
-;
+function parseData(data, type) {
+    if (type === enums_js_1.WsDBTypes.KeyValue) {
+        const value = data.value;
+        const obj = {
+            type: value instanceof Date ? "date" : typeof value,
+            value: value?.toString(),
+        };
+        return obj;
+    }
+    else if (type === enums_js_1.WsDBTypes.WideColumn) {
+        return stringify(data);
+    }
+}
+exports.parseData = parseData;
 //# sourceMappingURL=functions.js.map

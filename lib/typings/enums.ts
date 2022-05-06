@@ -13,6 +13,10 @@ export enum TransmitterFlags {
 
 
 
+
+
+
+
 export enum ReceiverOp
 {
   ACK_CONNECTION,
@@ -27,10 +31,13 @@ export enum ReceiverOp
   ERROR,
   ACK_CACHE,
   ACK_CLEAR,
-  ACK_LOGS
+  ACK_LOGS,
+  ACK_ANALYZE
 }
 
-export enum TransmitterOp {
+
+export enum TransmitterOp
+{
   REQUEST,
   CONNECTION,
   TABLE_OPEN,
@@ -56,6 +63,7 @@ export enum TransmitterOp {
   COLUMNS,
   ROWS,
   REQUEST_CACHE,
+  ANALYZE
 }
 
 export enum WsEventsList {

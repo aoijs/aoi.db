@@ -22,7 +22,8 @@ export declare enum ReceiverOp {
     ERROR = 9,
     ACK_CACHE = 10,
     ACK_CLEAR = 11,
-    ACK_LOGS = 12
+    ACK_LOGS = 12,
+    ACK_ANALYZE = 13
 }
 export declare enum TransmitterOp {
     REQUEST = 0,
@@ -49,7 +50,8 @@ export declare enum TransmitterOp {
     TABLES = 21,
     COLUMNS = 22,
     ROWS = 23,
-    REQUEST_CACHE = 24
+    REQUEST_CACHE = 24,
+    ANALYZE = 25
 }
 export declare enum WsEventsList {
     CONNECT = "connect",

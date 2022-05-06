@@ -17,12 +17,14 @@ import {
   ReceiverData,
   KeyValueDatabaseOption,
   ColumnDatabaseOptions,
+  KeyValueJSONOption,
 } from "../../typings/interface.js";
 import {
   KeyValueDataValueType,
   ReceiverTypes,
   WideColumnDataValueType,
 } from "../../typings/type.js";
+import { parseData } from "../../utils/functions.js";
 
 export class Transmitter extends TypedEmitter<WsEvents> {
   #name: string;
@@ -47,7 +49,7 @@ export class Transmitter extends TypedEmitter<WsEvents> {
   }
   connect() {
     this.connection.on("open", () => {
-      this.#hearbeat();
+      this.#heartbeat();
       this.emit(TransmitterEvents.OPEN);
       this.connection.send(
         JSON.stringify({
@@ -61,7 +63,10 @@ export class Transmitter extends TypedEmitter<WsEvents> {
         }),
       );
     });
-    this.connection.on("ping", this.#hearbeat);
+    this.connection.on("ping", () => {
+      this.#heartbeat();
+      console.log("pinged!");
+    });
 
     this.connection.on("message", (data: string) => {
       const parsedData: ReceiverData = JSON.parse(data);
@@ -178,32 +183,43 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       this.emit(TransmitterEvents.ERROR, err);
     });
   }
-  async set(table: string, key: unknown, data: unknown) {
+  async _set(
+    table: string,
+    key: unknown,
+    data: KeyValueJSONOption | WideColumnDataValueType,
+  ): Promise<ReceiverData> {
+    const start = performance.now();
+    const stringifiedData = parseData(data, WsDBTypes[this.databaseType]);
     const sendData = {
       op: TransmitterOp.SET,
       d: {
         table,
         key,
-        data,
+        data: stringifiedData,
       },
     };
     this.connection.send(JSON.stringify(sendData));
     return new Promise((resolve, reject) => {
       this.connection.once("message", (data: string) => {
         const parsedData = JSON.parse(data);
+        this.emit(TransmitterEvents.MESSAGE, parsedData);
         if (parsedData.op === ReceiverOp.ACK_SET) {
-          resolve(parsedData.d);
+          resolve({
+            o: performance.now() - start,
+            ...parsedData,
+          });
         } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.d);
+          reject(parsedData);
         }
       });
     });
   }
-  async get(
+  async _get(
     table: string,
     key: WideColumnDataValueType,
     id?: WideColumnDataValueType,
-  ) {
+  ): Promise<ReceiverData> {
+    const start = performance.now();
     const sendData = {
       op: TransmitterOp.GET,
       d: {
@@ -216,19 +232,21 @@ export class Transmitter extends TypedEmitter<WsEvents> {
     return new Promise((resolve, reject) => {
       this.connection.once("message", (data: string) => {
         const parsedData = JSON.parse(data);
+        this.emit(TransmitterEvents.MESSAGE, parsedData);
         if (parsedData.op === ReceiverOp.ACK_GET) {
-          resolve(parsedData.d);
+          resolve({ o: performance.now() - start, ...parsedData });
         } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.d);
+          reject(parsedData);
         }
       });
     });
   }
-  async delete(
+  async _delete(
     table: string,
     key: WideColumnDataValueType,
     primary: WideColumnDataValueType,
-  ) {
+  ): Promise<ReceiverData> {
+    const start = performance.now();
     const sendData = {
       op: TransmitterOp.DELETE,
       d: {
@@ -241,13 +259,132 @@ export class Transmitter extends TypedEmitter<WsEvents> {
     return new Promise((resolve, reject) => {
       this.connection.once("message", (data: string) => {
         const parsedData = JSON.parse(data);
+        this.emit(TransmitterEvents.MESSAGE, parsedData);
         if (parsedData.op === ReceiverOp.ACK_DELETE) {
-          resolve(parsedData.d);
+          resolve({
+            o: performance.now() - start,
+            ...parsedData,
+          });
         } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.d);
+          reject(parsedData);
         }
       });
     });
+  }
+  async _all(
+    table: string,
+    {
+      filter,
+      limit,
+      column,
+      sortOrder,
+    }: {
+      filter?: (...args: any) => boolean;
+      limit?: number;
+      column?: string;
+      sortOrder?: "asc" | "desc";
+    } = {},
+  ): Promise<ReceiverData> {
+    const start = performance.now();
+    const sendData = {
+      op: TransmitterOp.ALL,
+      d: {
+        table,
+        filter,
+        limit,
+        column,
+        sortOrder,
+      },
+    };
+    this.connection.send(JSON.stringify(sendData));
+    return new Promise((resolve, reject) => {
+      this.connection.once("message", (data: string) => {
+        const parsedData: ReceiverData = JSON.parse(data);
+        this.emit(TransmitterEvents.MESSAGE, parsedData);
+        if (parsedData.op === ReceiverOp.ACK_ALL) {
+          resolve({
+            o: performance.now() - start,
+            ...parsedData,
+          });
+        } else if (parsedData.op === ReceiverOp.ERROR) {
+          reject(parsedData);
+        }
+      });
+    });
+  }
+  async _clear(table: string, column?: string): Promise<ReceiverData> {
+    const start = performance.now();
+    const sendData = {
+      op: TransmitterOp.CLEAR,
+      d: {
+        table,
+        column,
+      },
+    };
+    this.connection.send(JSON.stringify(sendData));
+    return new Promise((resolve, reject) => {
+      this.connection.once("message", (data: string) => {
+        const parsedData: ReceiverData = JSON.parse(data);
+        this.emit(TransmitterEvents.MESSAGE, parsedData);
+        if (parsedData.op === ReceiverOp.ACK_CLEAR) {
+          resolve({
+            o: performance.now() - start,
+            ...parsedData,
+          });
+        } else if (parsedData.op === ReceiverOp.ERROR) {
+          reject(parsedData);
+        }
+      });
+    });
+  }
+  get ping() {
+    return this._ping;
+  }
+  #heartbeat() {
+    if (this.pingTimeout) clearTimeout(this.pingTimeout);
+    this.pingTimeout = setTimeout(() => {
+      console.log("cleared");
+      this.connection.terminate();
+    }, 60000);
+  }
+  #clearPingTimeout() {
+    clearTimeout(this.pingTimeout);
+  }
+  async analyze(method: "set" | "get" | "all" | "delete" | "clear", data: any) {
+    if (method === "set") {
+      return await this._set(data.table, data.key, data.data);
+    } else if (method === "get") {
+      return await this._get(data.table, data.key, data.id);
+    } else if (method === "all") {
+      return await this._all(data.table, data);
+    } else if (method === "delete") {
+      return await this._delete(data.table, data.key, data.primary);
+    } else if (method === "clear") {
+      return await this.clear(data.table, data.column);
+    } else {
+      throw new Error("Invalid method");
+    }
+  }
+  async set(
+    table: string,
+    key: unknown,
+    data: KeyValueJSONOption | WideColumnDataValueType,
+  ) {
+    return (await this._set(table, key, data)).d;
+  }
+  async get(
+    table: string,
+    key: WideColumnDataValueType,
+    id?: WideColumnDataValueType,
+  ) {
+    return (await this._get(table, key, id)).d;
+  }
+  async delete(
+    table: string,
+    key: WideColumnDataValueType,
+    primary: WideColumnDataValueType,
+  ) {
+    return (await this._delete(table, key, primary)).d;
   }
   async all(
     table: string,
@@ -263,58 +400,9 @@ export class Transmitter extends TypedEmitter<WsEvents> {
       sortOrder?: "asc" | "desc";
     } = {},
   ) {
-    const sendData = {
-      op: TransmitterOp.ALL,
-      d: {
-        table,
-        filter,
-        limit,
-        column,
-        sortOrder,
-      },
-    };
-    this.connection.send(JSON.stringify(sendData));
-    return new Promise((resolve, reject) => {
-      this.connection.once("message", (data: string) => {
-        const parsedData: ReceiverData = JSON.parse(data);
-        if (parsedData.op === ReceiverOp.ACK_ALL) {
-          resolve(parsedData.d);
-        } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.d);
-        }
-      });
-    });
+    return (await this._all(table, { filter, limit, column, sortOrder })).d;
   }
   async clear(table: string, column?: string) {
-    const sendData = {
-      op: TransmitterOp.CLEAR,
-      d: {
-        table,
-        column,
-      },
-    };
-    this.connection.send(JSON.stringify(sendData));
-    return new Promise((resolve, reject) => {
-      this.connection.once("message", (data: string) => {
-        const parsedData: ReceiverData = JSON.parse(data);
-        if (parsedData.op === ReceiverOp.ACK_CLEAR) {
-          resolve(parsedData.d);
-        } else if (parsedData.op === ReceiverOp.ERROR) {
-          reject(parsedData.d);
-        }
-      });
-    });
-  }
-  get ping() {
-    return this._ping;
-  }
-  #hearbeat() {
-    if (this.pingTimeout) clearTimeout(this.pingTimeout);
-    this.pingTimeout = setTimeout(() => {
-      this.connection.terminate();
-    }, 60000);
-  }
-  #clearPingTimeout() {
-    clearTimeout(this.pingTimeout);
+    return (await this._clear(table, column)).d;
   }
 }

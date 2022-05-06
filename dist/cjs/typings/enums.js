@@ -29,6 +29,7 @@ var ReceiverOp;
     ReceiverOp[ReceiverOp["ACK_CACHE"] = 10] = "ACK_CACHE";
     ReceiverOp[ReceiverOp["ACK_CLEAR"] = 11] = "ACK_CLEAR";
     ReceiverOp[ReceiverOp["ACK_LOGS"] = 12] = "ACK_LOGS";
+    ReceiverOp[ReceiverOp["ACK_ANALYZE"] = 13] = "ACK_ANALYZE";
 })(ReceiverOp = exports.ReceiverOp || (exports.ReceiverOp = {}));
 var TransmitterOp;
 (function (TransmitterOp) {
@@ -57,6 +58,7 @@ var TransmitterOp;
     TransmitterOp[TransmitterOp["COLUMNS"] = 22] = "COLUMNS";
     TransmitterOp[TransmitterOp["ROWS"] = 23] = "ROWS";
     TransmitterOp[TransmitterOp["REQUEST_CACHE"] = 24] = "REQUEST_CACHE";
+    TransmitterOp[TransmitterOp["ANALYZE"] = 25] = "ANALYZE";
 })(TransmitterOp = exports.TransmitterOp || (exports.TransmitterOp = {}));
 var WsEventsList;
 (function (WsEventsList) {

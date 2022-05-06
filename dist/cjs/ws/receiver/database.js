@@ -168,13 +168,16 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         return;
                     }
                     this._currentSequence += 1;
+                    const start = performance.now();
                     await sk.db.set(parsedData.d.table, parsedData.d.key, parsedData.d.data);
+                    const end = performance.now() - start;
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_SET,
                         s: this._currentSequence,
                         t: Date.now(),
                         db: sk.databaseType,
                         d: null,
+                        a: end,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -193,13 +196,18 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         return;
                     }
                     let get;
+                    let searchTime;
                     if (sk.databaseType === enums_js_1.WsDBTypes.KeyValue) {
                         const db = sk.db;
+                        const start = performance.now();
                         get = await db.get(parsedData.d.table, parsedData.d.key);
+                        searchTime = performance.now() - start;
                     }
                     else {
                         const db = sk.db;
+                        const start = performance.now();
                         get = await db.get(parsedData.d.table, parsedData.d.key, parsedData.d.primary);
+                        searchTime = performance.now() - start;
                     }
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_GET,
@@ -207,6 +215,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         t: Date.now(),
                         db: sk.databaseType,
                         d: get,
+                        a: searchTime,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -224,11 +233,16 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         return;
                     }
                     this._currentSequence += 1;
+                    let searchTime;
                     if (sk.databaseType === enums_js_1.WsDBTypes.KeyValue) {
+                        const start = performance.now();
                         await sk.db.delete(parsedData.d.table, parsedData.d.key);
+                        searchTime = performance.now() - start;
                     }
                     else if (sk.databaseType === enums_js_1.WsDBTypes.WideColumn) {
+                        const start = performance.now();
                         await sk.db.delete(parsedData.d.table, parsedData.d.key, parsedData.d.primary);
+                        searchTime = performance.now() - start;
                     }
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_DELETE,
@@ -236,6 +250,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         t: Date.now(),
                         db: sk.databaseType,
                         d: null,
+                        a: searchTime,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -254,13 +269,18 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     this._currentSequence += 1;
                     let all;
+                    let searchTime;
                     if (sk?.databaseType === enums_js_1.WsDBTypes.KeyValue) {
+                        const start = performance.now();
                         all = await sk.db.all(parsedData.d.table, parsedData.d.filter, parsedData.d.limit, parsedData.d.sortOrder);
+                        searchTime = performance.now() - start;
                     }
                     else if (sk?.databaseType === enums_js_1.WsDBTypes.WideColumn) {
+                        const start = performance.now();
                         all = await (parsedData.d.column
                             ? sk.db.all(parsedData.d.table, parsedData.d.column, parsedData.d.filter, parsedData.d.limit)
                             : sk.db.allData(parsedData.d.table));
+                        searchTime = performance.now() - start;
                     }
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_ALL,
@@ -268,6 +288,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         t: Date.now(),
                         db: sk?.databaseType,
                         d: all,
+                        a: searchTime,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
@@ -285,17 +306,31 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         return;
                     }
                     this._currentSequence += 1;
+                    let searchTime;
                     if (sk?.databaseType === enums_js_1.WsDBTypes.KeyValue) {
+                        const start = performance.now();
                         sk.db.clear(parsedData.d.table);
+                        searchTime = performance.now() - start;
                     }
                     else if (sk.databaseType === enums_js_1.WsDBTypes.WideColumn) {
+                        const start = performance.now();
                         if (!parsedData.d.column) {
                             sk.db.clearTable(parsedData.d.table);
                         }
                         else {
                             sk.db.clearColumn(parsedData.d.table, parsedData.d.column);
                         }
+                        searchTime = performance.now() - start;
                     }
+                    const sendData = {
+                        op: enums_js_1.ReceiverOp.ACK_CLEAR,
+                        s: this._currentSequence,
+                        t: Date.now(),
+                        db: sk?.databaseType,
+                        d: null,
+                        a: searchTime,
+                    };
+                    socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.LOGS) {
                 }
