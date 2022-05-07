@@ -124,6 +124,7 @@ export interface ColumnTableOptions {
     columns: Column[];
 }
 export interface ColumnDbColumnData {
+    default?: string | number | bigint | boolean | object | Date | Buffer | ReadableStream<any> | null;
     sortOrder?: "ASC" | "DESC";
     name: string;
     primary: boolean;

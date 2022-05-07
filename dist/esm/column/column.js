@@ -6,6 +6,7 @@ import { WideColumnData } from "./data.js";
 import { randomBytes } from "crypto";
 import { readFile } from "fs/promises";
 import { spaceConstant } from "./constants.js";
+import { WideColumnError } from "./error.js";
 export class Column {
     name;
     routers = {};
@@ -19,11 +20,17 @@ export class Column {
     files;
     logIv;
     logLines;
+    default;
     constructor(options) {
         this.name = options.name;
         this.type = options.type;
         this.primary = options.primary;
         this.sortOrder = options.sortOrder ?? "DESC";
+        if (options.default && !this.matchType(options.default) && this.primary)
+            throw new WideColumnError(`Default value is not of type ${this.type}`);
+        if (options.default && !this.primary)
+            throw new WideColumnError(`Default value can only be set for primary column`);
+        this.default = options.default;
         this.queue = {
             set: false,
             delete: false,

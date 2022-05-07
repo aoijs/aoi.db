@@ -12,6 +12,7 @@ const data_js_1 = require("./data.js");
 const crypto_1 = require("crypto");
 const promises_1 = require("fs/promises");
 const constants_js_1 = require("./constants.js");
+const error_js_1 = require("./error.js");
 class Column {
     name;
     routers = {};
@@ -25,11 +26,17 @@ class Column {
     files;
     logIv;
     logLines;
+    default;
     constructor(options) {
         this.name = options.name;
         this.type = options.type;
         this.primary = options.primary;
         this.sortOrder = options.sortOrder ?? "DESC";
+        if (options.default && !this.matchType(options.default) && this.primary)
+            throw new error_js_1.WideColumnError(`Default value is not of type ${this.type}`);
+        if (options.default && !this.primary)
+            throw new error_js_1.WideColumnError(`Default value can only be set for primary column`);
+        this.default = options.default;
         this.queue = {
             set: false,
             delete: false,

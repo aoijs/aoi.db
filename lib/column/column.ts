@@ -21,6 +21,7 @@ import { WideColumnData } from "./data.js";
 import { randomBytes } from "crypto";
 import { readFile, writeFile } from "fs/promises";
 import { spaceConstant } from "./constants.js";
+import { WideColumnError } from "./error.js";
 export class Column {
   name: string;
   routers: Record<string, number> = {};
@@ -34,12 +35,17 @@ export class Column {
   files!: string[];
   logIv!: string;
   logLines!: number;
+  default?: WideColumnDataValueType;
 
   constructor(options: ColumnDbColumnData) {
     this.name = options.name;
     this.type = options.type;
     this.primary = options.primary;
     this.sortOrder = options.sortOrder ?? "DESC";
+    if (options.default && !this.matchType(options.default) && this.primary)
+      throw new WideColumnError(`Default value is not of type ${this.type}`);
+      if(options.default && !this.primary) throw new WideColumnError(`Default value can only be set for primary column`);
+    this.default = options.default;
     this.queue = {
       set: false,
       delete: false,
@@ -465,7 +471,7 @@ export class Column {
   }
   async bulkSet(...data: [WideColumnDataValueType, WideColumnData][]) {
     if (!this.memMap) return;
-    data.forEach(async(x) => {
+    data.forEach(async (x) => {
       await this.set(x[0], x[1]);
     });
   }

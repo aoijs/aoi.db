@@ -16,6 +16,7 @@ export declare class Column {
     files: string[];
     logIv: string;
     logLines: number;
+    default?: WideColumnDataValueType;
     constructor(options: ColumnDbColumnData);
     setFiles(): void;
     setTable(table: WideColumnTable): void;
