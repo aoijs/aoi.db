@@ -357,7 +357,7 @@ export class Table {
         referenceSize <= this.db.options.cacheOption.limit &&
         referenceSize <= this.db.options.storeOption.maxDataPerFile
       ) {
-        return [...this.cache.data.values()];
+        return filter ? [...this.cache.data.values()].filter((_) => filter(_.key)) : [...this.cache.data.values()];
       }
       this.queue.queued.all = true;
 

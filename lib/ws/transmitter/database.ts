@@ -65,7 +65,6 @@ export class Transmitter extends TypedEmitter<WsEvents> {
     });
     this.connection.on("ping", () => {
       this.#heartbeat();
-      console.log("pinged!");
     });
 
     this.connection.on("message", (data: string) => {

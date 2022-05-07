@@ -43,7 +43,6 @@ export class Transmitter extends TypedEmitter {
         });
         this.connection.on("ping", () => {
             this.#heartbeat();
-            console.log("pinged!");
         });
         this.connection.on("message", (data) => {
             const parsedData = JSON.parse(data);
