@@ -68,6 +68,11 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
             socket.on("open", () => { });
             socket.on("message", async (data) => {
                 const parsedData = JSON.parse(data);
+                                console.log({
+                                  request: request.socket.remoteAddress,
+                                  socket:socket.url,
+                                  parsedData,
+                                });
                 this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.TransmitterOp.REQUEST) {
                     let data;
@@ -136,7 +141,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         op: enums_js_1.ReceiverOp.ACK_PING,
                         s: this._currentSequence,
                         t: Date.now(),
-                        db: sk.databaseType,
+                        db: sk?.databaseType,
                         d: null,
                     };
                     socket.send(JSON.stringify(sendData));
