@@ -65,52 +65,64 @@ export class Receiver extends TypedEmitter {
                 this.emit(ReceiverEvents.MESSAGE, parsedData);
                 if (parsedData.op === TransmitterOp.REQUEST) {
                     let data;
+                    const path = `name:${parsedData.d.name}@pass:${parsedData.d.pass}@path:${parsedData.d.options.path ?? "./database/"}@type:${parsedData.d.dbType}`;
+                    const hash = encrypt(path, this.logData.key);
                     if (parsedData.d.dbType === WsDBTypes.KeyValue) {
-                        const path = `name:${parsedData.d.name}@pass:${parsedData.d.pass}@path:${parsedData.d.options.path ?? "./database/"}@type:${parsedData.d.dbType}`;
-                        const hash = encrypt(path, this.logData.key);
-                        console.log({ options: parsedData.d.options });
-                        if (existsSync(parsedData.d.options.path)) {
-                            const readData = JSONParser(readFileSync(parsedData.d.options.path + "owner.hsh").toString());
-                            const decrypted = decrypt(readData, this.logData.key);
-                            if (decrypted !== path) {
-                                const [_name, _pass, _path, _type] = decrypted.split("@");
-                                if (`name:${parsedData.d.name}` === _name &&
-                                    `pass:${parsedData.d.pass}` !== _pass &&
-                                    `path:${parsedData.d.options.path}` === _path &&
-                                    `type:${parsedData.d.dbType}` === _type) {
-                                    socket.close(3000, "Wrong Password");
-                                    return;
-                                }
-                                else if (`name:${parsedData.d.name}` === _name &&
-                                    `pass:${parsedData.d.pass}` === _pass &&
-                                    `path:${parsedData.d.options.path}` === _path &&
-                                    `type:${parsedData.d.dbType}` !== _type) {
-                                    socket.close(3000, "Wrong Type");
-                                    return;
-                                }
-                                else if (`name:${parsedData.d.name}` === _name &&
-                                    `pass:${parsedData.d.pass}` === _pass &&
-                                    `path:${parsedData.d.options.path}` !== _path) {
-                                    parsedData.d.options.path = parsedData.d.options.path + "_1";
+                        const keys = [...this.clients.keys()].map((x) => {
+                            const [iv, data] = x.split(":");
+                            return { parsed: decrypt({ iv, data }, this.logData.key), raw: x };
+                        });
+                        const key = keys.find((x) => x.parsed === path);
+                        if (!key) {
+                            if (existsSync(parsedData.d.options.path)) {
+                                const readData = JSONParser(readFileSync(parsedData.d.options.path + "owner.hsh").toString());
+                                const decrypted = decrypt(readData, this.logData.key);
+                                if (decrypted !== path) {
+                                    const [_name, _pass, _path, _type] = decrypted.split("@");
+                                    if (`name:${parsedData.d.name}` === _name &&
+                                        `pass:${parsedData.d.pass}` !== _pass &&
+                                        `path:${parsedData.d.options.path}` === _path &&
+                                        `type:${parsedData.d.dbType}` === _type) {
+                                        socket.close(3000, "Wrong Password");
+                                        return;
+                                    }
+                                    else if (`name:${parsedData.d.name}` === _name &&
+                                        `pass:${parsedData.d.pass}` === _pass &&
+                                        `path:${parsedData.d.options.path}` === _path &&
+                                        `type:${parsedData.d.dbType}` !== _type) {
+                                        socket.close(3000, "Wrong Type");
+                                        return;
+                                    }
+                                    else if (`name:${parsedData.d.name}` === _name &&
+                                        `pass:${parsedData.d.pass}` === _pass &&
+                                        `path:${parsedData.d.options.path}` !== _path) {
+                                        parsedData.d.options.path =
+                                            parsedData.d.options.path + "_1";
+                                    }
                                 }
                             }
+                            data = {
+                                databaseType: WsDBTypes.KeyValue,
+                                db: new KeyValue(parsedData.d.options),
+                            };
+                            data.db.connect();
+                            if (!existsSync(parsedData.d.options.path + "/owner.hsh")) {
+                                writeFileSync(data.db.options.path + "/owner.hsh", JSON.stringify(hash));
+                            }
+                            // @ts-ignore
+                            socket.sessionId = `${hash.iv}:${hash.data}`;
+                            this.clients.set(`${hash.iv}:${hash.data}`, data);
                         }
-                        data = {
-                            databaseType: WsDBTypes.KeyValue,
-                            db: new KeyValue(parsedData.d.options),
-                        };
-                        data.db.connect();
-                        if (!existsSync(parsedData.d.options.path + "/owner.hsh")) {
-                            writeFileSync(data.db.options.path + "/owner.hsh", JSON.stringify(hash));
+                        else {
+                            data = this.clients.get(key.raw);
                         }
-                        this.clients.set(request.socket.remoteAddress, data);
                     }
                     else {
                         data = {
                             databaseType: WsDBTypes.WideColumn,
                             db: new WideColumn(parsedData.d.options),
                         };
-                        this.clients.set(request.socket.remoteAddress, data);
+                        this.clients.set(`${hash.iv}:${hash.data}`, data);
                     }
                     this._currentSequence += 1;
                     const sendData = {
@@ -119,13 +131,13 @@ export class Receiver extends TypedEmitter {
                         d: null,
                         t: Date.now(),
                         s: this._currentSequence,
+                        sk: `${hash.iv}:${hash.data}`,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === TransmitterOp.PING) {
-                    const sk = (this.clients.get(request.socket.remoteAddress));
+                    const sk = (this.clients.get(socket.sessionId));
                     this.lastPingTimestamp = Date.now();
-                    this._currentSequence += 1;
                     const sendData = {
                         op: ReceiverOp.ACK_PING,
                         s: this._currentSequence,
@@ -136,8 +148,8 @@ export class Receiver extends TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === TransmitterOp.BULK_TABLE_OPEN) {
-                    this.load(request.socket.remoteAddress || socket.url, parsedData.d);
-                    const sk = (this.clients.get(request.socket.remoteAddress));
+                    this.load(socket.sessionId, parsedData.d);
+                    const sk = this.clients.get(socket.sessionId);
                     this._currentSequence += 1;
                     const sendData = {
                         op: ReceiverOp.ACK_TABLES,
@@ -149,7 +161,7 @@ export class Receiver extends TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === TransmitterOp.SET) {
-                    const sk = (this.clients.get(request.socket.remoteAddress || socket.url));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: ReceiverOp.ERROR,
@@ -177,7 +189,7 @@ export class Receiver extends TypedEmitter {
                 }
                 else if (parsedData.op === TransmitterOp.GET) {
                     this._currentSequence += 1;
-                    const sk = (this.clients.get(request.socket.remoteAddress));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === TransmitterFlags.WRITE_ONLY) {
                         const sendData = {
                             op: ReceiverOp.ERROR,
@@ -214,7 +226,7 @@ export class Receiver extends TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === TransmitterOp.DELETE) {
-                    const sk = (this.clients.get(request.socket.remoteAddress || socket.url));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: ReceiverOp.ERROR,
@@ -249,7 +261,7 @@ export class Receiver extends TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === TransmitterOp.ALL) {
-                    const sk = (this.clients.get(request.socket.remoteAddress || socket.url));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === TransmitterFlags.WRITE_ONLY) {
                         const sendData = {
                             op: ReceiverOp.ERROR,
@@ -287,7 +299,7 @@ export class Receiver extends TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === TransmitterOp.CLEAR) {
-                    const sk = (this.clients.get(request.socket.remoteAddress || socket.url));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: ReceiverOp.ERROR,
@@ -330,7 +342,7 @@ export class Receiver extends TypedEmitter {
                 }
             });
             socket.on("close", () => {
-                this.clients.delete(request.socket.remoteAddress);
+                this.clients.delete(socket.sessionId);
             });
         });
         this.connection.on("close", () => {
@@ -338,7 +350,9 @@ export class Receiver extends TypedEmitter {
         });
     }
     load(socket, { tables, flags, }) {
+        //@ts-ignore
         this.clients.set(socket, {
+            // @ts-ignore
             ...this.clients.get(socket),
             tables,
             flags,

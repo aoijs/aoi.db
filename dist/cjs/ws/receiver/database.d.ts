@@ -12,7 +12,7 @@ export declare class Receiver extends TypedEmitter<WsEvents> {
     };
     connection: ws.Server;
     options: ReceiverOptions;
-    clients: Map<string, SocketData>;
+    clients: Map<`${string}:${string}`, SocketData>;
     _ping: number;
     lastPingTimestamp: number;
     _currentSequence: number;

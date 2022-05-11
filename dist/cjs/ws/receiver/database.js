@@ -68,60 +68,67 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
             socket.on("open", () => { });
             socket.on("message", async (data) => {
                 const parsedData = JSON.parse(data);
-                                console.log({
-                                  request: request.socket.remoteAddress,
-                                  socket:socket.url,
-                                  parsedData,
-                                });
                 this.emit(enums_js_1.WsEventsList.MESSAGE, parsedData);
                 if (parsedData.op === enums_js_1.TransmitterOp.REQUEST) {
                     let data;
+                    const path = `name:${parsedData.d.name}@pass:${parsedData.d.pass}@path:${parsedData.d.options.path ?? "./database/"}@type:${parsedData.d.dbType}`;
+                    const hash = (0, functions_js_1.encrypt)(path, this.logData.key);
                     if (parsedData.d.dbType === enums_js_1.WsDBTypes.KeyValue) {
-                        const path = `name:${parsedData.d.name}@pass:${parsedData.d.pass}@path:${parsedData.d.options.path ?? "./database/"}@type:${parsedData.d.dbType}`;
-                        const hash = (0, functions_js_1.encrypt)(path, this.logData.key);
-                        console.log({ options: parsedData.d.options });
-                        if ((0, fs_1.existsSync)(parsedData.d.options.path)) {
-                            const readData = (0, functions_js_1.JSONParser)((0, fs_1.readFileSync)(parsedData.d.options.path + "owner.hsh").toString());
-                            const decrypted = (0, functions_js_1.decrypt)(readData, this.logData.key);
-                            if (decrypted !== path) {
-                                const [_name, _pass, _path, _type] = decrypted.split("@");
-                                if (`name:${parsedData.d.name}` === _name &&
-                                    `pass:${parsedData.d.pass}` !== _pass &&
-                                    `path:${parsedData.d.options.path}` === _path &&
-                                    `type:${parsedData.d.dbType}` === _type) {
-                                    socket.close(3000, "Wrong Password");
-                                    return;
-                                }
-                                else if (`name:${parsedData.d.name}` === _name &&
-                                    `pass:${parsedData.d.pass}` === _pass &&
-                                    `path:${parsedData.d.options.path}` === _path &&
-                                    `type:${parsedData.d.dbType}` !== _type) {
-                                    socket.close(3000, "Wrong Type");
-                                    return;
-                                }
-                                else if (`name:${parsedData.d.name}` === _name &&
-                                    `pass:${parsedData.d.pass}` === _pass &&
-                                    `path:${parsedData.d.options.path}` !== _path) {
-                                    parsedData.d.options.path = parsedData.d.options.path + "_1";
+                        const keys = [...this.clients.keys()].map((x) => {
+                            const [iv, data] = x.split(":");
+                            return { parsed: (0, functions_js_1.decrypt)({ iv, data }, this.logData.key), raw: x };
+                        });
+                        const key = keys.find((x) => x.parsed === path);
+                        if (!key) {
+                            if ((0, fs_1.existsSync)(parsedData.d.options.path)) {
+                                const readData = (0, functions_js_1.JSONParser)((0, fs_1.readFileSync)(parsedData.d.options.path + "owner.hsh").toString());
+                                const decrypted = (0, functions_js_1.decrypt)(readData, this.logData.key);
+                                if (decrypted !== path) {
+                                    const [_name, _pass, _path, _type] = decrypted.split("@");
+                                    if (`name:${parsedData.d.name}` === _name &&
+                                        `pass:${parsedData.d.pass}` !== _pass &&
+                                        `path:${parsedData.d.options.path}` === _path &&
+                                        `type:${parsedData.d.dbType}` === _type) {
+                                        socket.close(3000, "Wrong Password");
+                                        return;
+                                    }
+                                    else if (`name:${parsedData.d.name}` === _name &&
+                                        `pass:${parsedData.d.pass}` === _pass &&
+                                        `path:${parsedData.d.options.path}` === _path &&
+                                        `type:${parsedData.d.dbType}` !== _type) {
+                                        socket.close(3000, "Wrong Type");
+                                        return;
+                                    }
+                                    else if (`name:${parsedData.d.name}` === _name &&
+                                        `pass:${parsedData.d.pass}` === _pass &&
+                                        `path:${parsedData.d.options.path}` !== _path) {
+                                        parsedData.d.options.path =
+                                            parsedData.d.options.path + "_1";
+                                    }
                                 }
                             }
+                            data = {
+                                databaseType: enums_js_1.WsDBTypes.KeyValue,
+                                db: new database_js_2.KeyValue(parsedData.d.options),
+                            };
+                            data.db.connect();
+                            if (!(0, fs_1.existsSync)(parsedData.d.options.path + "/owner.hsh")) {
+                                (0, fs_1.writeFileSync)(data.db.options.path + "/owner.hsh", JSON.stringify(hash));
+                            }
+                            // @ts-ignore
+                            socket.sessionId = `${hash.iv}:${hash.data}`;
+                            this.clients.set(`${hash.iv}:${hash.data}`, data);
                         }
-                        data = {
-                            databaseType: enums_js_1.WsDBTypes.KeyValue,
-                            db: new database_js_2.KeyValue(parsedData.d.options),
-                        };
-                        data.db.connect();
-                        if (!(0, fs_1.existsSync)(parsedData.d.options.path + "/owner.hsh")) {
-                            (0, fs_1.writeFileSync)(data.db.options.path + "/owner.hsh", JSON.stringify(hash));
+                        else {
+                            data = this.clients.get(key.raw);
                         }
-                        this.clients.set(request.socket.remoteAddress, data);
                     }
                     else {
                         data = {
                             databaseType: enums_js_1.WsDBTypes.WideColumn,
                             db: new database_js_1.WideColumn(parsedData.d.options),
                         };
-                        this.clients.set(request.socket.remoteAddress, data);
+                        this.clients.set(`${hash.iv}:${hash.data}`, data);
                     }
                     this._currentSequence += 1;
                     const sendData = {
@@ -130,25 +137,25 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                         d: null,
                         t: Date.now(),
                         s: this._currentSequence,
+                        sk: `${hash.iv}:${hash.data}`,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.PING) {
-                    const sk = (this.clients.get(request.socket.remoteAddress));
+                    const sk = (this.clients.get(socket.sessionId));
                     this.lastPingTimestamp = Date.now();
-                    this._currentSequence += 1;
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_PING,
                         s: this._currentSequence,
                         t: Date.now(),
-                        db: sk?.databaseType,
+                        db: sk.databaseType,
                         d: null,
                     };
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.BULK_TABLE_OPEN) {
-                    this.load(request.socket.remoteAddress || socket.url, parsedData.d);
-                    const sk = (this.clients.get(request.socket.remoteAddress));
+                    this.load(socket.sessionId, parsedData.d);
+                    const sk = this.clients.get(socket.sessionId);
                     this._currentSequence += 1;
                     const sendData = {
                         op: enums_js_1.ReceiverOp.ACK_TABLES,
@@ -160,7 +167,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.SET) {
-                    const sk = (this.clients.get(request.socket.remoteAddress || socket.url));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
@@ -188,7 +195,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.GET) {
                     this._currentSequence += 1;
-                    const sk = (this.clients.get(request.socket.remoteAddress));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === enums_js_1.TransmitterFlags.WRITE_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
@@ -225,7 +232,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.DELETE) {
-                    const sk = (this.clients.get(request.socket.remoteAddress || socket.url));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
@@ -260,7 +267,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.ALL) {
-                    const sk = (this.clients.get(request.socket.remoteAddress || socket.url));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === enums_js_1.TransmitterFlags.WRITE_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
@@ -298,7 +305,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                     socket.send(JSON.stringify(sendData));
                 }
                 else if (parsedData.op === enums_js_1.TransmitterOp.CLEAR) {
-                    const sk = (this.clients.get(request.socket.remoteAddress || socket.url));
+                    const sk = this.clients.get(socket.sessionId);
                     if (sk?.flags === enums_js_1.TransmitterFlags.READ_ONLY) {
                         const sendData = {
                             op: enums_js_1.ReceiverOp.ERROR,
@@ -341,7 +348,7 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
                 }
             });
             socket.on("close", () => {
-                this.clients.delete(request.socket.remoteAddress);
+                this.clients.delete(socket.sessionId);
             });
         });
         this.connection.on("close", () => {
@@ -349,7 +356,9 @@ class Receiver extends tiny_typed_emitter_1.TypedEmitter {
         });
     }
     load(socket, { tables, flags, }) {
+        //@ts-ignore
         this.clients.set(socket, {
+            // @ts-ignore
             ...this.clients.get(socket),
             tables,
             flags,

@@ -1,4 +1,4 @@
-import { ClientOptions, ServerOptions } from "ws";
+import { ClientOptions, ServerOptions,WebSocket } from "ws";
 import { Column } from "../column/column.js";
 import { WideColumn } from "../column/database.js";
 import { KeyValue } from "../keyvalue/database.js";
@@ -177,6 +177,7 @@ export interface ReceiverData {
   d: any;
   db: 0 | 1 | 2;
   s: number;
+  sk?:`${string}:${string}`;
   t: number;
   a?: number;
   o?: number;
@@ -226,4 +227,8 @@ export interface SocketData {
   flags?: TransmitterFlags;
   databaseType: WsDBTypes;
   db: KeyValue | WideColumn;
+}
+
+export interface WS extends WebSocket {
+  sessionId : `${string}:${string}`;
 }
