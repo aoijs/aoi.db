@@ -1,9 +1,13 @@
-import { ClientOptions } from "ws";
+import { ClientOptions, ServerOptions,WebSocket } from "ws";
 import { Column } from "../column/column.js";
+import { WideColumn } from "../column/database.js";
+import { KeyValue } from "../keyvalue/database.js";
 import { Table } from "../keyvalue/table.js";
+import { ReceiverOp, TransmitterFlags, WsDBTypes } from "./enums.js";
 import {
   CacheReferenceType,
   KeyValueDataValueType,
+  ReceiverTypes,
   RelationalDataValueType,
   WideColumnTypes,
 } from "./type.js";
@@ -110,7 +114,7 @@ export interface TypedDatabaseEvents {
 }
 
 export interface ColumnDatabaseOptions {
-  encryptOption:{
+  encryptOption: {
     securitykey: string;
   };
   tables: ColumnTableOptions[];
@@ -136,6 +140,7 @@ export interface ColumnTableOptions {
   columns: Column[];
 }
 export interface ColumnDbColumnData {
+  default?: string | number | bigint | boolean | object | Date | Buffer | ReadableStream<any> | null;
   sortOrder?: "ASC" | "DESC";
   name: string;
   primary: boolean;
@@ -147,4 +152,83 @@ export interface CacherOptions {
   sortOrder?: "ASC" | "DESC";
   cacheReference?: CacheReferenceType;
   sorted?: boolean;
+}
+
+export interface TransmitterOptions {
+  dbOptions: KeyValueDatabaseOption | ColumnDatabaseOptions;
+  databaseType: "KeyValue" | "WideColumn" | "Relational";
+  pass: string;
+  name: string;
+  flags:
+    | TransmitterFlags.READ_ONLY
+    | TransmitterFlags.READ_WRITE
+    | TransmitterFlags.WRITE_ONLY;
+  path: string;
+  wsOptions: ClientOptions;
+  tables: (string | ColumnTableOptions | RelationalTableOptions)[];
+  type: "KeyValue" | "Relational" | "WideColumn";
+  cacheOption?: {
+    limit?: number;
+  };
+}
+
+export interface ReceiverData {
+  op: ReceiverOp;
+  d: any;
+  db: 0 | 1 | 2;
+  s: number;
+  sk?:`${string}:${string}`;
+  t: number;
+  a?: number;
+  o?: number;
+}
+
+export interface ColumnTableOptions {
+  name: string;
+  columns: Column[];
+}
+export interface ColumnDbColumnData {
+  sortOrder?: "ASC" | "DESC";
+  name: string;
+  primary: boolean;
+  type: WideColumnTypes;
+}
+
+export interface CacherOptions {
+  limit?: number;
+  sortOrder?: "ASC" | "DESC";
+  cacheReference?: CacheReferenceType;
+  sorted?: boolean;
+}
+
+export interface ReceiverOptions {
+  logEncrypt: string;
+  logPath?: string;
+  whitelistedIps: "*" | string[];
+  wsOptions: ServerOptions;
+  cacheOption?: {
+    limit?: number;
+  };
+}
+
+export interface WsEvents {
+  ready(): void;
+  disconnect(): void;
+  debug(message: string): void;
+  message(message: ReceiverData): void;
+  open(): void;
+  close(code: number, reason?: Buffer): void;
+  error(error: Error): void;
+  connect(): void;
+}
+
+export interface SocketData {
+  tables?: string[] | ColumnTableOptions[];
+  flags?: TransmitterFlags;
+  databaseType: WsDBTypes;
+  db: KeyValue | WideColumn;
+}
+
+export interface WS extends WebSocket {
+  sessionId : `${string}:${string}`;
 }

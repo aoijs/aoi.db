@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { createReadStream } from "fs";
+import { WsDBTypes } from "../typings/enums.js";
 const algorithm = "aes-256-ctr";
 export function JSONParser(readData) {
     let res;
@@ -62,7 +63,8 @@ export function stringify(data) {
     else if (data instanceof Date) {
         return data.toISOString();
     }
-    else if (typeof data === "object" && !(data instanceof Buffer || data instanceof ReadableStream)) {
+    else if (typeof data === "object" &&
+        !(data instanceof Buffer || data instanceof ReadableStream)) {
         return JSON.stringify(data);
     }
     else if (typeof data === "bigint") {
@@ -86,10 +88,24 @@ export function countFileLines(filePath) {
                 idx = buffer.indexOf(10, idx + 1);
                 lineCount++;
             } while (idx !== -1);
-        }).on("end", () => {
+        })
+            .on("end", () => {
             resolve(lineCount);
-        }).on("error", reject);
+        })
+            .on("error", reject);
     });
 }
-;
+export function parseData(data, type) {
+    if (type === WsDBTypes.KeyValue) {
+        const value = data.value;
+        const obj = {
+            type: value instanceof Date ? "date" : typeof value,
+            value: value?.toString(),
+        };
+        return obj;
+    }
+    else if (type === WsDBTypes.WideColumn) {
+        return stringify(data);
+    }
+}
 //# sourceMappingURL=functions.js.map

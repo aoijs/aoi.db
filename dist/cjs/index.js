@@ -34,5 +34,7 @@ __exportStar(require("./column/table.js"), exports);
 __exportStar(require("./column/constants.js"), exports);
 __exportStar(require("./column/column.js"), exports);
 __exportStar(require("./column/queueManager.js"), exports);
+__exportStar(require("./ws/transmitter/database.js"), exports);
+__exportStar(require("./ws/receiver/database.js"), exports);
 __exportStar(require("./utils/functions.js"), exports);
 //# sourceMappingURL=index.js.map

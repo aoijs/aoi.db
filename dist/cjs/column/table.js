@@ -71,6 +71,8 @@ class WideColumnTable {
         if (!column) {
             throw new error_js_1.WideColumnError("Secondary Column Name Does Not Match");
         }
+        if (!primaryColumnData.value === undefined)
+            primaryColumnData.value = this.primary.default;
         if (!this.primary.matchType(primaryColumnData.value)) {
             throw new error_js_1.WideColumnError("Primary Column Value Does Not Match the Type: " + this.primary.type);
         }

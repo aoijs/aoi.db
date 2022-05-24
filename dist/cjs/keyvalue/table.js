@@ -336,12 +336,12 @@ class Table {
             }
         }
         else {
-            this.queue.queued.all = true;
             const referenceSize = await this.getReferenceSize();
             if (referenceSize <= this.db.options.cacheOption.limit &&
                 referenceSize <= this.db.options.storeOption.maxDataPerFile) {
-                return [...this.cache.data.values()];
+                return filter ? [...this.cache.data.values()].filter((_) => filter(_.key)) : [...this.cache.data.values()];
             }
+            this.queue.queued.all = true;
             this.files.forEach((file) => {
                 const readData = (0, fs_1.readFileSync)(`${this.path}/${file}`).toString();
                 let JSONData;
@@ -486,10 +486,10 @@ class Table {
         this._createReferencePath();
     }
     getPing() {
-        if (this.#ping !== -1 && Date.now() - this.#lastPingTimestamp < 20000)
+        if (this.#ping !== -1 && Date.now() - this.#lastPingTimestamp < 60000)
             return this.#ping;
         else if (this.#ping === -1 ||
-            Date.now() - this.#lastPingTimestamp > 20000) {
+            Date.now() - this.#lastPingTimestamp > 60000) {
             const randomFile = this.files[Math.floor(Math.random() * this.files.length)];
             const encryptOption = this.db.options.encryptOption;
             const start = Date.now();

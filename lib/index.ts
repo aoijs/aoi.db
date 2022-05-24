@@ -18,4 +18,7 @@ export * from "./column/constants.js";
 export * from "./column/column.js";
 export * from "./column/queueManager.js"
 
+export * from "./ws/transmitter/database.js";
+export * from "./ws/receiver/database.js";
+
 export * from "./utils/functions.js";
