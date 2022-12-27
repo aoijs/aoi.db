@@ -1,0 +1,1 @@
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../lib/constructor/index.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,oBAAoB,CAAC;AAClD,OAAO,EAAE,cAAc,EAAE,MAAM,kBAAkB,CAAC;AAElD,qBAAa,WAAY,SAAQ,YAAY,CAAC,cAAc,CAAC;;IAMzD,GAAG;IACH,GAAG;IACH,MAAM;IACN,GAAG;IACH,MAAM,CAAC,GAAG,CAAG,MAAM,EAAE,MAAM,EAAE,EAAE,EAAE,QAAQ;CAK5C"}

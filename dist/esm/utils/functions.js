@@ -1,6 +1,9 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { createReadStream } from "fs";
 import { WsDBTypes } from "../typings/enums.js";
+import { Transmitter } from "../ws/transmitter/database.js";
+import { KeyValue } from "../keyvalue/database.js";
+import { WideColumn } from "../column/database.js";
 const algorithm = "aes-256-ctr";
 export function JSONParser(readData) {
     let res;
@@ -106,6 +109,39 @@ export function parseData(data, type) {
     }
     else if (type === WsDBTypes.WideColumn) {
         return stringify(data);
+    }
+}
+export async function convertFromDbdjsDbToAoiDb(data, db) {
+    if (db instanceof Transmitter) {
+        for (const d of data) {
+            const key = db.databaseType === "KeyValue" ? d.key : db.databaseType === "WideColumn" ? {
+                name: d.key.split("_")[0],
+                value: d.data.value,
+            } : undefined;
+            const value = db.databaseType === "KeyValue" ? { value: d.data.value } : db.databaseType === "WideColumn" ? {
+                name: db['options'].tables[0].columns.find(x => x['primary'])?.name,
+                value: d.data.key.split("_").slice(1).join("_"),
+            } : {};
+            await db.set(typeof (db.options.tables[0]) === "string" ? db.options.tables[0] : db.options.tables[0].name, key, value);
+        }
+    }
+    else if (db instanceof KeyValue) {
+        for (const d of data) {
+            await db.set(db.options.tables[0], d.key, {
+                ...d.data,
+            });
+        }
+    }
+    else if (db instanceof WideColumn) {
+        for (const d of data) {
+            await db.set(db.options.tables[0].name, {
+                name: d.key.split("_")[0],
+                value: d.data.value,
+            }, {
+                name: db['options'].tables[0].columns.find(x => x['primary'])?.name,
+                value: d.data.key.split("_").slice(1).join("_"),
+            });
+        }
     }
 }
 //# sourceMappingURL=functions.js.map

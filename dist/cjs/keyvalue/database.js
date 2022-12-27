@@ -66,7 +66,7 @@ class KeyValue extends tiny_typed_emitter_1.TypedEmitter {
         if (!tableClass) {
             throw new error_js_1.KeyValueError(`[InvalidTable] :  Table ${table} not found!`);
         }
-        return await tableClass.set(key, value);
+        return await tableClass.set(key, { ...value, ttl: value.ttl ?? 0 });
     }
     async get(table, key) {
         const tableClass = this.tables.get(table);

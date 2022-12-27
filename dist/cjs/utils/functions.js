@@ -1,9 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseData = exports.countFileLines = exports.stringify = exports.decryptColumnFile = exports.encryptColumnData = exports.decrypt = exports.encrypt = exports.JSONParser = void 0;
+exports.convertFromDbdjsDbToAoiDb = exports.parseData = exports.countFileLines = exports.stringify = exports.decryptColumnFile = exports.encryptColumnData = exports.decrypt = exports.encrypt = exports.JSONParser = void 0;
 const crypto_1 = require("crypto");
 const fs_1 = require("fs");
 const enums_js_1 = require("../typings/enums.js");
+const database_js_1 = require("../ws/transmitter/database.js");
+const database_js_2 = require("../keyvalue/database.js");
+const database_js_3 = require("../column/database.js");
 const algorithm = "aes-256-ctr";
 function JSONParser(readData) {
     let res;
@@ -119,4 +122,38 @@ function parseData(data, type) {
     }
 }
 exports.parseData = parseData;
+async function convertFromDbdjsDbToAoiDb(data, db) {
+    if (db instanceof database_js_1.Transmitter) {
+        for (const d of data) {
+            const key = db.databaseType === "KeyValue" ? d.key : db.databaseType === "WideColumn" ? {
+                name: d.key.split("_")[0],
+                value: d.data.value,
+            } : undefined;
+            const value = db.databaseType === "KeyValue" ? { value: d.data.value } : db.databaseType === "WideColumn" ? {
+                name: db['options'].tables[0].columns.find(x => x['primary'])?.name,
+                value: d.data.key.split("_").slice(1).join("_"),
+            } : {};
+            await db.set(typeof (db.options.tables[0]) === "string" ? db.options.tables[0] : db.options.tables[0].name, key, value);
+        }
+    }
+    else if (db instanceof database_js_2.KeyValue) {
+        for (const d of data) {
+            await db.set(db.options.tables[0], d.key, {
+                ...d.data,
+            });
+        }
+    }
+    else if (db instanceof database_js_3.WideColumn) {
+        for (const d of data) {
+            await db.set(db.options.tables[0].name, {
+                name: d.key.split("_")[0],
+                value: d.data.value,
+            }, {
+                name: db['options'].tables[0].columns.find(x => x['primary'])?.name,
+                value: d.data.key.split("_").slice(1).join("_"),
+            });
+        }
+    }
+}
+exports.convertFromDbdjsDbToAoiDb = convertFromDbdjsDbToAoiDb;
 //# sourceMappingURL=functions.js.map

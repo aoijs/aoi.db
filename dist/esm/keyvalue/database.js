@@ -63,7 +63,7 @@ export class KeyValue extends TypedEmitter {
         if (!tableClass) {
             throw new KeyValueError(`[InvalidTable] :  Table ${table} not found!`);
         }
-        return await tableClass.set(key, value);
+        return await tableClass.set(key, { ...value, ttl: value.ttl ?? 0 });
     }
     async get(table, key) {
         const tableClass = this.tables.get(table);

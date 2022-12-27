@@ -1,5 +1,5 @@
 import { TypedEmitter } from "tiny-typed-emitter";
-import { KeyValueDatabaseOption, KeyValueDataOption, TypedDatabaseEvents } from "../typings/interface.js";
+import { KeyValueDatabaseOption, KeyValueDataOption, SetKeyValueDataOption, TypedDatabaseEvents } from "../typings/interface.js";
 import { CacheReferenceType } from "../typings/type.js";
 import { Table } from "./table.js";
 export declare class KeyValue extends TypedEmitter<TypedDatabaseEvents> {
@@ -55,7 +55,7 @@ export declare class KeyValue extends TypedEmitter<TypedDatabaseEvents> {
         };
     };
     connect(): void;
-    set(table: string, key: string, value: KeyValueDataOption): Promise<void>;
+    set(table: string, key: string, value: SetKeyValueDataOption): Promise<void>;
     get(table: string, key: string): Promise<import("./data.js").Data | undefined>;
     delete(table: string, key: string): Promise<void>;
     clear(table: string): void;

@@ -1,16 +1,10 @@
 node_modules
-test.js
-database
-.idea
 /olddatabase
 /database
-benchmarking
 /index.js
 /src
 /index.mjs
 /columndatabase
-/.vscode
-/a.js
 /Receiverdatabase
 /db
 /logs

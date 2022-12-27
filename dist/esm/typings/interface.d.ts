@@ -2,6 +2,8 @@
 import { ClientOptions, ServerOptions, WebSocket } from "ws";
 import { Column } from "../column/column.js";
 import { WideColumn } from "../column/database.js";
+import { List } from "../graph/list.js";
+import { Node } from "../graph/node.js";
 import { KeyValue } from "../keyvalue/database.js";
 import { Table } from "../keyvalue/table.js";
 import { ReceiverOp, TransmitterFlags, WsDBTypes } from "./enums.js";
@@ -11,6 +13,13 @@ export interface KeyValueDataOption {
     key: string;
     file: string;
     ttl: number;
+    type?: string;
+}
+export interface SetKeyValueDataOption {
+    value: KeyValueDataValueType;
+    key?: string;
+    file?: string;
+    ttl?: number;
     type?: string;
 }
 export interface KeyValueSetDataOption {
@@ -203,5 +212,15 @@ export interface SocketData {
 }
 export interface WS extends WebSocket {
     sessionId: `${string}:${string}`;
+}
+export interface ListData<type extends "node" | "list"> {
+    type: type;
+    data: type extends "list" ? List<type> : Node;
+}
+export interface NodeData {
+    key: unknown;
+    value: unknown;
+    parent?: Node | null;
+    id: number;
 }
 //# sourceMappingURL=interface.d.ts.map

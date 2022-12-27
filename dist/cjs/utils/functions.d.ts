@@ -1,6 +1,9 @@
 import { WsDBTypes } from "../typings/enums.js";
 import { HashData, KeyValueJSONOption } from "../typings/interface.js";
 import { WideColumnDataValueType } from "../typings/type.js";
+import { Transmitter } from "../ws/transmitter/database.js";
+import { KeyValue } from "../keyvalue/database.js";
+import { WideColumn } from "../column/database.js";
 export declare function JSONParser<T>(readData: string): T;
 export declare function encrypt(readData: string, securitykey: string): {
     iv: string;
@@ -15,4 +18,11 @@ export declare function parseData(data: WideColumnDataValueType | KeyValueJSONOp
     type: string;
     value: string | undefined;
 } | undefined;
+export declare function convertFromDbdjsDbToAoiDb(data: {
+    key: string;
+    data: {
+        key: string;
+        value: any;
+    };
+}[], db: Transmitter | KeyValue | WideColumn): Promise<void>;
 //# sourceMappingURL=functions.d.ts.map

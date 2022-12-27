@@ -55,6 +55,7 @@ export class Table {
       const newData = new Data({
         key,
         ...value,
+        ttl: value.ttl ?? oldData.ttl,
         file: oldData.file,
       });
       this.cache.set(key, newData);
