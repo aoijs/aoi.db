@@ -1,11 +1,6 @@
 node_modules
-/olddatabase
-/database
+__tests_dbs__
 /index.js
 /src
 /index.mjs
-/columndatabase
-/Receiverdatabase
-/db
-/logs
 /benchmark

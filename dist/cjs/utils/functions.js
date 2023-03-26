@@ -113,7 +113,7 @@ function parseData(data, type) {
         const value = data.value;
         const obj = {
             type: value instanceof Date ? "date" : typeof value,
-            value: value?.toString(),
+            value: stringify(value),
         };
         return obj;
     }

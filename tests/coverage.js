@@ -1,7 +1,7 @@
 const b = require("benny");
 const { KeyValue } = require("../dist/cjs/index.js");
 const db = new KeyValue({
-    path: "./database/", //path of the database
+    path: "./__tests_db__/database/", //path of the database
     tables: ["main"], // TableName[]
     methodOption: {
         saveTime: 100, // queue time to flush data into file

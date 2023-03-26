@@ -19,7 +19,7 @@ const prime = new Column({
 });
 
 const db = new WideColumn({
-  path: "./testcolumndatabase/",
+  path: "./__tests_dbs__/testcolumndatabase/",
   encryptOption: {
     securitykey: "a-32-characters-long-string-here",
   },

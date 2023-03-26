@@ -90,7 +90,7 @@ export function decryptColumnFile(
     return decrpyted.toString();
 }
 
-export function stringify(data: WideColumnDataValueType) {
+export function stringify(data: WideColumnDataValueType | KeyValueDataValueType) {
     if (typeof data === "string") {
         return data;
     } else if (typeof data === "number") {
@@ -140,7 +140,7 @@ export function parseData(
         const value = (<KeyValueJSONOption>data).value;
         const obj = {
             type: value instanceof Date ? "date" : typeof value,
-            value: value?.toString(),
+            value: stringify(value),
         };
         return obj;
     } else if (type === WsDBTypes.WideColumn) {

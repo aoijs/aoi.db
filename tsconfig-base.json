@@ -10,5 +10,6 @@
     "declaration": true,
     "sourceMap": true,
     "declarationMap": true,
+    "rootDir": "./lib"
   }
 }

@@ -437,7 +437,7 @@ class Table {
                 delete JSONData[key];
             }
             if (Object.keys(JSONData).length === 0) {
-                await (0, promises_1.rm)(`${this.path}/${file}`, {
+                (0, fs_1.rmSync)(`${this.path}/${file}`, {
                     recursive: true,
                 });
                 const indexof = this.files.indexOf(file);
@@ -456,8 +456,8 @@ class Table {
                         writeData = JSON.stringify((0, functions_js_1.encrypt)(writeData, encryptOption.securitykey));
                     }
                 }
-                await (0, promises_1.writeFile)(`${this.path}/$temp_${file}`, writeData);
-                await (0, promises_1.rm)(`${this.path}/${file}`);
+                (0, fs_1.writeFileSync)(`${this.path}/$temp_${file}`, writeData);
+                (0, fs_1.rmSync)(`${this.path}/${file}`);
                 await (0, promises_1.rename)(`${this.path}/$temp_${file}`, `${this.path}/${file}`);
             }
             this.queue.deletePathFromQueue("delete", file);

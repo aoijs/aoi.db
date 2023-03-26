@@ -371,7 +371,9 @@ export class Transmitter extends TypedEmitter<WsEvents> {
     key: WideColumnDataValueType,
     id?: WideColumnDataValueType,
   ) {
-    return (await this._get(table, key, id)).d;
+    const d = ( await this._get( table, key, id ) ).d;
+    d.value = parseData( d.value, WsDBTypes[ this.databaseType ] );
+    return d;
   }
   async delete(
     table: string,
