@@ -1,6 +1,6 @@
 {
   "name": "aoi.db",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "aoi.db - Database Management System with different types of databases.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -48,5 +48,16 @@
     "dist",
     "package.json",
     "README.md"
-  ]
+  ],
+  "homepage": "https://leref.github.io/aoi.db/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leref/aoi.db.git"
+  },
+  "author": "Leref",
+  "maintainers": ["USERSATOSHI"],
+  "bugs": {
+    "url": "https://github.com/Leref/aoi.db/issues"
+  },
+  "readme": "https://github.com/Leref/aoi.db/blob/main/README.md"
 }
