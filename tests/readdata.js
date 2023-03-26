@@ -1,20 +1,20 @@
 const fs = require("fs/promises");
 
 async function f() {
-await fs.readdir("./database/main/").then((d) => {
+await fs.readdir("./__tests_dbs__/database/main/").then((d) => {
   d.forEach((f) => {
-    fs.readFile(`./database/main/${f}`).then((b) => {
+    fs.readFile(`./__tests_dbs__/database/main/${f}`).then((b) => {
       console.log(`KeyValue : ${f} -> ${b.byteLength} bytes`);
     });
   });
 });
 
 await
-fs.readdir("./columndatabase/main/").then((d) => {
+fs.readdir("./__tests_dbs__/testcolumndatabase/main/").then((d) => {
   d.forEach((f) => {
-    fs.readdir(`./columndatabase/main/${f}`).then((files) => {
+    fs.readdir(`./__tests_dbs__/testcolumndatabase/main/${f}`).then((files) => {
       files.forEach((file) => {
-        fs.readFile(`./columndatabase/main/${f}/${file}`).then((b) => {
+        fs.readFile(`./__tests_dbs__/testcolumndatabase/main/${f}/${file}`).then((b) => {
       console.log(`WideColumn : ${file} -> ${b.byteLength} bytes`);
         });
       });

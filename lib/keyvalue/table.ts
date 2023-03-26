@@ -55,6 +55,7 @@ export class Table {
       const newData = new Data({
         key,
         ...value,
+        ttl: value.ttl ?? oldData.ttl,
         file: oldData.file,
       });
       this.cache.set(key, newData);
@@ -449,7 +450,7 @@ export class Table {
         delete JSONData[key];
       }
       if (Object.keys(JSONData).length === 0) {
-        await rm(`${this.path}/${file}`, {
+        rmSync(`${this.path}/${file}`, {
           recursive: true,
         });
         const indexof = this.files.indexOf(file);
@@ -468,8 +469,8 @@ export class Table {
             );
           }
         }
-        await writeFile(`${this.path}/$temp_${file}`, writeData);
-        await rm(`${this.path}/${file}`);
+        writeFileSync(`${this.path}/$temp_${file}`, writeData);
+        rmSync(`${this.path}/${file}`);
         await rename(`${this.path}/$temp_${file}`, `${this.path}/${file}`);
       }
       this.queue.deletePathFromQueue("delete", file);

@@ -13,7 +13,7 @@ const xp = new Column({
 });
 
 const db = new WideColumn({
-  path: "./columndatabase/",
+  path: "./testcolumndatabase/",
   encryptOption: {
     securitykey: "a-32-characters-long-string-here",
   },
