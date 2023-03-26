@@ -24,7 +24,7 @@
   - [KeyValue](#keyvalue)
   - [WideColumn](#widecolumn)
   - [Remote](#remote)
-    - [Setting up the daatabase server](#setting-up-the-daatabase-server)
+    - [Setting up the database server](#setting-up-the-database-server)
     - [Setting up the client](#setting-up-the-client)
 - [Links](#links)
 
@@ -132,7 +132,7 @@ Reference: [WideColumn](https://leref.github.io/aoi.db/classes/WideColumn.html)
 
 ### Remote
 
-#### Setting up the daatabase server
+#### Setting up the database server
 
 ```js
 const { Receiver } = require("aoi.db"); //commonjs
