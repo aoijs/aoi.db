@@ -1,6 +1,6 @@
 {
   "name": "aoi.db",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "aoi.db - Database Management System with different types of databases.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
