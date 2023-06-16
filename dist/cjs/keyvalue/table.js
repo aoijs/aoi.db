@@ -328,7 +328,7 @@ class Table {
                 return res;
             }
             else {
-                res = this.queue.queue.all.filter((_, key) => filter(key));
+                res = this.queue.queue.all.filter((_, key) => !key ? false : filter(key));
                 res =
                     sortType === "desc"
                         ? res.slice(0, limit)
@@ -340,7 +340,7 @@ class Table {
             const referenceSize = await this.getReferenceSize();
             if (referenceSize <= this.db.options.cacheOption.limit &&
                 referenceSize <= this.db.options.storeOption.maxDataPerFile) {
-                return filter ? [...this.cache.data.values()].filter((_) => filter(_.key)) : [...this.cache.data.values()];
+                return filter ? [...this.cache.data.values()].filter((_) => !_.key ? false : filter(_.key)) : [...this.cache.data.values()];
             }
             this.queue.queued.all = true;
             this.files.forEach((file) => {
@@ -379,7 +379,7 @@ class Table {
                 return res;
             }
             else {
-                res = this.queue.queue.all.filter((_, key) => filter(key));
+                res = this.queue.queue.all.filter((_, key) => !key ? false : filter(key));
                 res =
                     sortType === "desc"
                         ? res.slice(0, limit)
