@@ -26,6 +26,7 @@ export class Cacher {
     return data;
   }
   set(key: string, value: Data) {
+    if(!key && key !== "") return ;
     if (this.options?.sorted) {
       this.data.set(key, value);
       this.sort();
@@ -37,6 +38,7 @@ export class Cacher {
   }
   manualSet(key: string, value: Data) {
     if ((this.options?.limit ?? 10000) === this.data.size) return;
+    if(!key && key !== "") return;
     this.data.set(key, value);
   }
   get(key: string) {

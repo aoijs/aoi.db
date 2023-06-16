@@ -27,6 +27,8 @@ class Cacher {
         return data;
     }
     set(key, value) {
+        if (!key && key !== "")
+            return;
         if (this.options?.sorted) {
             this.data.set(key, value);
             this.sort();
@@ -39,6 +41,8 @@ class Cacher {
     }
     manualSet(key, value) {
         if ((this.options?.limit ?? 10000) === this.data.size)
+            return;
+        if (!key && key !== "")
             return;
         this.data.set(key, value);
     }

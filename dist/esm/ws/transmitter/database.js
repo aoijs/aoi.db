@@ -295,7 +295,9 @@ export class Transmitter extends TypedEmitter {
         return (await this._set(table, key, data)).d;
     }
     async get(table, key, id) {
-        return (await this._get(table, key, id)).d;
+        const d = (await this._get(table, key, id)).d;
+        d.value = parseData(d.value, WsDBTypes[this.databaseType]);
+        return d;
     }
     async delete(table, key, primary) {
         return (await this._delete(table, key, primary)).d;

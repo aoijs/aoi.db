@@ -301,7 +301,9 @@ class Transmitter extends tiny_typed_emitter_1.TypedEmitter {
         return (await this._set(table, key, data)).d;
     }
     async get(table, key, id) {
-        return (await this._get(table, key, id)).d;
+        const d = (await this._get(table, key, id)).d;
+        d.value = (0, functions_js_1.parseData)(d.value, enums_js_1.WsDBTypes[this.databaseType]);
+        return d;
     }
     async delete(table, key, primary) {
         return (await this._delete(table, key, primary)).d;

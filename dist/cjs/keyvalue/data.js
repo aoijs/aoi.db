@@ -15,15 +15,19 @@ class Data {
                 (typeof data.value === "string" ||
                     typeof data.value === "number" ||
                     util_1.types.isDate(data.value))
-                ? new Date(data.value)
+                ? // @ts-ignore
+                    new Date(data.value)
                 : data.type === "bigint" &&
-                    (typeof data.value === "string" || typeof data.value === "number")
+                    (typeof data.value === "string" ||
+                        typeof data.value === "number")
                     ? BigInt(data.value)
-                    : typeof data.value === "number" && data.value > Number.MAX_SAFE_INTEGER
+                    : typeof data.value === "number" &&
+                        data.value > Number.MAX_SAFE_INTEGER
                         ? BigInt(data.value)
                         : data.value;
         this.type =
-            data.type ?? (this.value instanceof Date ? "date" : typeof this.value);
+            data.type ??
+                (this.value instanceof Date ? "date" : typeof this.value);
         this.ttl = data.ttl;
         this.file = data.file;
     }
