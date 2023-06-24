@@ -29,14 +29,10 @@ Aoi.db is a collection of various database types to handle various types of data
 
 ```bash
 #npm 
-npm i aoi.db
+npm i @akarui/aoi.db
 
 #yarn
-yarn add aoi.db
-
-#edge
-
-npm i https://github.com/leref/aoi.db#main
+yarn add @akarui/aoi.db
 ```
 
 ## Types
@@ -59,9 +55,9 @@ npm i https://github.com/leref/aoi.db#main
 ### KeyValue
 
 ```ts
-  const { KeyValue } = require("aoi.db") //commonjs
+  const { KeyValue } = require("@akarui/aoi.db") //commonjs
   // or
-  import { KeyValue } from "aoi.db" //esm
+  import { KeyValue } from "@akarui/aoi.db" //esm
 
   // Basic Setup
   const db = new KeyValue({
@@ -76,14 +72,14 @@ npm i https://github.com/leref/aoi.db#main
   db.connect();
 
 ```
-Reference: [KeyValue](https://leref.github.io/aoi.db/classes/KeyValue.html)
+Reference: [KeyValue](https://akaruidevelopment.github.io/aoi.db/classes/KeyValue.html)
 
 ### WideColumn
 
 ```ts
-  const { WideColumn, Column } = require("aoi.db") //commonjs
+  const { WideColumn, Column } = require("@akarui/aoi.db") //commonjs
   // or
-  import { WideColumn, Column } from "aoi.db" //esm
+  import { WideColumn, Column } from "@akarui/aoi.db" //esm
 
   // Basic Setup
 
@@ -121,7 +117,7 @@ Reference: [KeyValue](https://leref.github.io/aoi.db/classes/KeyValue.html)
   db.connect();
 
 ```
-Reference: [WideColumn](https://leref.github.io/aoi.db/classes/WideColumn.html)
+Reference: [WideColumn](https://akaruidevelopment.github.io/aoi.db/classes/WideColumn.html)
 
 
 ### Remote
@@ -129,9 +125,9 @@ Reference: [WideColumn](https://leref.github.io/aoi.db/classes/WideColumn.html)
 #### Setting up the database server
 
 ```js
-const { Receiver } = require("aoi.db"); //commonjs
+const { Receiver } = require("@akarui/aoi.db"); //commonjs
 // or
-import { Receiver } from "aoi.db"; //esm
+import { Receiver } from "@akarui/aoi.db"; //esm
 
 const rec = new Receiver({
   logEncrypt: "a-32-characters-long-string-here",
@@ -150,15 +146,15 @@ rec.on("connect", () => {
 rec.connect();
 
 ```
-Reference: [Receiver](https://leref.github.io/aoi.db/classes/Receiver.html)
+Reference: [Receiver](https://akaruidevelopment.github.io/aoi.db/classes/Receiver.html)
 
 #### Setting up the client
 
 ```js
 
-const { Transmitter, TransmitterFlags } = require("aoi.db"); //commonjs
+const { Transmitter, TransmitterFlags } = require("@akarui/aoi.db"); //commonjs
 // or
-import { Transmitter, TransmitterFlags } from "aoi.db"; //esm
+import { Transmitter, TransmitterFlags } from "@akarui/aoi.db"; //esm
 
 const db = new Transmitter({
   path: "websocket path",
@@ -185,12 +181,12 @@ db.on("close", (code, reason) => {
 });
 db.connect();
 ```
-Reference: [Transmitter](https://leref.github.io/aoi.db/classes/Transmitter.html)
+Reference: [Transmitter](https://akaruidevelopment.github.io/aoi.db/classes/Transmitter.html)
 
 
 ## Links
 
-- [Documentation](https://leref.github.io/aoi.db/)
+- [Documentation](https://akaruidevelopment.github.io/aoi.db/)
 - [Discord Server](https://discord.com/invite/HMUfMXDQsV)
-- [NPM](https://www.npmjs.com/package/aoi.db)
-- [Github](https://github.com/leref/aoi.db)
+- [NPM](https://www.npmjs.com/package/@akarui/aoi.db)
+- [Github](https://github.com/Akaruidevelopment/aoi.db)
