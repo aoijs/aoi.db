@@ -4,3 +4,5 @@ __tests_dbs__
 /src
 /index.mjs
 /benchmark
+.idea
+.DS_Store
