@@ -4,6 +4,7 @@
     "module": "ESNext",
     "outDir": "dist/esm",
     "target": "ESNext",
-    "rootDir": "./lib"
+    "rootDir": "./lib",
+    
   }
 }

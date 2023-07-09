@@ -1,8 +1,10 @@
 node_modules
 __tests_dbs__
+/database
 /index.js
-/src
+/oldlib
 /index.mjs
 /benchmark
 .idea
 .DS_Store
+/dist

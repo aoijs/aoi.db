@@ -1,15 +1,15 @@
 {
-  "compilerOptions": {
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipDefaultLibCheck": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "sourceMap": true,
-    "declarationMap": true,
-    "rootDir": "./lib"
-  }
+    "compilerOptions": {
+        "moduleResolution": "NodeNext",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "declaration": true,
+        "sourceMap": true,
+        "declarationMap": true,
+        "rootDir": "./lib",
+        "composite": false,
+    },
+    "exclude": ["oldlib","dist"]
 }
