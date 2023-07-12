@@ -1,5 +1,5 @@
 node_modules
-__tests_dbs__
+__tests__
 /database
 /index.js
 /oldlib
@@ -8,3 +8,4 @@ __tests_dbs__
 .idea
 .DS_Store
 /dist
+/tsconfig.old.json

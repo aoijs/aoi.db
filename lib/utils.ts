@@ -1,8 +1,9 @@
 import { createCipheriv,createDecipheriv,randomBytes } from "crypto";
 import { Hash } from "./typings/interface";
-const algorithm = "aes-256-cbc";
+import { r } from "tar";
+const algorithm = "aes-256-ctr";
 export function encrypt(string: string, key: string,iV?:string):Hash {
-    const iv = iV? Buffer.from(iV) : randomBytes(16);
+    const iv = iV? Buffer.from(iV,"hex") : randomBytes(16);
     const cipher = createCipheriv(algorithm, key, iv);
 
     const encrypted = Buffer.concat([cipher.update(string), cipher.final()]);
@@ -39,4 +40,23 @@ export function  createHash(string:string,key:string,iv:string) {
 export function decodeHash(hash:string,key:string,iv:string) {
     const decrpyted = decrypt({encrypted:hash,iv:iv},key);
     return decrpyted.split(ReferenceConstantSpace);
+}
+
+export function JSONParser(data:string) {
+    try {
+        return {
+            data: JSON.parse(data),
+            isBroken: false
+        }
+    } catch (e) {
+        data = data.split("}").slice(0, -1).join("}").trim() + "}";
+        if(data === "}") return {
+            data: {},
+            isBroken: true
+        }
+        return {
+            data: JSON.parse(data),
+            isBroken: true
+        }
+    }
 }

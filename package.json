@@ -12,7 +12,7 @@
   "scripts": {
     "test": "node tests/keyValue/keyValuecjs.js && node tests/keyValue/keyValuemjs.mjs && node tests/widecolumn/widecolcjs.js && node tests/widecolumn/widecolmjs.mjs && node tests/readdata.js",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && npm run createpack",
-    "createpack": "node tests/pack.js",
+    "createpack": "node builder/pack.js",
     "exec": "node executions/keyvalue/exec.js && node executions/widecolumn/exec.js",
     "docs": "typedoc"
   },
@@ -35,13 +35,17 @@
   "devDependencies": {
     "@types/benchmark": "^2.1.2",
     "@types/node": "^20.4.0",
+    "@types/tar": "^6.1.5",
+    "@types/ws": "^8.5.5",
     "benchmark": "^2.1.4",
     "benny": "^3.7.1",
     "typedoc": "^0.24.8",
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "tiny-typed-emitter": "^2.1.0"
+    "tar": "^6.1.15",
+    "tiny-typed-emitter": "^2.1.0",
+    "ws": "^8.13.0"
   },
   "files": [
     "dist",

@@ -8,16 +8,46 @@ export default class Data {
     ttl?: number;
     type: string;
 
+    /**
+     * @description create data
+     * @param data data to create
+     * 
+     * @memberof Data
+     * 
+     * @example
+     * ```js
+     * const data = new Data({
+     * file:"file",
+     * key:"key",
+     * value:"value",
+     * ttl:1000,
+     * type:"string"
+     * })
+     * ```
+     */
+
     constructor(data: Optional<KeyValueData, "type" | "ttl">) {
         this.file = data.file;
         this.key = data.key;
-        this.type = data.type ?? this.#getType();
+        this.type = data.type ?? this.#getType(data.value);
         this.value = this.#parseValue(data);
         this.ttl = data.ttl !== -1 && data.ttl ? Date.now() + data.ttl : -1;
     }
-    #getType() {
-        return this.value instanceof Date ? "date" : typeof this.value;
+    /**
+     * @private
+     * @description get type of value
+     * @param value value to get type
+     * @returns 
+     */
+    #getType(value: any) {
+        return value instanceof Date ? "date" : typeof value;
     }
+    /**
+     * @private
+     * @description parse value to correct type
+     * @param data data to parse
+     * @returns
+     */
     #parseValue(data: Optional<KeyValueData, "type" | "ttl">): any {
         return data.type === "date" &&
             (typeof data.value === "string" ||
@@ -33,6 +63,15 @@ export default class Data {
             ? BigInt(data.value)
             : data.value;
     }
+    /**
+     * @description convert data to json
+     * @returns
+     * @memberof Data
+     * @example
+     * ```js
+     * <KeyValueData>.toJSON()
+     * ```
+     */
     toJSON(): KeyValueJSONOption {
         return {
             value: types.isDate(this.value)
@@ -49,6 +88,11 @@ export default class Data {
     get size() {
         return Buffer.byteLength(JSON.stringify(this.toJSON()));
     }
+    /**
+     * @description create empty data
+     * @static
+     * @returns 
+     */
     static emptyData() {
         return new Data({
             file: "",

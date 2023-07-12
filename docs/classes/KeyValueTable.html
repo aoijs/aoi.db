@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>KeyValue | @akarui/aoi.db</title><meta name="description" content="Documentation for @akarui/aoi.db"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>KeyValueTable | @akarui/aoi.db</title><meta name="description" content="Documentation for @akarui/aoi.db"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -13,16 +13,16 @@
 <div class="tsd-page-title">
 <ul class="tsd-breadcrumb">
 <li><a href="../modules.html">@akarui/aoi.db</a></li>
-<li><a href="KeyValue.html">KeyValue</a></li></ul>
-<h1>Class KeyValue</h1></div>
+<li><a href="KeyValueTable.html">KeyValueTable</a></li></ul>
+<h1>Class KeyValueTable</h1></div>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li><span class="tsd-signature-type ">EventEmitter</span>
 <ul class="tsd-hierarchy">
-<li><span class="target">KeyValue</span></li></ul></li></ul></section><aside class="tsd-sources">
+<li><span class="target">KeyValueTable</span></li></ul></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L14">lib/KeyValue/src/database.ts:14</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L42">lib/KeyValue/src/table.ts:42</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -30,108 +30,223 @@
 <div class="tsd-accordion-details">
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Constructors</h3>
-<div class="tsd-index-list"><a href="KeyValue.html#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-512"><rect fill="var(--color-icon-background)" stroke="#4D7FFF" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)"></path></g></svg><span>constructor</span></a>
+<div class="tsd-index-list"><a href="KeyValueTable.html#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-512"><rect fill="var(--color-icon-background)" stroke="#4D7FFF" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)"></path></g></svg><span>constructor</span></a>
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Properties</h3>
-<div class="tsd-index-list"><a href="KeyValue.html#_options" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-1024"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)"></path></g></svg><span>#options</span></a>
-<a href="KeyValue.html#readyAt" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>ready<wbr/>At</span></a>
-<a href="KeyValue.html#tables" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>tables</span></a>
-<a href="KeyValue.html#captureRejectionSymbol" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>capture<wbr/>Rejection<wbr/>Symbol</span></a>
-<a href="KeyValue.html#captureRejections" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>capture<wbr/>Rejections</span></a>
-<a href="KeyValue.html#defaultMaxListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>default<wbr/>Max<wbr/>Listeners</span></a>
-<a href="KeyValue.html#errorMonitor" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>error<wbr/>Monitor</span></a>
+<div class="tsd-index-list"><a href="KeyValueTable.html#_cache" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-1024"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)"></path></g></svg><span>#cache</span></a>
+<a href="KeyValueTable.html#_intervals" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>#intervals</span></a>
+<a href="KeyValueTable.html#_queue" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>#queue</span></a>
+<a href="KeyValueTable.html#_queued" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>#queued</span></a>
+<a href="KeyValueTable.html#db" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>db</span></a>
+<a href="KeyValueTable.html#files" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>files</span></a>
+<a href="KeyValueTable.html#logData" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>log<wbr/>Data</span></a>
+<a href="KeyValueTable.html#logHash" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>log<wbr/>Hash</span></a>
+<a href="KeyValueTable.html#options" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>options</span></a>
+<a href="KeyValueTable.html#paths" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>paths</span></a>
+<a href="KeyValueTable.html#readyAt" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>ready<wbr/>At</span></a>
+<a href="KeyValueTable.html#referencer" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>referencer</span></a>
+<a href="KeyValueTable.html#repairMode" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>repair<wbr/>Mode</span></a>
+<a href="KeyValueTable.html#captureRejectionSymbol" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>capture<wbr/>Rejection<wbr/>Symbol</span></a>
+<a href="KeyValueTable.html#captureRejections" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>capture<wbr/>Rejections</span></a>
+<a href="KeyValueTable.html#defaultMaxListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>default<wbr/>Max<wbr/>Listeners</span></a>
+<a href="KeyValueTable.html#errorMonitor" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>error<wbr/>Monitor</span></a>
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Accessors</h3>
-<div class="tsd-index-list"><a href="KeyValue.html#options" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-262144"><rect fill="var(--color-icon-background)" stroke="#FF4D4D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M8.85 16L11.13 7.24H12.582L14.85 16H13.758L13.182 13.672H10.53L9.954 16H8.85ZM10.746 12.76H12.954L12.282 10.06C12.154 9.548 12.054 9.12 11.982 8.776C11.91 8.432 11.866 8.208 11.85 8.104C11.834 8.208 11.79 8.432 11.718 8.776C11.646 9.12 11.546 9.544 11.418 10.048L10.746 12.76Z" fill="var(--color-text)"></path></g></svg><span>options</span></a>
+<div class="tsd-index-list"><a href="KeyValueTable.html#queue" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-262144"><rect fill="var(--color-icon-background)" stroke="#FF4D4D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M8.85 16L11.13 7.24H12.582L14.85 16H13.758L13.182 13.672H10.53L9.954 16H8.85ZM10.746 12.76H12.954L12.282 10.06C12.154 9.548 12.054 9.12 11.982 8.776C11.91 8.432 11.866 8.208 11.85 8.104C11.834 8.208 11.79 8.432 11.718 8.776C11.646 9.12 11.546 9.544 11.418 10.048L10.746 12.76Z" fill="var(--color-text)"></path></g></svg><span>queue</span></a>
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Methods</h3>
-<div class="tsd-index-list"><a href="KeyValue.html#_finalizeOptions" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-2048"><rect fill="var(--color-icon-background)" stroke="#FF4DB8" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.162 16V7.24H10.578L11.514 10.072C11.602 10.328 11.674 10.584 11.73 10.84C11.794 11.088 11.842 11.28 11.874 11.416C11.906 11.28 11.954 11.088 12.018 10.84C12.082 10.584 12.154 10.324 12.234 10.06L13.122 7.24H14.538V16H13.482V12.82C13.482 12.468 13.49 12.068 13.506 11.62C13.53 11.172 13.558 10.716 13.59 10.252C13.622 9.78 13.654 9.332 13.686 8.908C13.726 8.476 13.762 8.1 13.794 7.78L12.366 12.16H11.334L9.894 7.78C9.934 8.092 9.97 8.456 10.002 8.872C10.042 9.28 10.078 9.716 10.11 10.18C10.142 10.636 10.166 11.092 10.182 11.548C10.206 12.004 10.218 12.428 10.218 12.82V16H9.162Z" fill="var(--color-text)"></path></g></svg><span>#finalize<wbr/>Options</span></a>
-<a href="KeyValue.html#addListener" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Listener</span></a>
-<a href="KeyValue.html#all" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>all</span></a>
-<a href="KeyValue.html#backup" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>backup</span></a>
-<a href="KeyValue.html#clear" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>clear</span></a>
-<a href="KeyValue.html#clearAll" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>clear<wbr/>All</span></a>
-<a href="KeyValue.html#connect" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>connect</span></a>
-<a href="KeyValue.html#delete" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>delete</span></a>
-<a href="KeyValue.html#emit" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>emit</span></a>
-<a href="KeyValue.html#eventNames" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>event<wbr/>Names</span></a>
-<a href="KeyValue.html#findMany" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>find<wbr/>Many</span></a>
-<a href="KeyValue.html#findOne" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>find<wbr/>One</span></a>
-<a href="KeyValue.html#fullRepair" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>full<wbr/>Repair</span></a>
-<a href="KeyValue.html#get" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get</span></a>
-<a href="KeyValue.html#getMaxListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Max<wbr/>Listeners</span></a>
-<a href="KeyValue.html#has" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>has</span></a>
-<a href="KeyValue.html#listenerCount" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>listener<wbr/>Count</span></a>
-<a href="KeyValue.html#listeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>listeners</span></a>
-<a href="KeyValue.html#off" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>off</span></a>
-<a href="KeyValue.html#on" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>on</span></a>
-<a href="KeyValue.html#once" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>once</span></a>
-<a href="KeyValue.html#prependListener" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>prepend<wbr/>Listener</span></a>
-<a href="KeyValue.html#prependOnceListener" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>prepend<wbr/>Once<wbr/>Listener</span></a>
-<a href="KeyValue.html#rawListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>raw<wbr/>Listeners</span></a>
-<a href="KeyValue.html#removeAllListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>remove<wbr/>All<wbr/>Listeners</span></a>
-<a href="KeyValue.html#removeListener" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>remove<wbr/>Listener</span></a>
-<a href="KeyValue.html#set" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set</span></a>
-<a href="KeyValue.html#setMaxListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set<wbr/>Max<wbr/>Listeners</span></a>
-<a href="KeyValue.html#defaultOptions" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>default<wbr/>Options</span></a>
-<a href="KeyValue.html#getEventListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Event<wbr/>Listeners</span></a>
-<a href="KeyValue.html#listenerCount-2" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>listener<wbr/>Count</span></a>
-<a href="KeyValue.html#on-2" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>on</span></a>
-<a href="KeyValue.html#once-2" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>once</span></a>
-<a href="KeyValue.html#setMaxListeners-2" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set<wbr/>Max<wbr/>Listeners</span></a>
+<div class="tsd-index-list"><a href="KeyValueTable.html#_checkIntegrity" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-2048"><rect fill="var(--color-icon-background)" stroke="#FF4DB8" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.162 16V7.24H10.578L11.514 10.072C11.602 10.328 11.674 10.584 11.73 10.84C11.794 11.088 11.842 11.28 11.874 11.416C11.906 11.28 11.954 11.088 12.018 10.84C12.082 10.584 12.154 10.324 12.234 10.06L13.122 7.24H14.538V16H13.482V12.82C13.482 12.468 13.49 12.068 13.506 11.62C13.53 11.172 13.558 10.716 13.59 10.252C13.622 9.78 13.654 9.332 13.686 8.908C13.726 8.476 13.762 8.1 13.794 7.78L12.366 12.16H11.334L9.894 7.78C9.934 8.092 9.97 8.456 10.002 8.872C10.042 9.28 10.078 9.716 10.11 10.18C10.142 10.636 10.166 11.092 10.182 11.548C10.206 12.004 10.218 12.428 10.218 12.82V16H9.162Z" fill="var(--color-text)"></path></g></svg><span>#check<wbr/>Integrity</span></a>
+<a href="KeyValueTable.html#_createNewFile" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#create<wbr/>New<wbr/>File</span></a>
+<a href="KeyValueTable.html#_delete" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#delete</span></a>
+<a href="KeyValueTable.html#_deleteFlush" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#delete<wbr/>Flush</span></a>
+<a href="KeyValueTable.html#_fetchFile" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#fetch<wbr/>File</span></a>
+<a href="KeyValueTable.html#_fileSize" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#file<wbr/>Size</span></a>
+<a href="KeyValueTable.html#_get" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#get</span></a>
+<a href="KeyValueTable.html#_getCurrentFile" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#get<wbr/>Current<wbr/>File</span></a>
+<a href="KeyValueTable.html#_getHashLog" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#get<wbr/>Hash<wbr/>Log</span></a>
+<a href="KeyValueTable.html#_initialize" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#initialize</span></a>
+<a href="KeyValueTable.html#_set" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#set</span></a>
+<a href="KeyValueTable.html#_syncWithLogs" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#sync<wbr/>With<wbr/>Logs</span></a>
+<a href="KeyValueTable.html#_wal" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#wal</span></a>
+<a href="KeyValueTable.html#addListener" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Listener</span></a>
+<a href="KeyValueTable.html#all" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>all</span></a>
+<a href="KeyValueTable.html#clear" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>clear</span></a>
+<a href="KeyValueTable.html#delete-4" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>delete</span></a>
+<a href="KeyValueTable.html#emit" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>emit</span></a>
+<a href="KeyValueTable.html#eventNames" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>event<wbr/>Names</span></a>
+<a href="KeyValueTable.html#findMany" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>find<wbr/>Many</span></a>
+<a href="KeyValueTable.html#findOne" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>find<wbr/>One</span></a>
+<a href="KeyValueTable.html#fullRepair" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>full<wbr/>Repair</span></a>
+<a href="KeyValueTable.html#get" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get</span></a>
+<a href="KeyValueTable.html#getLogs" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Logs</span></a>
+<a href="KeyValueTable.html#getMaxListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Max<wbr/>Listeners</span></a>
+<a href="KeyValueTable.html#has" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>has</span></a>
+<a href="KeyValueTable.html#listenerCount" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>listener<wbr/>Count</span></a>
+<a href="KeyValueTable.html#listeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>listeners</span></a>
+<a href="KeyValueTable.html#off" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>off</span></a>
+<a href="KeyValueTable.html#on" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>on</span></a>
+<a href="KeyValueTable.html#once" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>once</span></a>
+<a href="KeyValueTable.html#prependListener" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>prepend<wbr/>Listener</span></a>
+<a href="KeyValueTable.html#prependOnceListener" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>prepend<wbr/>Once<wbr/>Listener</span></a>
+<a href="KeyValueTable.html#rawListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>raw<wbr/>Listeners</span></a>
+<a href="KeyValueTable.html#removeAllListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>remove<wbr/>All<wbr/>Listeners</span></a>
+<a href="KeyValueTable.html#removeListener" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>remove<wbr/>Listener</span></a>
+<a href="KeyValueTable.html#set-4" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set</span></a>
+<a href="KeyValueTable.html#setMaxListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set<wbr/>Max<wbr/>Listeners</span></a>
+<a href="KeyValueTable.html#getEventListeners" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Event<wbr/>Listeners</span></a>
+<a href="KeyValueTable.html#listenerCount-2" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>listener<wbr/>Count</span></a>
+<a href="KeyValueTable.html#on-2" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>on</span></a>
+<a href="KeyValueTable.html#once-2" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>once</span></a>
+<a href="KeyValueTable.html#setMaxListeners-2" class="tsd-index-link tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set<wbr/>Max<wbr/>Listeners</span></a>
 </div></section></div></details></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Constructors</h2>
 <section class="tsd-panel tsd-member"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_KeyValue"><span class="tsd-kind-constructor-signature">new <wbr/>Key<wbr/>Value</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#constructor.new_KeyValue" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_KeyValueTable"><span class="tsd-kind-constructor-signature">new <wbr/>Key<wbr/>Value<wbr/>Table</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">options</span>, <span class="tsd-kind-parameter">db</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#constructor.new_KeyValueTable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">options</span>: <a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a></h5>
-<div class="tsd-comment tsd-typography"><p>options to create database</p>
+<h5><span class="tsd-kind-parameter">options</span>: <a href="../interfaces/KeyValueTableOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueTableOptions</a></h5>
+<div class="tsd-comment tsd-typography"><p>The options for the table</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
+<li>
+<h5><span class="tsd-kind-parameter">db</span>: <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h5>
+<div class="tsd-comment tsd-typography"><p>The database instance</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>create a new database</p>
+<h4>Description</h4><p>Creates a new table</p>
 
-<h4>Example</h4><pre><code class="language-js"><span class="hl-4">const</span><span class="hl-2"> </span><span class="hl-5">db</span><span class="hl-2"> = </span><span class="hl-4">new</span><span class="hl-2"> </span><span class="hl-1">KeyValue</span><span class="hl-2">({</span><br/><span class="hl-2"> </span><span class="hl-7">dataConfig:</span><span class="hl-2">{</span><br/><span class="hl-2"> </span><span class="hl-7">path:</span><span class="hl-3">&quot;./database&quot;</span><span class="hl-2">,</span><br/><span class="hl-2"> },</span><br/><span class="hl-2"> </span><span class="hl-7">encryptionConfig:</span><span class="hl-2">{</span><br/><span class="hl-2"> </span><span class="hl-7">encriptData:</span><span class="hl-4">true</span><span class="hl-2">,</span><br/><span class="hl-2"> </span><span class="hl-7">securityKey:</span><span class="hl-3">&quot;a-32-characters-long-string-here&quot;</span><br/><span class="hl-2"> }</span><br/><span class="hl-2">})</span>
-</code><button>Copy</button></pre>
+<h4>Mermaid</h4><p>graph LR;
+A[KeyValue] --&gt; B[Table];</p>
 </div><aside class="tsd-sources">
 <p>Overrides EventEmitter.constructor</p>
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L42">lib/KeyValue/src/database.ts:42</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L91">lib/KeyValue/src/table.ts:91</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
-<section class="tsd-panel tsd-member tsd-is-private"><a id="_options" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#options</span><a href="#_options" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">#options</span><span class="tsd-signature-symbol">:</span> <a href="../types/DeepRequired.html" class="tsd-signature-type tsd-kind-type-alias">DeepRequired</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a><span class="tsd-signature-symbol">&gt;</span></div><aside class="tsd-sources">
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_cache" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#cache</span><a href="#_cache" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">#cache</span><span class="tsd-signature-symbol">:</span> <a href="KeyValueCacher.html" class="tsd-signature-type tsd-kind-class">KeyValueCacher</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L15">lib/KeyValue/src/database.ts:15</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member"><a id="readyAt" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><span>ready<wbr/>At</span><a href="#readyAt" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">ready<wbr/>At</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L23">lib/KeyValue/src/database.ts:23</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member"><a id="tables" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><span>tables</span><a href="#tables" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">tables</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">ready</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">table</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = {}</span></div>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L59">lib/KeyValue/src/table.ts:59</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_intervals" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#intervals</span><a href="#_intervals" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">#intervals</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Timeout</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Timeout</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol"> = ...</span></div>
 <div class="tsd-type-declaration">
 <h4>Type declaration</h4>
 <ul class="tsd-parameters">
 <li class="tsd-parameter">
-<h5><span class="tsd-kind-property">ready</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5></li>
+<h5><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Timeout</span></h5></li>
 <li class="tsd-parameter">
-<h5><span class="tsd-kind-property">table</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h5></li></ul></div><aside class="tsd-sources">
+<h5><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Timeout</span></h5></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L16">lib/KeyValue/src/database.ts:16</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L65">lib/KeyValue/src/table.ts:65</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_queue" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#queue</span><a href="#_queue" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">#queue</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol"> = ...</span></div>
+<div class="tsd-type-declaration">
+<h4>Type declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span></h5></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L55">lib/KeyValue/src/table.ts:55</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_queued" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#queued</span><a href="#_queued" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">#queued</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">reference</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol"> = ...</span></div>
+<div class="tsd-type-declaration">
+<h4>Type declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">reference</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L60">lib/KeyValue/src/table.ts:60</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="db" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>db</span><a href="#db" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">db</span><span class="tsd-signature-symbol">:</span> <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L44">lib/KeyValue/src/table.ts:44</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="files" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>files</span><a href="#files" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">files</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">name</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">size</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">writer</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">WriteStream</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-type-declaration">
+<h4>Type declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">name</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">size</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">writer</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">WriteStream</span></h5></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L49">lib/KeyValue/src/table.ts:49</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="logData" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>log<wbr/>Data</span><a href="#logData" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">log<wbr/>Data</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">fullWriter</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">WriteStream</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">size</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">writer</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">WriteStream</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-type-declaration">
+<h4>Type declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">full<wbr/>Writer</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">WriteStream</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">size</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">writer</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">WriteStream</span></h5></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L71">lib/KeyValue/src/table.ts:71</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="logHash" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>log<wbr/>Hash</span><a href="#logHash" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">log<wbr/>Hash</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L54">lib/KeyValue/src/table.ts:54</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="options" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>options</span><a href="#options" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">options</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/KeyValueTableOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueTableOptions</a></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L43">lib/KeyValue/src/table.ts:43</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="paths" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>paths</span><a href="#paths" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">log</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">reference</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-type-declaration">
+<h4>Type declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">log</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">reference</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L45">lib/KeyValue/src/table.ts:45</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="readyAt" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>ready<wbr/>At</span><a href="#readyAt" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">ready<wbr/>At</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L70">lib/KeyValue/src/table.ts:70</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="referencer" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>referencer</span><a href="#referencer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">referencer</span><span class="tsd-signature-symbol">:</span> <a href="KeyValueReferencer.html" class="tsd-signature-type tsd-kind-class">KeyValueReferencer</a></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L69">lib/KeyValue/src/table.ts:69</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="repairMode" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>repair<wbr/>Mode</span><a href="#repairMode" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">repair<wbr/>Mode</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L77">lib/KeyValue/src/table.ts:77</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="captureRejectionSymbol" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>capture<wbr/>Rejection<wbr/>Symbol</span><a href="#captureRejectionSymbol" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">capture<wbr/>Rejection<wbr/>Symbol</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">typeof </span><a href="KeyValueTable.html#captureRejectionSymbol" class="tsd-signature-type tsd-kind-property">captureRejectionSymbol</a></div>
@@ -202,39 +317,231 @@ regular <code>&#39;error&#39;</code> listener is installed.</p>
 <li>Defined in node_modules/@types/node/events.d.ts:319</li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Accessors</h2>
-<section class="tsd-panel tsd-member"><a id="options" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><span>options</span><a href="#options" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<section class="tsd-panel tsd-member"><a id="queue" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>queue</span><a href="#queue" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature" id="options.options-1"><span class="tsd-signature-symbol">get</span> options<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../types/DeepRequired.html" class="tsd-signature-type tsd-kind-type-alias">DeepRequired</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a><span class="tsd-signature-symbol">&gt;</span></li>
+<li class="tsd-signature" id="queue.queue-1"><span class="tsd-signature-symbol">get</span> queue<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></li>
 <li class="tsd-description">
-<h4 class="tsd-returns-title">Returns <a href="../types/DeepRequired.html" class="tsd-signature-type tsd-kind-type-alias">DeepRequired</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h4><p>The queue</p>
+
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">delete</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h5></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">set</span><span class="tsd-signature-symbol">: </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span></h5></li></ul>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Gets the queue</p>
+
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.queue</span>
+</code><button>Copy</button></pre>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L248">lib/KeyValue/src/database.ts:248</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L583">lib/KeyValue/src/table.ts:583</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
-<section class="tsd-panel tsd-member tsd-is-private"><a id="_finalizeOptions" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#finalize<wbr/>Options</span><a href="#_finalizeOptions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_checkIntegrity" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#check<wbr/>Integrity</span><a href="#_checkIntegrity" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-private">
-<li class="tsd-signature tsd-anchor-link" id="_finalizeOptions._finalizeOptions-1"><span class="tsd-kind-call-signature">#finalize<wbr/>Options</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../types/DeepRequired.html" class="tsd-signature-type tsd-kind-type-alias">DeepRequired</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a><span class="tsd-signature-symbol">&gt;</span><a href="#_finalizeOptions._finalizeOptions-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="_checkIntegrity._checkIntegrity-1"><span class="tsd-kind-call-signature">#check<wbr/>Integrity</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_checkIntegrity._checkIntegrity-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Checks the integrity of the table and does a small self repair if needed</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L153">lib/KeyValue/src/table.ts:153</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_createNewFile" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#create<wbr/>New<wbr/>File</span><a href="#_createNewFile" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_createNewFile._createNewFile-1"><span class="tsd-kind-call-signature">#create<wbr/>New<wbr/>File</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><a href="#_createNewFile._createNewFile-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The name of the new file</p>
+
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Creates a new file</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L425">lib/KeyValue/src/table.ts:425</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_delete" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#delete</span><a href="#_delete" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_delete._delete-1"><span class="tsd-kind-call-signature">#delete</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span>, <span class="tsd-kind-parameter">file</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#_delete._delete-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">options</span>: <a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a></h5>
-<div class="tsd-comment tsd-typography"><p>options to finalize</p>
+<h5><span class="tsd-kind-parameter">key</span>: <span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>The key of the data</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
+<li>
+<h5><span class="tsd-kind-parameter">file</span>: <span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>The file where the data is stored</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="../types/DeepRequired.html" class="tsd-signature-type tsd-kind-type-alias">DeepRequired</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a><span class="tsd-signature-symbol">&gt;</span></h4>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L680">lib/KeyValue/src/table.ts:680</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_deleteFlush" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#delete<wbr/>Flush</span><a href="#_deleteFlush" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_deleteFlush._deleteFlush-1"><span class="tsd-kind-call-signature">#delete<wbr/>Flush</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#_deleteFlush._deleteFlush-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>finalize options</p>
+<h4>Description</h4><p>Flushes the delete queue</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L87">lib/KeyValue/src/database.ts:87</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L751">lib/KeyValue/src/table.ts:751</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_fetchFile" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#fetch<wbr/>File</span><a href="#_fetchFile" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_fetchFile._fetchFile-1"><span class="tsd-kind-call-signature">#fetch<wbr/>File</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">file</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/KeyValueJSONOption.html" class="tsd-signature-type tsd-kind-interface">KeyValueJSONOption</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><a href="#_fetchFile._fetchFile-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">file</span>: <span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>The file to fetch</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/KeyValueJSONOption.html" class="tsd-signature-type tsd-kind-interface">KeyValueJSONOption</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The file</p>
+
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Fetches the file</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L848">lib/KeyValue/src/table.ts:848</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_fileSize" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#file<wbr/>Size</span><a href="#_fileSize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_fileSize._fileSize-1"><span class="tsd-kind-call-signature">#file<wbr/>Size</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">file</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span><a href="#_fileSize._fileSize-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">file</span>: <span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>The file to get the size of</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The size of the file</p>
+
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>gets the size of the file</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L529">lib/KeyValue/src/table.ts:529</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_get" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#get</span><a href="#_get" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_get._get-1"><span class="tsd-kind-call-signature">#get</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span>, <span class="tsd-kind-parameter">file</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/KeyValueJSONOption.html" class="tsd-signature-type tsd-kind-interface">KeyValueJSONOption</a><span class="tsd-signature-symbol">&gt;</span><a href="#_get._get-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">key</span>: <span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>key of the data</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
+<li>
+<h5><span class="tsd-kind-parameter">file</span>: <span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p>file where the data is stored</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/KeyValueJSONOption.html" class="tsd-signature-type tsd-kind-interface">KeyValueJSONOption</a><span class="tsd-signature-symbol">&gt;</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L631">lib/KeyValue/src/table.ts:631</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_getCurrentFile" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#get<wbr/>Current<wbr/>File</span><a href="#_getCurrentFile" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_getCurrentFile._getCurrentFile-1"><span class="tsd-kind-call-signature">#get<wbr/>Current<wbr/>File</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><a href="#_getCurrentFile._getCurrentFile-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><p>The current file</p>
+
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Gets the current file</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L415">lib/KeyValue/src/table.ts:415</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_getHashLog" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#get<wbr/>Hash<wbr/>Log</span><a href="#_getHashLog" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_getHashLog._getHashLog-1"><span class="tsd-kind-call-signature">#get<wbr/>Hash<wbr/>Log</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><a href="#_getHashLog._getHashLog-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The hash of the transaction log</p>
+
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Gets the hash of the transaction log</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L249">lib/KeyValue/src/table.ts:249</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_initialize" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#initialize</span><a href="#_initialize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_initialize._initialize-1"><span class="tsd-kind-call-signature">#initialize</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#_initialize._initialize-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Initializes the table</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L102">lib/KeyValue/src/table.ts:102</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_set" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#set</span><a href="#_set" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_set._set-1"><span class="tsd-kind-call-signature">#set</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#_set._set-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Sets the data in the file</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L315">lib/KeyValue/src/table.ts:315</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_syncWithLogs" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#sync<wbr/>With<wbr/>Logs</span><a href="#_syncWithLogs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_syncWithLogs._syncWithLogs-1"><span class="tsd-kind-call-signature">#sync<wbr/>With<wbr/>Logs</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#_syncWithLogs._syncWithLogs-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Syncs the table with the transaction log</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L209">lib/KeyValue/src/table.ts:209</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_wal" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>#wal</span><a href="#_wal" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_wal._wal-1"><span class="tsd-kind-call-signature">#wal</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span>, <span class="tsd-kind-parameter">method</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#_wal._wal-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagPrivate">Private</code> 
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">data</span>: <a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a></h5>
+<div class="tsd-comment tsd-typography"><p>data to write to the transaction log</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
+<li>
+<h5><span class="tsd-kind-parameter">method</span>: <a href="../enums/DatabaseMethod.html" class="tsd-signature-type tsd-kind-enum">DatabaseMethod</a></h5>
+<div class="tsd-comment tsd-typography"><p>the method used when wal was called</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Writes to the transaction log</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L278">lib/KeyValue/src/table.ts:278</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="addListener" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>add<wbr/>Listener</span><a href="#addListener" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="addListener.addListener-1"><span class="tsd-kind-call-signature">add<wbr/>Listener</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#addListener.addListener-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="addListener.addListener-1"><span class="tsd-kind-call-signature">add<wbr/>Listener</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#addListener.addListener-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Alias for <code>emitter.on(eventName, listener)</code>.</p>
 </div>
@@ -256,7 +563,7 @@ regular <code>&#39;error&#39;</code> listener is installed.</p>
 <li>
 <h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v0.1.26</p>
 </div><aside class="tsd-sources">
@@ -266,19 +573,14 @@ regular <code>&#39;error&#39;</code> listener is installed.</p>
 <section class="tsd-panel tsd-member"><a id="all" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>all</span><a href="#all" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="all.all-1"><span class="tsd-kind-call-signature">all</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span>, <span class="tsd-kind-parameter">query</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">limit</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><a href="#all.all-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="all.all-1"><span class="tsd-kind-call-signature">all</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">query</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">limit</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><a href="#all.all-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table to get</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li>
-<li>
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">query</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">value</span>, <span class="tsd-kind-parameter">index</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span></h5>
-<div class="tsd-comment tsd-typography"><p>query to match</p>
+<div class="tsd-comment tsd-typography"><p>The query to find the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div>
 <ul class="tsd-parameters">
@@ -296,109 +598,52 @@ regular <code>&#39;error&#39;</code> listener is installed.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4></li></ul></li></ul></li>
 <li>
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">limit</span>: <span class="tsd-signature-type">number</span></h5>
-<div class="tsd-comment tsd-typography"><p>limit of data to get</p>
+<div class="tsd-comment tsd-typography"><p>The limit of the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>get all data from table</p>
-
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.all(&quot;main&quot;,(value,index)=&gt;</span><span class="hl-4">{</span><br/><span class="hl-11">  </span><span class="hl-7">return</span><span class="hl-11"> </span><span class="hl-7">value</span><span class="hl-11">.</span><span class="hl-7">key</span><span class="hl-11"> </span><span class="hl-2">===</span><span class="hl-11"> </span><span class="hl-3">&quot;key&quot;</span><span class="hl-11"> </span><span class="hl-2">&amp;&amp;</span><span class="hl-11"> </span><span class="hl-7">value</span><span class="hl-11">.</span><span class="hl-7">value</span><span class="hl-11"> </span><span class="hl-2">===</span><span class="hl-11"> </span><span class="hl-3">&quot;value&quot;</span><span class="hl-11">;</span><br/><span class="hl-4">}</span><span class="hl-2">,10)</span>
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.all(() =&gt; true, 10) // returns the first 10 data</span>
 </code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L426">lib/KeyValue/src/database.ts:426</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member"><a id="backup" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><span>backup</span><a href="#backup" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="backup.backup-1"><span class="tsd-kind-call-signature">backup</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#backup.backup-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
-<li class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-<div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>perform a backup of database</p>
-
-<h4>Example</h4><pre><code class="language-js"><span class="hl-1">setInterval</span><span class="hl-2">(()</span><span class="hl-4">=&gt;</span><span class="hl-2">{</span><br/><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.backup();</span><br/><span class="hl-2">},1000 * 60 * 60 * 24) // backup every 24 hours</span>
-</code><button>Copy</button></pre>
-</div><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L448">lib/KeyValue/src/database.ts:448</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L987">lib/KeyValue/src/table.ts:987</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="clear" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>clear</span><a href="#clear" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="clear.clear-1"><span class="tsd-kind-call-signature">clear</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#clear.clear-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="clear.clear-1"><span class="tsd-kind-call-signature">clear</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#clear.clear-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Clears the table</p>
+
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.clear()</span>
+</code><button>Copy</button></pre>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L796">lib/KeyValue/src/table.ts:796</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member"><a id="delete-4" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>delete</span><a href="#delete-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="tsd-signature tsd-anchor-link" id="delete-4.delete-5"><span class="tsd-kind-call-signature">delete</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#delete-4.delete-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
-<li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table to clear</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
-<div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>clear table</p>
-
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.clear(&quot;main&quot;);</span>
-</code><button>Copy</button></pre>
-</div><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L322">lib/KeyValue/src/database.ts:322</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member"><a id="clearAll" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><span>clear<wbr/>All</span><a href="#clearAll" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="clearAll.clearAll-1"><span class="tsd-kind-call-signature">clear<wbr/>All</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#clearAll.clearAll-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
-<li class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
-<div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>clear all tables</p>
-
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.clearAll();</span>
-</code><button>Copy</button></pre>
-</div><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L358">lib/KeyValue/src/database.ts:358</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member"><a id="connect" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><span>connect</span><a href="#connect" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="connect.connect-1"><span class="tsd-kind-call-signature">connect</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#connect.connect-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
-<li class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-<div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>connect to database</p>
-
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.connect()</span>
-</code><button>Copy</button></pre>
-</div><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L155">lib/KeyValue/src/database.ts:155</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member"><a id="delete" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><span>delete</span><a href="#delete" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="delete.delete-1"><span class="tsd-kind-call-signature">delete</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span>, <span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#delete.delete-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table where data is saved</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li>
 <li>
 <h5><span class="tsd-kind-parameter">key</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>key to delete</p>
+<div class="tsd-comment tsd-typography"><p>The key of the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>delete data from database</p>
+<h4>Description</h4><p>Deletes the data</p>
 
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.delete(&quot;main&quot;,&quot;key&quot;);</span>
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.delete(&quot;key&quot;)</span>
 </code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L304">lib/KeyValue/src/database.ts:304</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L666">lib/KeyValue/src/table.ts:666</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="emit" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>emit</span><a href="#emit" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
@@ -444,19 +689,14 @@ listeners. The values in the array are strings or <code>Symbol</code>s.</p>
 <section class="tsd-panel tsd-member"><a id="findMany" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>find<wbr/>Many</span><a href="#findMany" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="findMany.findMany-1"><span class="tsd-kind-call-signature">find<wbr/>Many</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span>, <span class="tsd-kind-parameter">query</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><a href="#findMany.findMany-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="findMany.findMany-1"><span class="tsd-kind-call-signature">find<wbr/>Many</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">query</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><a href="#findMany.findMany-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table to find</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li>
-<li>
 <h5><span class="tsd-kind-parameter">query</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">value</span>, <span class="tsd-kind-parameter">index</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span></h5>
-<div class="tsd-comment tsd-typography"><p>query to match</p>
+<div class="tsd-comment tsd-typography"><p>The query to find the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div>
 <ul class="tsd-parameters">
@@ -472,31 +712,24 @@ listeners. The values in the array are strings or <code>Symbol</code>s.</p>
 <li>
 <h5><span class="tsd-kind-parameter">index</span>: <span class="tsd-signature-type">number</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>find all data that matches the query</p>
-
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.findMany(&quot;main&quot;,(value,index)=&gt;</span><span class="hl-4">{</span><br/><span class="hl-11">   </span><span class="hl-7">return</span><span class="hl-11"> </span><span class="hl-7">value</span><span class="hl-11">.</span><span class="hl-7">key</span><span class="hl-11"> </span><span class="hl-2">===</span><span class="hl-11"> </span><span class="hl-3">&quot;key&quot;</span><span class="hl-11"> </span><span class="hl-2">&amp;&amp;</span><span class="hl-11"> </span><span class="hl-7">value</span><span class="hl-11">.</span><span class="hl-7">value</span><span class="hl-11"> </span><span class="hl-2">===</span><span class="hl-11"> </span><span class="hl-3">&quot;value&quot;</span><span class="hl-11">;</span><br/><span class="hl-4">}</span><span class="hl-2">)</span>
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.findMany((v, index) =&gt; v.value === &quot;value&quot;)</span>
 </code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L401">lib/KeyValue/src/database.ts:401</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L932">lib/KeyValue/src/table.ts:932</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="findOne" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>find<wbr/>One</span><a href="#findOne" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="findOne.findOne-1"><span class="tsd-kind-call-signature">find<wbr/>One</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span>, <span class="tsd-kind-parameter">query</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">&gt;</span><a href="#findOne.findOne-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="findOne.findOne-1"><span class="tsd-kind-call-signature">find<wbr/>One</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">query</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">&gt;</span><a href="#findOne.findOne-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table to find</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li>
-<li>
 <h5><span class="tsd-kind-parameter">query</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">value</span>, <span class="tsd-kind-parameter">index</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span></h5>
-<div class="tsd-comment tsd-typography"><p>query to match</p>
+<div class="tsd-comment tsd-typography"><p>The query to find the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div>
 <ul class="tsd-parameters">
@@ -512,71 +745,76 @@ listeners. The values in the array are strings or <code>Symbol</code>s.</p>
 <li>
 <h5><span class="tsd-kind-parameter">index</span>: <span class="tsd-signature-type">number</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">&gt;</span></h4>
-<div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>find the first data that matches the query</p>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">&gt;</span></h4><p>The data</p>
 
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.findOne(&quot;main&quot;,(value,index)=&gt;</span><span class="hl-4">{</span><br/><span class="hl-11">    </span><span class="hl-7">return</span><span class="hl-11"> </span><span class="hl-7">value</span><span class="hl-11">.</span><span class="hl-7">key</span><span class="hl-11"> </span><span class="hl-2">===</span><span class="hl-11"> </span><span class="hl-3">&quot;key&quot;</span><span class="hl-11"> </span><span class="hl-2">&amp;&amp;</span><span class="hl-11"> </span><span class="hl-7">value</span><span class="hl-11">.</span><span class="hl-7">value</span><span class="hl-11"> </span><span class="hl-2">===</span><span class="hl-11"> </span><span class="hl-3">&quot;value&quot;</span><span class="hl-11">;</span><br/><span class="hl-4">}</span><span class="hl-2">)</span>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Finds the data</p>
+
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.findOne((v, index) =&gt; v.value === &quot;value&quot;)</span>
 </code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L377">lib/KeyValue/src/database.ts:377</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L878">lib/KeyValue/src/table.ts:878</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="fullRepair" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>full<wbr/>Repair</span><a href="#fullRepair" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="fullRepair.fullRepair-1"><span class="tsd-kind-call-signature">full<wbr/>Repair</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#fullRepair.fullRepair-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="fullRepair.fullRepair-1"><span class="tsd-kind-call-signature">full<wbr/>Repair</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#fullRepair.fullRepair-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table to repair</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>perform a full repair of table</p>
+<h4>Description</h4><p>Executes a full repair on the table</p>
 
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.fullRepair(&quot;main&quot;);</span>
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-2">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-2">&gt;.</span><span class="hl-1">fullRepair</span><span class="hl-2">()</span>
 </code><button>Copy</button></pre>
+
+<h4>Note</h4><p>This method is very slow and should only be used when the table is corrupted</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L478">lib/KeyValue/src/database.ts:478</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L1003">lib/KeyValue/src/table.ts:1003</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="get" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get</span><a href="#get" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="get.get-1"><span class="tsd-kind-call-signature">get</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span>, <span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">&gt;</span><a href="#get.get-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="get.get-1"><span class="tsd-kind-call-signature">get</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">&gt;</span><a href="#get.get-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table where data is saved</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li>
-<li>
 <h5><span class="tsd-kind-parameter">key</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>key to get</p>
+<div class="tsd-comment tsd-typography"><p>The key of the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">&gt;</span></h4>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="KeyValueData.html" class="tsd-signature-type tsd-kind-class">KeyValueData</a><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>get data from database</p>
+<h4>Description</h4><p>Get the value for the key</p>
 
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.get(&quot;main&quot;,&quot;key&quot;);</span>
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.get(&quot;key&quot;)</span>
 </code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L285">lib/KeyValue/src/database.ts:285</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L598">lib/KeyValue/src/table.ts:598</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member"><a id="getLogs" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>get<wbr/>Logs</span><a href="#getLogs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="tsd-signature tsd-anchor-link" id="getLogs.getLogs-1"><span class="tsd-kind-call-signature">get<wbr/>Logs</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">key</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">method</span><span class="tsd-signature-symbol">: </span><a href="../enums/DatabaseMethod.html" class="tsd-signature-type tsd-kind-enum">DatabaseMethod</a><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">ttl</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">value</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><a href="#getLogs.getLogs-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">key</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">method</span><span class="tsd-signature-symbol">: </span><a href="../enums/DatabaseMethod.html" class="tsd-signature-type tsd-kind-enum">DatabaseMethod</a><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">ttl</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">value</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The transaction log</p>
+
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>get the transaction log</p>
+
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.getLogs()</span>
+</code><button>Copy</button></pre>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L545">lib/KeyValue/src/table.ts:545</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="getMaxListeners" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Max<wbr/>Listeners</span><a href="#getMaxListeners" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
 <li class="tsd-signature tsd-anchor-link" id="getMaxListeners.getMaxListeners-1"><span class="tsd-kind-call-signature">get<wbr/>Max<wbr/>Listeners</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><a href="#getMaxListeners.getMaxListeners-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Returns the current max listener value for the <code>EventEmitter</code> which is either
-set by <code>emitter.setMaxListeners(n)</code> or defaults to <a href="KeyValue.html#defaultMaxListeners" class="tsd-kind-property">defaultMaxListeners</a>.</p>
+set by <code>emitter.setMaxListeners(n)</code> or defaults to <a href="KeyValueTable.html#defaultMaxListeners" class="tsd-kind-property">defaultMaxListeners</a>.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
 <div class="tsd-comment tsd-typography">
@@ -588,30 +826,25 @@ set by <code>emitter.setMaxListeners(n)</code> or defaults to <a href="KeyValue.
 <section class="tsd-panel tsd-member"><a id="has" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>has</span><a href="#has" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="has.has-1"><span class="tsd-kind-call-signature">has</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span>, <span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#has.has-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="has.has-1"><span class="tsd-kind-call-signature">has</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#has.has-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table to check</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li>
-<li>
 <h5><span class="tsd-kind-parameter">key</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>key to check</p>
+<div class="tsd-comment tsd-typography"><p>The key of the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>check if data exists in database</p>
+<h4>Description</h4><p>Checks if the key exists</p>
 
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.has(&quot;main&quot;,&quot;key&quot;);</span>
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.has(&quot;key&quot;)</span>
 </code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L341">lib/KeyValue/src/database.ts:341</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L835">lib/KeyValue/src/table.ts:835</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="listenerCount" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>listener<wbr/>Count</span><a href="#listenerCount" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
@@ -665,7 +898,7 @@ in the list of the listeners of the event.</p>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="off" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>off</span><a href="#off" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="off.off-1"><span class="tsd-kind-call-signature">off</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#off.off-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="off.off-1"><span class="tsd-kind-call-signature">off</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#off.off-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Alias for <code>emitter.removeListener()</code>.</p>
 </div>
@@ -687,7 +920,7 @@ in the list of the listeners of the event.</p>
 <li>
 <h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v10.0.0</p>
 </div><aside class="tsd-sources">
@@ -697,7 +930,7 @@ in the list of the listeners of the event.</p>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="on" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>on</span><a href="#on" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="on.on-1"><span class="tsd-kind-call-signature">on</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#on.on-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="on.on-1"><span class="tsd-kind-call-signature">on</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#on.on-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Adds the <code>listener</code> function to the end of the listeners array for the
 event named <code>eventName</code>. No checks are made to see if the <code>listener</code> has
@@ -735,7 +968,7 @@ event listener to the beginning of the listeners array.</p>
 <li>
 <h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v0.1.101</p>
 </div><aside class="tsd-sources">
@@ -745,7 +978,7 @@ event listener to the beginning of the listeners array.</p>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="once" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>once</span><a href="#once" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="once.once-1"><span class="tsd-kind-call-signature">once</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#once.once-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="once.once-1"><span class="tsd-kind-call-signature">once</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#once.once-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Adds a <strong>one-time</strong><code>listener</code> function for the event named <code>eventName</code>. The
 next time <code>eventName</code> is triggered, this listener is removed and then invoked.</p>
@@ -781,7 +1014,7 @@ event listener to the beginning of the listeners array.</p>
 <li>
 <h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v0.3.0</p>
 </div><aside class="tsd-sources">
@@ -791,7 +1024,7 @@ event listener to the beginning of the listeners array.</p>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="prependListener" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>prepend<wbr/>Listener</span><a href="#prependListener" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="prependListener.prependListener-1"><span class="tsd-kind-call-signature">prepend<wbr/>Listener</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#prependListener.prependListener-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="prependListener.prependListener-1"><span class="tsd-kind-call-signature">prepend<wbr/>Listener</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#prependListener.prependListener-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Adds the <code>listener</code> function to the <em>beginning</em> of the listeners array for the
 event named <code>eventName</code>. No checks are made to see if the <code>listener</code> has
@@ -825,7 +1058,7 @@ times.</p>
 <li>
 <h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v6.0.0</p>
 </div><aside class="tsd-sources">
@@ -835,7 +1068,7 @@ times.</p>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="prependOnceListener" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>prepend<wbr/>Once<wbr/>Listener</span><a href="#prependOnceListener" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="prependOnceListener.prependOnceListener-1"><span class="tsd-kind-call-signature">prepend<wbr/>Once<wbr/>Listener</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#prependOnceListener.prependOnceListener-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="prependOnceListener.prependOnceListener-1"><span class="tsd-kind-call-signature">prepend<wbr/>Once<wbr/>Listener</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#prependOnceListener.prependOnceListener-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Adds a <strong>one-time</strong><code>listener</code> function for the event named <code>eventName</code> to the <em>beginning</em> of the listeners array. The next time <code>eventName</code> is triggered, this
 listener is removed, and then invoked.</p>
@@ -867,7 +1100,7 @@ listener is removed, and then invoked.</p>
 <li>
 <h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v6.0.0</p>
 </div><aside class="tsd-sources">
@@ -899,7 +1132,7 @@ including any wrappers (such as those created by <code>.once()</code>).</p>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="removeAllListeners" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>remove<wbr/>All<wbr/>Listeners</span><a href="#removeAllListeners" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="removeAllListeners.removeAllListeners-1"><span class="tsd-kind-call-signature">remove<wbr/>All<wbr/>Listeners</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">event</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#removeAllListeners.removeAllListeners-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="removeAllListeners.removeAllListeners-1"><span class="tsd-kind-call-signature">remove<wbr/>All<wbr/>Listeners</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">event</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#removeAllListeners.removeAllListeners-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Removes all listeners, or those of the specified <code>eventName</code>.</p>
 <p>It is bad practice to remove listeners added elsewhere in the code,
@@ -912,7 +1145,7 @@ component or module (e.g. sockets or file streams).</p>
 <ul class="tsd-parameter-list">
 <li>
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">event</span>: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v0.1.26</p>
 </div><aside class="tsd-sources">
@@ -922,7 +1155,7 @@ component or module (e.g. sockets or file streams).</p>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="removeListener" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>remove<wbr/>Listener</span><a href="#removeListener" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="removeListener.removeListener-1"><span class="tsd-kind-call-signature">remove<wbr/>Listener</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#removeListener.removeListener-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="removeListener.removeListener-1"><span class="tsd-kind-call-signature">remove<wbr/>Listener</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#removeListener.removeListener-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Removes the specified <code>listener</code> from the listener array for the event named<code>eventName</code>.</p>
 <pre><code class="language-js"><span class="hl-4">const</span><span class="hl-2"> </span><span class="hl-1">callback</span><span class="hl-2"> = (</span><span class="hl-7">stream</span><span class="hl-2">) </span><span class="hl-4">=&gt;</span><span class="hl-2"> {</span><br/><span class="hl-2">  </span><span class="hl-7">console</span><span class="hl-2">.</span><span class="hl-1">log</span><span class="hl-2">(</span><span class="hl-3">&#39;someone connected!&#39;</span><span class="hl-2">);</span><br/><span class="hl-2">};</span><br/><span class="hl-7">server</span><span class="hl-2">.</span><span class="hl-1">on</span><span class="hl-2">(</span><span class="hl-3">&#39;connection&#39;</span><span class="hl-2">, </span><span class="hl-7">callback</span><span class="hl-2">);</span><br/><span class="hl-0">// ...</span><br/><span class="hl-7">server</span><span class="hl-2">.</span><span class="hl-1">removeListener</span><span class="hl-2">(</span><span class="hl-3">&#39;connection&#39;</span><span class="hl-2">, </span><span class="hl-7">callback</span><span class="hl-2">);</span>
@@ -966,49 +1199,44 @@ recently added instance. In the example the <code>once(&#39;ping&#39;)</code>lis
 <li>
 <h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span><span class="tsd-kind-parameter">args</span>: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v0.1.26</p>
 </div><aside class="tsd-sources">
 <p>Inherited from EventEmitter.removeListener</p>
 <ul>
 <li>Defined in node_modules/@types/node/events.d.ts:535</li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member"><a id="set" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><span>set</span><a href="#set" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<section class="tsd-panel tsd-member"><a id="set-4" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>set</span><a href="#set-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="set.set-1"><span class="tsd-kind-call-signature">set</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">table</span>, <span class="tsd-kind-parameter">key</span>, <span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#set.set-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="set-4.set-5"><span class="tsd-kind-call-signature">set</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span>, <span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#set-4.set-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">table</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>table where data will be saved</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></li>
-<li>
 <h5><span class="tsd-kind-parameter">key</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>key to set</p>
+<div class="tsd-comment tsd-typography"><p>The key of the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li>
 <li>
 <h5><span class="tsd-kind-parameter">value</span>: <span class="tsd-signature-type ">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">KeyValueData</span><span class="tsd-signature-symbol">&gt;</span></h5>
-<div class="tsd-comment tsd-typography"><p>value to set</p>
+<div class="tsd-comment tsd-typography"><p>The value of the data</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>set data to database</p>
+<h4>Description</h4><p>Sets the data in the file</p>
 
-<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValue</span><span class="hl-9">&gt;</span><span class="hl-2">.set(&quot;main&quot;,&quot;key&quot;,</span><span class="hl-4">{</span><br/><span class="hl-11">     </span><span class="hl-7">value</span><span class="hl-11">:</span><span class="hl-3">&quot;value&quot;</span><span class="hl-11">,</span><br/><span class="hl-4">}</span><span class="hl-2">);</span>
+<h4>Example</h4><pre><code class="language-js"><span class="hl-9">&lt;</span><span class="hl-10">KeyValueTable</span><span class="hl-9">&gt;</span><span class="hl-2">.set(&quot;key&quot;, </span><span class="hl-4">{</span><br/><span class="hl-11"> </span><span class="hl-7">value</span><span class="hl-11">: </span><span class="hl-3">&quot;value&quot;</span><span class="hl-11">,</span><br/><span class="hl-4">}</span><span class="hl-2">)</span>
 </code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L266">lib/KeyValue/src/database.ts:266</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/table.ts#L476">lib/KeyValue/src/table.ts:476</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="setMaxListeners" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Max<wbr/>Listeners</span><a href="#setMaxListeners" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
-<li class="tsd-signature tsd-anchor-link" id="setMaxListeners.setMaxListeners-1"><span class="tsd-kind-call-signature">set<wbr/>Max<wbr/>Listeners</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">n</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a><a href="#setMaxListeners.setMaxListeners-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="setMaxListeners.setMaxListeners-1"><span class="tsd-kind-call-signature">set<wbr/>Max<wbr/>Listeners</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">n</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a><a href="#setMaxListeners.setMaxListeners-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>By default <code>EventEmitter</code>s will print a warning if more than <code>10</code> listeners are
 added for a particular event. This is a useful default that helps finding
@@ -1021,26 +1249,13 @@ modified for this specific <code>EventEmitter</code> instance. The value can be 
 <ul class="tsd-parameter-list">
 <li>
 <h5><span class="tsd-kind-parameter">n</span>: <span class="tsd-signature-type">number</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="KeyValue.html" class="tsd-signature-type tsd-kind-class">KeyValue</a></h4>
+<h4 class="tsd-returns-title">Returns <a href="KeyValueTable.html" class="tsd-signature-type tsd-kind-class">KeyValueTable</a></h4>
 <div class="tsd-comment tsd-typography">
 <h4>Since</h4><p>v0.3.5</p>
 </div><aside class="tsd-sources">
 <p>Inherited from EventEmitter.setMaxListeners</p>
 <ul>
 <li>Defined in node_modules/@types/node/events.d.ts:561</li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member"><a id="defaultOptions" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <span>default<wbr/>Options</span><a href="#defaultOptions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="defaultOptions.defaultOptions-1"><span class="tsd-kind-call-signature">default<wbr/>Options</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../types/DeepRequired.html" class="tsd-signature-type tsd-kind-type-alias">DeepRequired</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a><span class="tsd-signature-symbol">&gt;</span><a href="#defaultOptions.defaultOptions-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
-<li class="tsd-description">
-<h4 class="tsd-returns-title">Returns <a href="../types/DeepRequired.html" class="tsd-signature-type tsd-kind-type-alias">DeepRequired</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/KeyValueOptions.html" class="tsd-signature-type tsd-kind-interface">KeyValueOptions</a><span class="tsd-signature-symbol">&gt;</span></h4><p>default options</p>
-
-<div class="tsd-comment tsd-typography">
-<h4>Description</h4><p>get default options</p>
-
-<h4>Static</h4></div><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/AkaruiDevelopment/aoi.db/blob/a80640b/lib/KeyValue/src/database.ts#L52">lib/KeyValue/src/database.ts:52</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited tsd-is-external"><a id="getEventListeners" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <span>get<wbr/>Event<wbr/>Listeners</span><a href="#getEventListeners" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited tsd-is-external">
@@ -1232,28 +1447,48 @@ special handling:</p>
 <div class="tsd-accordion-details">
 <ul>
 <li><a href="#constructor" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-512"></use></svg><span>constructor</span></a></li>
-<li><a href="#_options" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>#options</span></a></li>
+<li><a href="#_cache" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>#cache</span></a></li>
+<li><a href="#_intervals" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>#intervals</span></a></li>
+<li><a href="#_queue" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>#queue</span></a></li>
+<li><a href="#_queued" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>#queued</span></a></li>
+<li><a href="#db" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>db</span></a></li>
+<li><a href="#files" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>files</span></a></li>
+<li><a href="#logData" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>log<wbr/>Data</span></a></li>
+<li><a href="#logHash" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>log<wbr/>Hash</span></a></li>
+<li><a href="#options" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>options</span></a></li>
+<li><a href="#paths" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>paths</span></a></li>
 <li><a href="#readyAt" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>ready<wbr/>At</span></a></li>
-<li><a href="#tables" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>tables</span></a></li>
+<li><a href="#referencer" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>referencer</span></a></li>
+<li><a href="#repairMode" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>repair<wbr/>Mode</span></a></li>
 <li><a href="#captureRejectionSymbol" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>capture<wbr/>Rejection<wbr/>Symbol</span></a></li>
 <li><a href="#captureRejections" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>capture<wbr/>Rejections</span></a></li>
 <li><a href="#defaultMaxListeners" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>default<wbr/>Max<wbr/>Listeners</span></a></li>
 <li><a href="#errorMonitor" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>error<wbr/>Monitor</span></a></li>
-<li><a href="#options" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-262144"></use></svg><span>options</span></a></li>
-<li><a href="#_finalizeOptions" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#finalize<wbr/>Options</span></a></li>
+<li><a href="#queue" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-262144"></use></svg><span>queue</span></a></li>
+<li><a href="#_checkIntegrity" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#check<wbr/>Integrity</span></a></li>
+<li><a href="#_createNewFile" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#create<wbr/>New<wbr/>File</span></a></li>
+<li><a href="#_delete" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#delete</span></a></li>
+<li><a href="#_deleteFlush" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#delete<wbr/>Flush</span></a></li>
+<li><a href="#_fetchFile" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#fetch<wbr/>File</span></a></li>
+<li><a href="#_fileSize" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#file<wbr/>Size</span></a></li>
+<li><a href="#_get" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#get</span></a></li>
+<li><a href="#_getCurrentFile" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#get<wbr/>Current<wbr/>File</span></a></li>
+<li><a href="#_getHashLog" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#get<wbr/>Hash<wbr/>Log</span></a></li>
+<li><a href="#_initialize" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#initialize</span></a></li>
+<li><a href="#_set" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#set</span></a></li>
+<li><a href="#_syncWithLogs" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#sync<wbr/>With<wbr/>Logs</span></a></li>
+<li><a href="#_wal" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>#wal</span></a></li>
 <li><a href="#addListener" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Listener</span></a></li>
 <li><a href="#all" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>all</span></a></li>
-<li><a href="#backup" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>backup</span></a></li>
 <li><a href="#clear" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>clear</span></a></li>
-<li><a href="#clearAll" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>clear<wbr/>All</span></a></li>
-<li><a href="#connect" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>connect</span></a></li>
-<li><a href="#delete" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>delete</span></a></li>
+<li><a href="#delete-4" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>delete</span></a></li>
 <li><a href="#emit" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>emit</span></a></li>
 <li><a href="#eventNames" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>event<wbr/>Names</span></a></li>
 <li><a href="#findMany" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>find<wbr/>Many</span></a></li>
 <li><a href="#findOne" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>find<wbr/>One</span></a></li>
 <li><a href="#fullRepair" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>full<wbr/>Repair</span></a></li>
 <li><a href="#get" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get</span></a></li>
+<li><a href="#getLogs" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Logs</span></a></li>
 <li><a href="#getMaxListeners" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Max<wbr/>Listeners</span></a></li>
 <li><a href="#has" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>has</span></a></li>
 <li><a href="#listenerCount" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>listener<wbr/>Count</span></a></li>
@@ -1266,9 +1501,8 @@ special handling:</p>
 <li><a href="#rawListeners" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>raw<wbr/>Listeners</span></a></li>
 <li><a href="#removeAllListeners" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>remove<wbr/>All<wbr/>Listeners</span></a></li>
 <li><a href="#removeListener" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>remove<wbr/>Listener</span></a></li>
-<li><a href="#set" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set</span></a></li>
+<li><a href="#set-4" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set</span></a></li>
 <li><a href="#setMaxListeners" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>set<wbr/>Max<wbr/>Listeners</span></a></li>
-<li><a href="#defaultOptions" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>default<wbr/>Options</span></a></li>
 <li><a href="#getEventListeners" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Event<wbr/>Listeners</span></a></li>
 <li><a href="#listenerCount-2" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>listener<wbr/>Count</span></a></li>
 <li><a href="#on-2" class="tsd-is-inherited tsd-is-external"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>on</span></a></li>
@@ -1281,11 +1515,11 @@ special handling:</p>
 <li><a href="../enums/DatabaseEvents.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-8"></use></svg><span>Database<wbr/>Events</span></a></li>
 <li><a href="../enums/DatabaseMethod.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-8"></use></svg><span>Database<wbr/>Method</span></a></li>
 <li><a href="../enums/ReferenceType.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-8"></use></svg><span>Reference<wbr/>Type</span></a></li>
-<li><a href="KeyValue.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-128"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-class)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)"></path></g></svg><span>Key<wbr/>Value</span></a></li>
+<li><a href="KeyValue.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-128"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-class)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)"></path></g></svg><span>Key<wbr/>Value</span></a></li>
 <li><a href="KeyValueCacher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Key<wbr/>Value<wbr/>Cacher</span></a></li>
 <li><a href="KeyValueData.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Key<wbr/>Value<wbr/>Data</span></a></li>
 <li><a href="KeyValueReferencer.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Key<wbr/>Value<wbr/>Referencer</span></a></li>
-<li><a href="KeyValueTable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Key<wbr/>Value<wbr/>Table</span></a></li>
+<li><a href="KeyValueTable.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Key<wbr/>Value<wbr/>Table</span></a></li>
 <li><a href="../interfaces/CacherOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-256"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-interface)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.51 16V15.016H11.298V8.224H9.51V7.24H14.19V8.224H12.402V15.016H14.19V16H9.51Z" fill="var(--color-text)"></path></g></svg><span>Cacher<wbr/>Options</span></a></li>
 <li><a href="../interfaces/Hash.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Hash</span></a></li>
 <li><a href="../interfaces/KeyValueCacheConfig.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Key<wbr/>Value<wbr/>Cache<wbr/>Config</span></a></li>

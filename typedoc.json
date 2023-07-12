@@ -3,6 +3,7 @@
         "lib/index.ts"
     ],
     "out": "docs",
+    "json": "data/docs.json",
     "tsconfig": "tsconfig.json",
     "entryPointStrategy": "resolve"
 }

@@ -1,4 +1,4 @@
-export enum CacheReferenceType {
+export enum CacheType {
     LRU ,
     MRU ,
     LFU ,
@@ -16,6 +16,7 @@ export enum DatabaseMethod {
     Replicate,
     Backup,
     Restore,
+    NewFile,
 }
 
 export enum DatabaseEvents {
@@ -31,4 +32,9 @@ export enum DatabaseEvents {
     Restore = "restore",
     Disconnect = "disconnect",
     TableReady = "tableReady",
+}
+
+export enum ReferenceType {
+    Cache,
+    File,
 }

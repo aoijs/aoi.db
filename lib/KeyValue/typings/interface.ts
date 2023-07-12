@@ -1,5 +1,5 @@
 import {  KeyValueDataValueType } from "./type.js";
-import { CacheReferenceType } from "./enum.js";
+import { CacheType,ReferenceType} from "./enum.js";
 
 export interface KeyValueOptions {
     dataConfig?: KeyValueDataConfig;
@@ -26,7 +26,8 @@ export interface KeyValueEncryptionConfig {
 }
 
 export interface KeyValueCacheConfig {
-    cacheReference: CacheReferenceType;
+    cache: CacheType;
+    reference: ReferenceType;
     limit: number;
     sorted: boolean;
     sortFunction?: (a: any, b: any) => number;
@@ -39,7 +40,7 @@ export interface KeyValueTableOptions {
 
 export interface KeyValueData {
     file: string;
-    value:string;
+    value:KeyValueDataValueType;
     key:string;
     ttl:number;
     type:string;
@@ -52,3 +53,11 @@ export interface KeyValueJSONOption {
   ttl: number;
   type: string;
 } 
+
+export interface CacherOptions {
+    cache: CacheType;
+    limit: number;
+    sorted: boolean;
+    sortFunction?: (a: any, b: any) => number;
+    
+}
