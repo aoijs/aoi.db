@@ -1,5 +1,5 @@
 import {  KeyValueDataValueType } from "./type.js";
-import { CacheType,ReferenceType} from "./enum.js";
+import { CacheType,ReferenceType} from "../../typings/enum.js";
 
 export interface KeyValueOptions {
     dataConfig?: KeyValueDataConfig;

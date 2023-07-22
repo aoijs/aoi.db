@@ -17,7 +17,7 @@ import {
     decrypt,
     encrypt,
 } from "../../utils.js";
-import { DatabaseEvents, DatabaseMethod } from "../typings/enum.js";
+import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
 import {
     KeyValueData,
     KeyValueJSONOption,
@@ -517,6 +517,8 @@ export default class Table extends EventEmitter {
                 await this.#set();
             }, 100);
         }
+
+        return data;
     }
 
     /**
@@ -739,6 +741,8 @@ export default class Table extends EventEmitter {
                 await this.#deleteFlush();
             }, 100);
         }
+
+        return data;
     }
 
     /**

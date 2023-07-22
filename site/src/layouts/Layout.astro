@@ -1,0 +1,68 @@
+---
+export interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+	  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/aoi.db/logo.png" />
+    <link rel="manifest" href="/aoi.db/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <meta
+      name="description"
+      content="Aoi.db is a collection of various database types to handle various types of data requirements!"
+    />
+    <meta name="thumbnail" content="/aoi.db/logo.png" />
+    <meta
+      name="keywords"
+      content="aoi.js, aoijs, aoi, api, dbd.js, dbdjs, dbd, bot, akarui, functions, music, aoi.music, bdfd, Bot Designer for Discord, discord, discordbot"
+    />
+    <meta name="author" content="Akarui Development" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="google" content="notranslate" />
+    <meta name="copyright" content="Akarui Development" />
+    <meta name="language" content="EN" />
+    <meta name="revised" content="Friday, 28th April, 2023, 9:15 pm" />
+    <meta name="designer" content="USERSATOSHI" />
+    <meta name="publisher" content="Akarui Development" />
+    <meta name="distribution" content="global" />
+    <meta name="Classification" content="Development" />
+    <meta name="owner" content="Akarui Development" />
+
+    <meta property="og:title" content="Akarui Development | Zeneth" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/aoi.db/logo.png" />
+    <meta
+      property="og:description"
+      content="Aoi.db is a collection of various database types to handle various types of data requirements!"
+    />
+    <meta property="og:site_name" content="Akarui Development" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link type="application/json+oembed" href="/aoi.db/oembed.json" />
+    <title>{title}</title>
+  </head>
+	<body>
+		<slot />
+	</body>
+</html>
+<style is:global>
+	:root {
+		--accent: 124, 58, 237;
+		--accent-gradient: linear-gradient(45deg, rgb(var(--accent)), #da62c4 30%, white 60%);
+	}
+	html {
+		font-family: system-ui, sans-serif;
+		background-color: #F6F6F6;
+	}
+	code {
+		font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
+			Bitstream Vera Sans Mono, Courier New, monospace;
+	}
+</style>

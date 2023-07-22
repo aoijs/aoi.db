@@ -1,13 +1,21 @@
 export enum CacheType {
-    LRU ,
-    MRU ,
-    LFU ,
-    MFU ,
-    FIFO ,
-    FILO ,
+    LRU,
+    MRU,
+    LFU,
+    MFU,
+    FIFO,
+    FILO,
 }
 
-export enum DatabaseMethod {
+
+
+
+
+
+
+
+export enum DatabaseMethod
+{
     Set,
     //Get,
     Delete,
@@ -17,6 +25,10 @@ export enum DatabaseMethod {
     Backup,
     Restore,
     NewFile,
+    Ping,
+    Get,
+    All,
+    Has
 }
 
 export enum DatabaseEvents {
@@ -32,6 +44,7 @@ export enum DatabaseEvents {
     Restore = "restore",
     Disconnect = "disconnect",
     TableReady = "tableReady",
+    Debug = "debug",
 }
 
 export enum ReferenceType {

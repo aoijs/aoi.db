@@ -4,7 +4,6 @@ import KeyValueReferencer from "./src/referencer.js";
 import KeyValue from "./src/database.js";
 import KeyValueTable from "./src/table.js";
 export * from "./typings/interface.js";
-export * from "./typings/enum.js";
 export * from "./typings/type.js";
 
 export { KeyValueCacher, KeyValueData, KeyValueReferencer, KeyValueTable,KeyValue };

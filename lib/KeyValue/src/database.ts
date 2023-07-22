@@ -1,7 +1,7 @@
 import { KeyValueData, KeyValueOptions } from "../typings/interface.js";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { randomBytes } from "crypto";
-import { CacheType,ReferenceType, DatabaseEvents } from "../typings/enum.js";
+import { CacheType,ReferenceType, DatabaseEvents } from "../../typings/enum.js";
 import { DeepRequired } from "../typings/type.js";
 import { encrypt } from "../../utils.js";
 import Table from "./table.js";

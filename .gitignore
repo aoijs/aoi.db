@@ -7,5 +7,5 @@ __tests__
 /benchmark
 .idea
 .DS_Store
-/dist
+/dist/old
 /tsconfig.old.json
