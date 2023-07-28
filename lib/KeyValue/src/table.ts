@@ -1163,4 +1163,26 @@ export default class Table extends EventEmitter {
         this.repairMode = false;
         return true;
     }
+
+    /**
+      * @description Deletes the data
+      * @param query The query to find the data
+      * @returns The data deleted if query is provided else boolean if whole table is cleared
+      * @example
+      * ```js
+      * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
+      * ```
+     */
+    async deleteMany(query?: (value: Data, index: number) => boolean) {
+        if (!query) {
+            await this.clear();
+            return true;
+        } else {
+            const data = await this.findMany(query);
+            for (const d of data) {
+                await this.delete(d.key);
+            }
+            return data;
+        }
+    }
 }
