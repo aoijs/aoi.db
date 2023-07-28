@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const crypto_1 = require("crypto");
-const enum_js_1 = require("../typings/enum.js");
+const enum_js_1 = require("../../typings/enum.js");
 const utils_js_1 = require("../../utils.js");
 const table_js_1 = __importDefault(require("./table.js"));
 const events_1 = require("events");

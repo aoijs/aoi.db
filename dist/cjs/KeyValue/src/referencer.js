@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const utils_js_1 = require("../../utils.js");
 const promises_1 = require("fs/promises");
-const enum_js_1 = require("../typings/enum.js");
+const enum_js_1 = require("../../typings/enum.js");
 class Referencer {
     cache = {};
     cacheSize = -1;

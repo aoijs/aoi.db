@@ -1,7 +1,7 @@
 /// <reference types="node" />
 /// <reference types="node" />
 import { WriteStream } from "fs";
-import { DatabaseMethod } from "../typings/enum.js";
+import { DatabaseMethod } from "../../typings/enum.js";
 import { KeyValueData, KeyValueTableOptions } from "../typings/interface.js";
 import Data from "./data.js";
 import KeyValue from "./database.js";
@@ -56,7 +56,7 @@ export default class Table extends EventEmitter {
      * ```
      *
      */
-    set(key: string, value: Partial<KeyValueData>): Promise<void>;
+    set(key: string, value: Partial<KeyValueData>): Promise<Data>;
     /**
      * @description get the transaction log
      * @returns The transaction log
@@ -108,7 +108,7 @@ export default class Table extends EventEmitter {
      * <KeyValueTable>.delete("key")
      * ```
      */
-    delete(key: string): Promise<void | null>;
+    delete(key: string): Promise<Data | null>;
     /**
      * @description Clears the table
      * @returns
@@ -174,5 +174,15 @@ export default class Table extends EventEmitter {
      * @note This method is very slow and should only be used when the table is corrupted
      */
     fullRepair(): Promise<boolean>;
+    /**
+      * @description Deletes the data
+      * @param query The query to find the data
+      * @returns The data deleted if query is provided else boolean if whole table is cleared
+      * @example
+      * ```js
+      * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
+      * ```
+     */
+    deleteMany(query?: (value: Data, index: number) => boolean): Promise<true | Data[]>;
 }
 //# sourceMappingURL=table.d.ts.map

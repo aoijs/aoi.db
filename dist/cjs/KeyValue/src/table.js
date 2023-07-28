@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const utils_js_1 = require("../../utils.js");
-const enum_js_1 = require("../typings/enum.js");
+const enum_js_1 = require("../../typings/enum.js");
 const data_js_1 = __importDefault(require("./data.js"));
 const promises_1 = require("fs/promises");
 const referencer_js_1 = __importDefault(require("./referencer.js"));
@@ -355,6 +355,7 @@ class Table extends events_1.EventEmitter {
                 await this.#set();
             }, 100);
         }
+        return data;
     }
     /**
      * @private
@@ -536,6 +537,7 @@ class Table extends events_1.EventEmitter {
                 await this.#deleteFlush();
             }, 100);
         }
+        return data;
     }
     /**
      * @private
@@ -853,6 +855,28 @@ class Table extends events_1.EventEmitter {
         this.referencer.restart();
         this.repairMode = false;
         return true;
+    }
+    /**
+      * @description Deletes the data
+      * @param query The query to find the data
+      * @returns The data deleted if query is provided else boolean if whole table is cleared
+      * @example
+      * ```js
+      * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
+      * ```
+     */
+    async deleteMany(query) {
+        if (!query) {
+            await this.clear();
+            return true;
+        }
+        else {
+            const data = await this.findMany(query);
+            for (const d of data) {
+                await this.delete(d.key);
+            }
+            return data;
+        }
     }
 }
 exports.default = Table;

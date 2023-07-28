@@ -1,7 +1,7 @@
 import { createWriteStream, readdirSync, statSync, } from "fs";
 import { ReferenceConstantSpace } from "../../utils.js";
 import { readFile, truncate, unlink } from "fs/promises";
-import { ReferenceType } from "../typings/enum.js";
+import { ReferenceType } from "../../typings/enum.js";
 export default class Referencer {
     cache = {};
     cacheSize = -1;

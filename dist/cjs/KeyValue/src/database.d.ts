@@ -60,7 +60,7 @@ export default class KeyValue extends EventEmitter {
      * });
      * ```
      */
-    set(table: string, key: string, value: Partial<KeyValueData>): Promise<void>;
+    set(table: string, key: string, value: Partial<KeyValueData>): Promise<Data | undefined>;
     /**
      * @description get data from database
      * @param table table where data is saved
@@ -84,7 +84,7 @@ export default class KeyValue extends EventEmitter {
      * <KeyValue>.delete("main","key");
      * ```
      */
-    delete(table: string, key: string): Promise<void | null>;
+    delete(table: string, key: string): Promise<Data | null | undefined>;
     /**
      * @description clear table
      * @param table table to clear

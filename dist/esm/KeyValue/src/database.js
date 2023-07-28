@@ -1,6 +1,6 @@
 import { createWriteStream, existsSync, mkdirSync, writeFileSync } from "fs";
 import { randomBytes } from "crypto";
-import { CacheType, ReferenceType, DatabaseEvents } from "../typings/enum.js";
+import { CacheType, ReferenceType, DatabaseEvents } from "../../typings/enum.js";
 import { encrypt } from "../../utils.js";
 import Table from "./table.js";
 import { EventEmitter } from "events";

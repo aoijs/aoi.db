@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { WriteStream } from "fs";
-import { ReferenceType } from "../typings/enum.js";
+import { ReferenceType } from "../../typings/enum.js";
 export default class Referencer {
     #private;
     cache: Record<string, {

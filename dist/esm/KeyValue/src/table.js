@@ -1,6 +1,6 @@
 import { createReadStream, createWriteStream, readFileSync, readdirSync, statSync, writeFileSync, } from "fs";
 import { JSONParser, ReferenceConstantSpace, createHash, createHashRawString, decodeHash, decrypt, encrypt, } from "../../utils.js";
-import { DatabaseEvents, DatabaseMethod } from "../typings/enum.js";
+import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
 import Data from "./data.js";
 import { readFile, rename, stat, truncate, unlink, writeFile, } from "fs/promises";
 import Referencer from "./referencer.js";
@@ -350,6 +350,7 @@ export default class Table extends EventEmitter {
                 await this.#set();
             }, 100);
         }
+        return data;
     }
     /**
      * @private
@@ -531,6 +532,7 @@ export default class Table extends EventEmitter {
                 await this.#deleteFlush();
             }, 100);
         }
+        return data;
     }
     /**
      * @private
@@ -848,6 +850,28 @@ export default class Table extends EventEmitter {
         this.referencer.restart();
         this.repairMode = false;
         return true;
+    }
+    /**
+      * @description Deletes the data
+      * @param query The query to find the data
+      * @returns The data deleted if query is provided else boolean if whole table is cleared
+      * @example
+      * ```js
+      * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
+      * ```
+     */
+    async deleteMany(query) {
+        if (!query) {
+            await this.clear();
+            return true;
+        }
+        else {
+            const data = await this.findMany(query);
+            for (const d of data) {
+                await this.delete(d.key);
+            }
+            return data;
+        }
     }
 }
 //# sourceMappingURL=table.js.map

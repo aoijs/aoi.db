@@ -29,6 +29,5 @@ exports.KeyValue = database_js_1.default;
 const table_js_1 = __importDefault(require("./src/table.js"));
 exports.KeyValueTable = table_js_1.default;
 __exportStar(require("./typings/interface.js"), exports);
-__exportStar(require("./typings/enum.js"), exports);
 __exportStar(require("./typings/type.js"), exports);
 //# sourceMappingURL=index.js.map
