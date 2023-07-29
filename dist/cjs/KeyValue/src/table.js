@@ -857,13 +857,13 @@ class Table extends events_1.EventEmitter {
         return true;
     }
     /**
-      * @description Deletes the data
-      * @param query The query to find the data
-      * @returns The data deleted if query is provided else boolean if whole table is cleared
-      * @example
-      * ```js
-      * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
-      * ```
+     * @description Deletes the data
+     * @param query The query to find the data
+     * @returns The data deleted if query is provided else boolean if whole table is cleared
+     * @example
+     * ```js
+     * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
+     * ```
      */
     async deleteMany(query) {
         if (!query) {

@@ -19,7 +19,7 @@ import {
 } from "../../utils.js";
 import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
 import {
-    KeyValueData,
+    KeyValueDataInterface,
     KeyValueJSONOption,
     KeyValueTableOptions,
 } from "../typings/interface.js";
@@ -473,7 +473,7 @@ export default class Table extends EventEmitter {
      *
      */
 
-    async set(key: string, value: Partial<KeyValueData>) {
+    async set(key: string, value: Partial<KeyValueDataInterface>) {
         const reference = await this.referencer.getReference();
         let data: Data;
         if (reference.hasOwnProperty(key)) {
@@ -1165,13 +1165,13 @@ export default class Table extends EventEmitter {
     }
 
     /**
-      * @description Deletes the data
-      * @param query The query to find the data
-      * @returns The data deleted if query is provided else boolean if whole table is cleared
-      * @example
-      * ```js
-      * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
-      * ```
+     * @description Deletes the data
+     * @param query The query to find the data
+     * @returns The data deleted if query is provided else boolean if whole table is cleared
+     * @example
+     * ```js
+     * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
+     * ```
      */
     async deleteMany(query?: (value: Data, index: number) => boolean) {
         if (!query) {

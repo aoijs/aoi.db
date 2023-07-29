@@ -2,7 +2,7 @@
 /// <reference types="node" />
 import { WriteStream } from "fs";
 import { DatabaseMethod } from "../../typings/enum.js";
-import { KeyValueData, KeyValueTableOptions } from "../typings/interface.js";
+import { KeyValueDataInterface, KeyValueTableOptions } from "../typings/interface.js";
 import Data from "./data.js";
 import KeyValue from "./database.js";
 import Referencer from "./referencer.js";
@@ -56,7 +56,7 @@ export default class Table extends EventEmitter {
      * ```
      *
      */
-    set(key: string, value: Partial<KeyValueData>): Promise<Data>;
+    set(key: string, value: Partial<KeyValueDataInterface>): Promise<Data>;
     /**
      * @description get the transaction log
      * @returns The transaction log
@@ -175,13 +175,13 @@ export default class Table extends EventEmitter {
      */
     fullRepair(): Promise<boolean>;
     /**
-      * @description Deletes the data
-      * @param query The query to find the data
-      * @returns The data deleted if query is provided else boolean if whole table is cleared
-      * @example
-      * ```js
-      * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
-      * ```
+     * @description Deletes the data
+     * @param query The query to find the data
+     * @returns The data deleted if query is provided else boolean if whole table is cleared
+     * @example
+     * ```js
+     * <KeyValueTable>.deleteMany((v, index) => v.value === "value")
+     * ```
      */
     deleteMany(query?: (value: Data, index: number) => boolean): Promise<true | Data[]>;
 }

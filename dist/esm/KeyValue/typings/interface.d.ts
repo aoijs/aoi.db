@@ -30,7 +30,7 @@ export interface KeyValueCacheConfig {
 export interface KeyValueTableOptions {
     name: string;
 }
-export interface KeyValueData {
+export interface KeyValueDataInterface {
     file: string;
     value: KeyValueDataValueType;
     key: string;

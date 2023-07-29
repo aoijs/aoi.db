@@ -1,4 +1,7 @@
-import { KeyValueData, KeyValueOptions } from "../typings/interface.js";
+import {
+    KeyValueDataInterface,
+    KeyValueOptions,
+} from "../typings/interface.js";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { randomBytes } from "crypto";
 import { CacheType,ReferenceType, DatabaseEvents } from "../../typings/enum.js";
@@ -255,7 +258,7 @@ export default class KeyValue extends EventEmitter {
      * @param value value to set
      * @param table table where data will be saved
      * @returns
-     * 
+     *
      * @example
      * ```js
      * <KeyValue>.set("main","key",{
@@ -263,7 +266,11 @@ export default class KeyValue extends EventEmitter {
      * });
      * ```
      */
-    async set(table: string, key: string, value: Partial<KeyValueData>) {
+    async set(
+        table: string,
+        key: string,
+        value: Partial<KeyValueDataInterface>,
+    ) {
         const t = this.tables[table];
         if (!t) return undefined;
 
@@ -274,8 +281,8 @@ export default class KeyValue extends EventEmitter {
      * @description get data from database
      * @param table table where data is saved
      * @param key key to get
-     * @returns 
-     * 
+     * @returns
+     *
      * @example
      * ```js
      * <KeyValue>.get("main","key");
@@ -293,8 +300,8 @@ export default class KeyValue extends EventEmitter {
      * @description delete data from database
      * @param table table where data is saved
      * @param key key to delete
-     * @returns 
-     * 
+     * @returns
+     *
      * @example
      * ```js
      * <KeyValue>.delete("main","key");
@@ -311,8 +318,8 @@ export default class KeyValue extends EventEmitter {
     /**
      * @description clear table
      * @param table table to clear
-     * @returns 
-     * 
+     * @returns
+     *
      * @example
      * ```js
      * <KeyValue>.clear("main");
@@ -330,8 +337,8 @@ export default class KeyValue extends EventEmitter {
      * @description check if data exists in database
      * @param table table to check
      * @param key key to check
-     * @returns 
-     * 
+     * @returns
+     *
      * @example
      * ```js
      * <KeyValue>.has("main","key");
@@ -348,7 +355,7 @@ export default class KeyValue extends EventEmitter {
     /**
      * @description clear all tables
      * @returns
-     * 
+     *
      * @example
      * ```js
      * <KeyValue>.clearAll();
@@ -365,8 +372,8 @@ export default class KeyValue extends EventEmitter {
      * @description find the first data that matches the query
      * @param table table to find
      * @param query query to match
-     * @returns 
-     * 
+     * @returns
+     *
      * @example
      * ```js
      * <KeyValue>.findOne("main",(value,index)=>{
@@ -388,8 +395,8 @@ export default class KeyValue extends EventEmitter {
      * @description find all data that matches the query
      * @param table table to find
      * @param query query to match
-     * @returns 
-     * 
+     * @returns
+     *
      * @example
      *  ```js
      * <KeyValue>.findMany("main",(value,index)=>{
@@ -413,8 +420,8 @@ export default class KeyValue extends EventEmitter {
      * @param table table to get
      * @param query query to match
      * @param limit limit of data to get
-     * @returns 
-     * 
+     * @returns
+     *
      * @example
      * ```js
      * <KeyValue>.all("main",(value,index)=>{
@@ -437,7 +444,7 @@ export default class KeyValue extends EventEmitter {
     /**
      * @description perform a backup of database
      * @returns
-     * 
+     *
      * @example
      * ```js
      * setInterval(()=>{
@@ -467,12 +474,12 @@ export default class KeyValue extends EventEmitter {
      * @description perform a full repair of table
      * @param table table to repair
      * @returns
-     * 
+     *
      * @example
      * ```js
      * <KeyValue>.fullRepair("main");
      * ```
-     * 
+     *
      */
 
     async fullRepair(table: string) {
@@ -483,19 +490,22 @@ export default class KeyValue extends EventEmitter {
     }
 
     /**
-      * @description deletes all data that matches the query
-      * @param table table to delete
-      * @param query query to match
-      * @returns list of deleted data if query is provided else boolean to indicate if table is cleared
-      * @example
-      * ```js
-      * <KeyValue>.deleteMany("main",(value,index)=>{
-      *    return value.key === "key" && value.value === "value";
-      * })
-      * ```
+     * @description deletes all data that matches the query
+     * @param table table to delete
+     * @param query query to match
+     * @returns list of deleted data if query is provided else boolean to indicate if table is cleared
+     * @example
+     * ```js
+     * <KeyValue>.deleteMany("main",(value,index)=>{
+     *    return value.key === "key" && value.value === "value";
+     * })
+     * ```
      */
 
-    async deleteMany(table:string,query?:(value:Data,index:number) => boolean ) {
+    async deleteMany(
+        table: string,
+        query?: (value: Data, index: number) => boolean,
+    ) {
         const t = this.tables[table];
         if (!t) return undefined;
 

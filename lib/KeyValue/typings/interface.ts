@@ -38,7 +38,7 @@ export interface KeyValueTableOptions {
 
 }
 
-export interface KeyValueData {
+export interface KeyValueDataInterface {
     file: string;
     value:KeyValueDataValueType;
     key:string;

@@ -1,5 +1,5 @@
 import { Optional } from "../../typings/type.js";
-import { KeyValueData, KeyValueJSONOption } from "../typings/interface.js";
+import { KeyValueDataInterface, KeyValueJSONOption } from "../typings/interface.js";
 export default class Data {
     #private;
     file: string;
@@ -24,7 +24,7 @@ export default class Data {
      * })
      * ```
      */
-    constructor(data: Optional<KeyValueData, "type" | "ttl">);
+    constructor(data: Optional<KeyValueDataInterface, "type" | "ttl">);
     /**
      * @description convert data to json
      * @returns

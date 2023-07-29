@@ -1,5 +1,5 @@
 import { Optional } from "../../typings/type.js";
-import { KeyValueData, KeyValueJSONOption } from "../typings/interface.js";
+import { KeyValueDataInterface, KeyValueJSONOption } from "../typings/interface.js";
 import { types } from "util";
 export default class Data {
     file: string;
@@ -11,9 +11,9 @@ export default class Data {
     /**
      * @description create data
      * @param data data to create
-     * 
+     *
      * @memberof Data
-     * 
+     *
      * @example
      * ```js
      * const data = new Data({
@@ -26,7 +26,7 @@ export default class Data {
      * ```
      */
 
-    constructor(data: Optional<KeyValueData, "type" | "ttl">) {
+    constructor(data: Optional<KeyValueDataInterface, "type" | "ttl">) {
         this.file = data.file;
         this.key = data.key;
         this.type = data.type ?? this.#getType(data.value);
@@ -37,7 +37,7 @@ export default class Data {
      * @private
      * @description get type of value
      * @param value value to get type
-     * @returns 
+     * @returns
      */
     #getType(value: any) {
         return value instanceof Date ? "date" : typeof value;
@@ -48,7 +48,7 @@ export default class Data {
      * @param data data to parse
      * @returns
      */
-    #parseValue(data: Optional<KeyValueData, "type" | "ttl">): any {
+    #parseValue(data: Optional<KeyValueDataInterface, "type" | "ttl">): any {
         return data.type === "date" &&
             (typeof data.value === "string" ||
                 typeof data.value === "number" ||
@@ -91,7 +91,7 @@ export default class Data {
     /**
      * @description create empty data
      * @static
-     * @returns 
+     * @returns
      */
     static emptyData() {
         return new Data({

@@ -376,16 +376,16 @@ export default class KeyValue extends EventEmitter {
         return await t.table.fullRepair();
     }
     /**
-      * @description deletes all data that matches the query
-      * @param table table to delete
-      * @param query query to match
-      * @returns list of deleted data if query is provided else boolean to indicate if table is cleared
-      * @example
-      * ```js
-      * <KeyValue>.deleteMany("main",(value,index)=>{
-      *    return value.key === "key" && value.value === "value";
-      * })
-      * ```
+     * @description deletes all data that matches the query
+     * @param table table to delete
+     * @param query query to match
+     * @returns list of deleted data if query is provided else boolean to indicate if table is cleared
+     * @example
+     * ```js
+     * <KeyValue>.deleteMany("main",(value,index)=>{
+     *    return value.key === "key" && value.value === "value";
+     * })
+     * ```
      */
     async deleteMany(table, query) {
         const t = this.tables[table];

@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { KeyValueData, KeyValueOptions } from "../typings/interface.js";
+import { KeyValueDataInterface, KeyValueOptions } from "../typings/interface.js";
 import { DeepRequired } from "../typings/type.js";
 import Table from "./table.js";
 import { EventEmitter } from "events";
@@ -60,7 +60,7 @@ export default class KeyValue extends EventEmitter {
      * });
      * ```
      */
-    set(table: string, key: string, value: Partial<KeyValueData>): Promise<Data | undefined>;
+    set(table: string, key: string, value: Partial<KeyValueDataInterface>): Promise<Data | undefined>;
     /**
      * @description get data from database
      * @param table table where data is saved
@@ -186,16 +186,16 @@ export default class KeyValue extends EventEmitter {
      */
     fullRepair(table: string): Promise<boolean | undefined>;
     /**
-      * @description deletes all data that matches the query
-      * @param table table to delete
-      * @param query query to match
-      * @returns list of deleted data if query is provided else boolean to indicate if table is cleared
-      * @example
-      * ```js
-      * <KeyValue>.deleteMany("main",(value,index)=>{
-      *    return value.key === "key" && value.value === "value";
-      * })
-      * ```
+     * @description deletes all data that matches the query
+     * @param table table to delete
+     * @param query query to match
+     * @returns list of deleted data if query is provided else boolean to indicate if table is cleared
+     * @example
+     * ```js
+     * <KeyValue>.deleteMany("main",(value,index)=>{
+     *    return value.key === "key" && value.value === "value";
+     * })
+     * ```
      */
     deleteMany(table: string, query?: (value: Data, index: number) => boolean): Promise<true | Data[] | undefined>;
 }
