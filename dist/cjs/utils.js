@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
+exports.convertV1KeyValuetov2 = exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
 const crypto_1 = require("crypto");
+const fs_1 = require("fs");
 const algorithm = "aes-256-ctr";
 function encrypt(string, key, iV) {
     const iv = iV ? Buffer.from(iV, "hex") : (0, crypto_1.randomBytes)(16);
@@ -57,4 +58,32 @@ function JSONParser(data) {
     }
 }
 exports.JSONParser = JSONParser;
+async function convertV1KeyValuetov2(oldDbFolder, db) {
+    const tables = (0, fs_1.readdirSync)(oldDbFolder);
+    for (const table of tables) {
+        if (!db.tables[table])
+            continue;
+        const files = (0, fs_1.readdirSync)(oldDbFolder + "/" + table).filter(x => !x.startsWith("$temp_"));
+        for (const file of files) {
+            const data = (0, fs_1.readFileSync)(oldDbFolder + "/" + table + "/" + file).toString();
+            const { data: json, isBroken } = JSONParser(data);
+            if (json.iv && json.data) {
+                json.ecrypted = json.data;
+                delete json.data;
+                const { data: decrypted } = JSONParser(decrypt(json, db.options.encryptionConfig.securityKey));
+                const keys = Object.keys(decrypted);
+                for (const key of keys) {
+                    await db.set(table, key, decrypted[key]);
+                }
+            }
+            else {
+                const keys = Object.keys(json);
+                for (const key of keys) {
+                    await db.set(table, key, json[key]);
+                }
+            }
+        }
+    }
+}
+exports.convertV1KeyValuetov2 = convertV1KeyValuetov2;
 //# sourceMappingURL=utils.js.map

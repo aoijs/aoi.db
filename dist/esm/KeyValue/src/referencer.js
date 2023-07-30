@@ -12,21 +12,25 @@ export default class Referencer {
     constructor(path, maxSize, type) {
         this.type = type;
         this.#path = path;
-        this.files = readdirSync(path).map((file) => {
+        this.maxSize = maxSize;
+    }
+    /**
+     * Description initialize the Referencer
+     * @returns
+     */
+    async initialize() {
+        this.files = readdirSync(this.#path).map((file) => {
             return {
                 name: file,
-                size: statSync(path + "/" + file).size,
-                writer: createWriteStream(path + "/" + file, {
+                size: statSync(this.#path + "/" + file).size,
+                writer: createWriteStream(this.#path + "/" + file, {
                     flags: "a",
                     encoding: "utf-8",
                 }),
             };
         });
-        this.maxSize = maxSize;
         if (this.type === ReferenceType.Cache)
-            (async () => {
-                this.cache = await this.#getReference();
-            })();
+            this.cache = await this.#getReference();
     }
     /**
      * @private

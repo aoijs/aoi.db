@@ -2,9 +2,19 @@ import {
     KeyValueDataInterface,
     KeyValueOptions,
 } from "../typings/interface.js";
-import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import {
+    createWriteStream,
+    existsSync,
+    mkdirSync,
+    readFileSync,
+    writeFileSync,
+} from "fs";
 import { randomBytes } from "crypto";
-import { CacheType,ReferenceType, DatabaseEvents } from "../../typings/enum.js";
+import {
+    CacheType,
+    ReferenceType,
+    DatabaseEvents,
+} from "../../typings/enum.js";
 import { DeepRequired } from "../typings/type.js";
 import { encrypt } from "../../utils.js";
 import Table from "./table.js";
@@ -155,7 +165,18 @@ export default class KeyValue extends EventEmitter {
      * ```
      */
 
-    connect() {
+    async connect() {
+        const isReady = (table: Table) => {
+            this.tables[table.options.name].ready = true;
+
+            for (const t of this.options.dataConfig.tables) {
+                if (!this.tables[t]?.ready) return;
+            }
+            this.readyAt = Date.now();
+            this.removeListener(DatabaseEvents.TableReady, isReady);
+            this.emit(DatabaseEvents.Connect);
+        };
+        this.on(DatabaseEvents.TableReady, isReady);
         if (!existsSync(this.#options.dataConfig.path)) {
             mkdirSync(this.#options.dataConfig.path);
             for (const table of this.#options.dataConfig.tables) {
@@ -237,16 +258,9 @@ export default class KeyValue extends EventEmitter {
                 table: t,
                 ready: false,
             };
+
+            await t.initialize();
         }
-        const isReady = (table: Table) => {
-            this.readyAt = Date.now();
-            this.tables[table.options.name].ready = true;
-            if (Object.values(this.tables).every((t) => t.ready)) {
-                this.emit(DatabaseEvents.Connect, table);
-                this.removeListener(DatabaseEvents.TableReady, isReady);
-            }
-        };
-        this.on(DatabaseEvents.TableReady, isReady);
     }
     get options() {
         return this.#options;

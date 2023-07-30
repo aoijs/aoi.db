@@ -20,7 +20,7 @@ export default class Referencer {
     > = {};
     cacheSize = -1;
     #path: string;
-    files: {
+    files!: {
         name: string;
         size: number;
         writer: WriteStream;
@@ -30,27 +30,32 @@ export default class Referencer {
     constructor(path: string, maxSize: number, type: ReferenceType) {
         this.type = type;
         this.#path = path;
-        this.files = readdirSync(path).map((file) => {
+        this.maxSize = maxSize;
+    }
+
+    /**
+     * Description initialize the Referencer
+     * @returns 
+     */
+    async initialize() {
+        this.files = readdirSync(this.#path).map((file) => {
             return {
                 name: file,
-                size: statSync(path + "/" + file).size,
-                writer: createWriteStream(path + "/" + file, {
+                size: statSync(this.#path + "/" + file).size,
+                writer: createWriteStream(this.#path + "/" + file, {
                     flags: "a",
                     encoding: "utf-8",
                 }),
             };
         });
-        this.maxSize = maxSize;
         if (this.type === ReferenceType.Cache)
-            (async () => {
-                this.cache = await this.#getReference();
-            })();
+            this.cache = await this.#getReference();
     }
 
     /**
      * @private
      * @description get reference from files
-     * @returns 
+     * @returns
      */
 
     async #getReference(): Promise<
@@ -71,7 +76,7 @@ export default class Referencer {
         >;
         for (const file of this.files) {
             const data = await readFile(this.#path + "/" + file.name, "utf-8");
-            if(data.trim() === "") return reference;
+            if (data.trim() === "") return reference;
             const lines = data.split("\n");
             for (const line of lines) {
                 const [key, value] = line.split(ReferenceConstantSpace);
@@ -86,8 +91,8 @@ export default class Referencer {
 
     /**
      * @description get references
-     * @returns 
-     * 
+     * @returns
+     *
      * @example
      * ```js
      * <Referencer>.getReference() // {key:{file:"file",referenceFile:"referenceFile"}}
@@ -165,9 +170,9 @@ export default class Referencer {
      * @description set reference
      * @param key key to set
      * @param file file to set
-     * 
+     *
      * @example
-     * 
+     *
      * ```js
      * <Referencer>.setReference("key","file")
      * ```
@@ -186,7 +191,7 @@ export default class Referencer {
     /**
      * @description delete reference
      * @param key key to delete
-     * 
+     *
      * @example
      * ```js
      * <Referencer>.deleteReference("key")
@@ -194,15 +199,14 @@ export default class Referencer {
      */
 
     async deleteReference(key: string) {
-        let referenceFile:string;
+        let referenceFile: string;
         if (this.cacheSize !== -1) {
             referenceFile = this.cache[key].referenceFile;
             delete this.cache[key];
             this.cacheSize--;
-        }
-        else {
-        const reference = await this.getReference();
-        referenceFile = reference[key].referenceFile;
+        } else {
+            const reference = await this.getReference();
+            referenceFile = reference[key].referenceFile;
         }
 
         await this.#deleteReference(key, referenceFile);
@@ -231,7 +235,7 @@ export default class Referencer {
     /**
      * @description get all references from file
      * @param file file to get reference
-     * @returns 
+     * @returns
      */
 
     async #getFileReference(file: string) {
@@ -249,7 +253,7 @@ export default class Referencer {
 
     /**
      * @description clear the Referencer
-     * 
+     *
      * @example
      * ```js
      * <Referencer>.clear()
@@ -257,27 +261,27 @@ export default class Referencer {
      */
 
     async clear() {
-        for(const file of this.files){
+        for (const file of this.files) {
             file.size = 0;
             file.writer.close();
 
-            if(file.name !== "reference_1.log"){
+            if (file.name !== "reference_1.log") {
                 await unlink(this.#path + "/" + file.name);
             } else {
-                await truncate(this.#path + "/" + file.name,0);
+                await truncate(this.#path + "/" + file.name, 0);
             }
         }
-        this.files = this.files.slice(0,1);
+        this.files = this.files.slice(0, 1);
         this.cache = {};
 
-        if(this.cacheSize !== -1){
+        if (this.cacheSize !== -1) {
             this.cacheSize = -1;
         }
     }
 
     /**
      * @description open the Referencer
-     * 
+     *
      * @example
      * ```js
      * <Referencer>.open()
@@ -294,7 +298,7 @@ export default class Referencer {
 
     /**
      * @description restart the Referencer
-     * 
+     *
      * @example
      * ```js
      * <Referencer>.restart()
@@ -302,8 +306,8 @@ export default class Referencer {
      */
 
     restart() {
-        for(const file of this.files){
-            if(!file.writer.closed) file.writer.close();
+        for (const file of this.files) {
+            if (!file.writer.closed) file.writer.close();
         }
         this.files = readdirSync(this.#path).map((file) => {
             return {
@@ -313,7 +317,7 @@ export default class Referencer {
                     flags: "a",
                     encoding: "utf-8",
                 }),
-            }
-        });     
+            };
+        });
     }
 }

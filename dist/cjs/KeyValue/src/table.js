@@ -52,13 +52,12 @@ class Table extends events_1.EventEmitter {
         this.options = options;
         this.#cache = new cache_js_1.default(db.options.cacheConfig);
         this.db = db;
-        this.#initialize();
     }
     /**
      * @private
      * @description Initializes the table
      */
-    async #initialize() {
+    async initialize() {
         this.paths = {
             reference: `${this.db.options.dataConfig.referencePath}/${this.options.name}`,
             log: `${this.db.options.fileConfig.transactionLogPath}/${this.options.name}/transaction.log`,
@@ -66,14 +65,17 @@ class Table extends events_1.EventEmitter {
         this.logHash = await this.#getHashLog();
         this.files = (0, fs_1.readdirSync)(`${this.db.options.dataConfig.path}/${this.options.name}`).map((file) => {
             const stats = (0, fs_1.statSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
-            const writer = (0, fs_1.createWriteStream)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`);
+            // const writer = createWriteStream(
+            //     `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
+            // );
             return {
                 name: file,
                 size: stats.size,
-                writer,
+                // writer,
             };
         });
         this.referencer = new referencer_js_1.default(this.paths.reference, this.db.options.fileConfig.maxSize, this.db.options.cacheConfig.reference);
+        await this.referencer.initialize();
         this.logData = {
             writer: (0, fs_1.createWriteStream)(this.paths.log, {
                 flags: "a",
@@ -95,10 +97,11 @@ class Table extends events_1.EventEmitter {
      */
     #checkIntegrity() {
         const files = this.files.map((x) => x.name);
+        let index = 0;
         for (const file of files) {
-            const data = (0, fs_1.readFileSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8");
+            const data = (0, fs_1.readFileSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8").trim();
             const { data: json, isBroken } = (0, utils_js_1.JSONParser)(data);
-            if (isBroken) {
+            if (isBroken && !file.startsWith("$temp_")) {
                 console.warn(`Attempting self fix on file ${file} in table ${this.options.name}.`);
                 if (this.db.options.encryptionConfig.encriptData) {
                     const decrypted = (0, utils_js_1.decrypt)(json, this.db.options.encryptionConfig.securityKey);
@@ -114,6 +117,12 @@ class Table extends events_1.EventEmitter {
                     console.warn(`Attempted self fix on file ${file} in table ${this.options.name}. If the file is still corrupted, please use the <KeyValue>.fullRepair("tableName") to restore the data.`);
                 }
             }
+            if (file.startsWith("$temp_")) {
+                // this.files.find(x => x.name === file)?.writer?.close();
+                (0, fs_1.unlinkSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
+                this.files.splice(index, 1);
+            }
+            index++;
         }
     }
     /**
@@ -208,16 +217,12 @@ class Table extends events_1.EventEmitter {
      * @returns
      */
     async #set() {
-        if (!this.#queue.set.length) {
-            this.#queued.set = false;
-            clearInterval(this.#intervals.set);
-            this.#intervals.set = null;
+        if (this.#queued.set)
             return;
-        }
         this.#queued.set = true;
         if (this.#cache.size === -1) {
             for (const files of this.files) {
-                const Jdata = JSON.parse((await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`)).toString());
+                const Jdata = JSON.parse((await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`)).toString().trim());
                 if (this.db.options.encryptionConfig.encriptData) {
                     const decrypted = (0, utils_js_1.decrypt)(Jdata, this.db.options.encryptionConfig.securityKey);
                     const json = JSON.parse(decrypted);
@@ -255,9 +260,12 @@ class Table extends events_1.EventEmitter {
                 await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`, JSON.stringify(encrypted));
             }
             else {
-                file.writer.write(JSON.stringify(json), async () => {
-                    await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`);
-                });
+                // file.writer.write(JSON.stringify(json), async () => {
+                //     await rename(
+                //         `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
+                //         `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
+                //     );
+                // });
                 await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`, JSON.stringify(json));
             }
             try {
@@ -267,6 +275,7 @@ class Table extends events_1.EventEmitter {
         }
         this.#queue.set = [];
         await this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
+        this.#queued.set = false;
     }
     /**
      * @description Gets the current file
@@ -446,7 +455,7 @@ class Table extends events_1.EventEmitter {
      * @returns
      */
     async #get(key, file) {
-        const data = await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8");
+        const data = (await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8")).trim();
         if (this.db.options.encryptionConfig.encriptData) {
             const decrypted = (0, utils_js_1.decrypt)(JSON.parse(data), this.db.options.encryptionConfig.securityKey);
             const json = JSON.parse(decrypted);
@@ -499,7 +508,7 @@ class Table extends events_1.EventEmitter {
             this.#cache.delete(key, file);
         }
         if (!data) {
-            const p = await (0, promises_1.readFile)(path, "utf-8");
+            const p = (await (0, promises_1.readFile)(path, "utf-8")).trim();
             const json = JSON.parse(p);
             if (this.db.options.encryptionConfig.encriptData) {
                 const decrypted = (0, utils_js_1.decrypt)(json, this.db.options.encryptionConfig.securityKey);
@@ -578,7 +587,7 @@ class Table extends events_1.EventEmitter {
         await (0, promises_1.truncate)(this.paths.log, 33);
         for (const file of this.files) {
             if (file.name !== this.files[0].name) {
-                file.writer.close();
+                file.writer?.close();
                 await (0, promises_1.unlink)(`${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`);
             }
             else {
@@ -614,7 +623,7 @@ class Table extends events_1.EventEmitter {
      * @private
      */
     async #fetchFile(file) {
-        const data = await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8");
+        const data = (await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8")).trim();
         let json = {};
         if (this.db.options.encryptionConfig.encriptData) {
             const decrypted = (0, utils_js_1.decrypt)(JSON.parse(data), this.db.options.encryptionConfig.securityKey);
@@ -753,7 +762,7 @@ class Table extends events_1.EventEmitter {
     async fullRepair() {
         this.repairMode = true;
         for (const file of this.files) {
-            file.writer.close();
+            file.writer?.close();
             if (file.name !==
                 `${this.options.name}_scheme_1${this.db.options.fileConfig.extension}`) {
                 await (0, promises_1.unlink)(`${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`);

@@ -14,21 +14,25 @@ class Referencer {
     constructor(path, maxSize, type) {
         this.type = type;
         this.#path = path;
-        this.files = (0, fs_1.readdirSync)(path).map((file) => {
+        this.maxSize = maxSize;
+    }
+    /**
+     * Description initialize the Referencer
+     * @returns
+     */
+    async initialize() {
+        this.files = (0, fs_1.readdirSync)(this.#path).map((file) => {
             return {
                 name: file,
-                size: (0, fs_1.statSync)(path + "/" + file).size,
-                writer: (0, fs_1.createWriteStream)(path + "/" + file, {
+                size: (0, fs_1.statSync)(this.#path + "/" + file).size,
+                writer: (0, fs_1.createWriteStream)(this.#path + "/" + file, {
                     flags: "a",
                     encoding: "utf-8",
                 }),
             };
         });
-        this.maxSize = maxSize;
         if (this.type === enum_js_1.ReferenceType.Cache)
-            (async () => {
-                this.cache = await this.#getReference();
-            })();
+            this.cache = await this.#getReference();
     }
     /**
      * @private

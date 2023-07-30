@@ -123,7 +123,18 @@ class KeyValue extends events_1.EventEmitter {
      * <KeyValue>.connect()
      * ```
      */
-    connect() {
+    async connect() {
+        const isReady = (table) => {
+            this.tables[table.options.name].ready = true;
+            for (const t of this.options.dataConfig.tables) {
+                if (!this.tables[t]?.ready)
+                    return;
+            }
+            this.readyAt = Date.now();
+            this.removeListener(enum_js_1.DatabaseEvents.TableReady, isReady);
+            this.emit(enum_js_1.DatabaseEvents.Connect);
+        };
+        this.on(enum_js_1.DatabaseEvents.TableReady, isReady);
         if (!(0, fs_1.existsSync)(this.#options.dataConfig.path)) {
             (0, fs_1.mkdirSync)(this.#options.dataConfig.path);
             for (const table of this.#options.dataConfig.tables) {
@@ -165,16 +176,8 @@ class KeyValue extends events_1.EventEmitter {
                 table: t,
                 ready: false,
             };
+            await t.initialize();
         }
-        const isReady = (table) => {
-            this.readyAt = Date.now();
-            this.tables[table.options.name].ready = true;
-            if (Object.values(this.tables).every((t) => t.ready)) {
-                this.emit(enum_js_1.DatabaseEvents.Connect, table);
-                this.removeListener(enum_js_1.DatabaseEvents.TableReady, isReady);
-            }
-        };
-        this.on(enum_js_1.DatabaseEvents.TableReady, isReady);
     }
     get options() {
         return this.#options;

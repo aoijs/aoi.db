@@ -17,6 +17,11 @@ export default class Referencer {
     type: ReferenceType;
     constructor(path: string, maxSize: number, type: ReferenceType);
     /**
+     * Description initialize the Referencer
+     * @returns
+     */
+    initialize(): Promise<void>;
+    /**
      * @description get references
      * @returns
      *

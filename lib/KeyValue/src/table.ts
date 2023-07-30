@@ -6,6 +6,7 @@ import {
     readFileSync,
     readdirSync,
     statSync,
+    unlinkSync,
     writeFileSync,
 } from "fs";
 import {
@@ -49,7 +50,7 @@ export default class Table extends EventEmitter {
     files!: {
         name: string;
         size: number;
-        writer: WriteStream;
+        writer?: WriteStream;
     }[];
     logHash!: string;
     #queue = {
@@ -93,13 +94,12 @@ export default class Table extends EventEmitter {
         this.options = options;
         this.#cache = new Cacher(db.options.cacheConfig);
         this.db = db;
-        this.#initialize();
     }
     /**
      * @private
      * @description Initializes the table
      */
-    async #initialize() {
+    async initialize() {
         this.paths = {
             reference: `${this.db.options.dataConfig.referencePath}/${this.options.name}`,
             log: `${this.db.options.fileConfig.transactionLogPath}/${this.options.name}/transaction.log`,
@@ -111,14 +111,14 @@ export default class Table extends EventEmitter {
             const stats = statSync(
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
             );
-            const writer = createWriteStream(
-                `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
-            );
+            // const writer = createWriteStream(
+            //     `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
+            // );
 
             return {
                 name: file,
                 size: stats.size,
-                writer,
+                // writer,
             };
         });
         this.referencer = new Referencer(
@@ -126,6 +126,8 @@ export default class Table extends EventEmitter {
             this.db.options.fileConfig.maxSize,
             this.db.options.cacheConfig.reference,
         );
+
+        await this.referencer.initialize();
         this.logData = {
             writer: createWriteStream(this.paths.log, {
                 flags: "a",
@@ -152,16 +154,16 @@ export default class Table extends EventEmitter {
 
     #checkIntegrity() {
         const files = this.files.map((x) => x.name);
-
+        let index = 0;
         for (const file of files) {
             const data = readFileSync(
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
                 "utf-8",
-            );
+            ).trim();
 
             const { data: json, isBroken } = JSONParser(data);
 
-            if (isBroken) {
+            if (isBroken && !file.startsWith("$temp_")) {
                 console.warn(
                     `Attempting self fix on file ${file} in table ${this.options.name}.`,
                 );
@@ -198,7 +200,19 @@ export default class Table extends EventEmitter {
                     );
                 }
             }
+
+            if(file.startsWith("$temp_")) {
+                // this.files.find(x => x.name === file)?.writer?.close();
+
+                 unlinkSync(
+                    `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+                );
+
+                this.files.splice(index, 1);
+            }
+            index++;
         }
+        
     }
 
     /**
@@ -313,12 +327,7 @@ export default class Table extends EventEmitter {
      */
 
     async #set() {
-        if (!this.#queue.set.length) {
-            this.#queued.set = false;
-            clearInterval(this.#intervals.set as NodeJS.Timeout);
-            this.#intervals.set = null;
-            return;
-        }
+        if(this.#queued.set) return;
         this.#queued.set = true;
         if (this.#cache.size === -1) {
             for (const files of this.files) {
@@ -327,7 +336,7 @@ export default class Table extends EventEmitter {
                         await readFile(
                             `${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`,
                         )
-                    ).toString(),
+                    ).toString().trim(),
                 );
 
                 if (this.db.options.encryptionConfig.encriptData) {
@@ -384,12 +393,12 @@ export default class Table extends EventEmitter {
                     JSON.stringify(encrypted),
                 );
             } else {
-                file.writer.write(JSON.stringify(json), async () => {
-                    await rename(
-                        `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
-                        `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
-                    );
-                });
+                // file.writer.write(JSON.stringify(json), async () => {
+                //     await rename(
+                //         `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
+                //         `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
+                //     );
+                // });
 
                 await writeFile(
                     `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
@@ -405,6 +414,7 @@ export default class Table extends EventEmitter {
         }
         this.#queue.set = [];
         await this.#wal(Data.emptyData(), DatabaseMethod.Flush);
+        this.#queued.set = false;
     }
 
     /**
@@ -631,10 +641,10 @@ export default class Table extends EventEmitter {
      */
 
     async #get(key: string, file: string) {
-        const data = await readFile(
+        const data = (await readFile(
             `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
             "utf-8",
-        );
+        )).trim();
 
         if (this.db.options.encryptionConfig.encriptData) {
             const decrypted = decrypt(
@@ -695,7 +705,7 @@ export default class Table extends EventEmitter {
         }
 
         if (!data) {
-            const p = await readFile(path, "utf-8");
+            const p = (await readFile(path, "utf-8")).trim();
             const json = JSON.parse(p);
             if (this.db.options.encryptionConfig.encriptData) {
                 const decrypted = decrypt(
@@ -802,7 +812,7 @@ export default class Table extends EventEmitter {
         await truncate(this.paths.log, 33);
         for (const file of this.files) {
             if (file.name !== this.files[0].name) {
-                file.writer.close();
+                file.writer?.close();
                 await unlink(
                     `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
                 );
@@ -850,10 +860,10 @@ export default class Table extends EventEmitter {
      */
 
     async #fetchFile(file: string) {
-        const data = await readFile(
+        const data = (await readFile(
             `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
             "utf-8",
-        );
+        )).trim();
         let json: Record<string, KeyValueJSONOption> = {};
         if (this.db.options.encryptionConfig.encriptData) {
             const decrypted = decrypt(
@@ -1007,7 +1017,7 @@ export default class Table extends EventEmitter {
     async fullRepair() {
         this.repairMode = true;
         for (const file of this.files) {
-            file.writer.close();
+            file.writer?.close();
 
             if (
                 file.name !==

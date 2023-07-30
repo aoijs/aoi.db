@@ -44,7 +44,7 @@ export default class KeyValue extends EventEmitter {
      * <KeyValue>.connect()
      * ```
      */
-    connect(): void;
+    connect(): Promise<void>;
     get options(): DeepRequired<KeyValueOptions>;
     /**
      * @description set data to database

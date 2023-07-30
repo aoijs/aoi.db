@@ -18,7 +18,7 @@ export default class Table extends EventEmitter {
     files: {
         name: string;
         size: number;
-        writer: WriteStream;
+        writer?: WriteStream;
     }[];
     logHash: string;
     referencer: Referencer;
@@ -42,6 +42,11 @@ export default class Table extends EventEmitter {
      * @param db The database instance
      */
     constructor(options: KeyValueTableOptions, db: KeyValue);
+    /**
+     * @private
+     * @description Initializes the table
+     */
+    initialize(): Promise<void>;
     /**
      * @description Sets the data in the file
      * @param key The key of the data

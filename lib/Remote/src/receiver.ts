@@ -63,5 +63,5 @@ export default class Receiver extends EventEmitter {
         return JSON.parse(buffer.toString()) as TransmitterDataFormat;
     }
 
-    
+
 }
