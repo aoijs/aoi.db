@@ -1,5 +1,5 @@
 export interface Hash {
     iv: string;
-    encrypted: string;
+    data: string;
 }
 //# sourceMappingURL=interface.d.ts.map

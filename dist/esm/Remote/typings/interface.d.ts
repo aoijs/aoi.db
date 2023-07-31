@@ -1,8 +1,12 @@
 /// <reference types="node" />
 import { TcpNetConnectOpts } from "net";
-import { DatabaseOptions } from "./type.js";
-export interface TransmitterOptions extends TcpNetConnectOpts {
-    dbOptions: DatabaseOptions;
+import { DatabaseOptions, PossibleDatabaseTypes } from "./type.js";
+import { DatabaseMethod } from "../../index.js";
+export interface TransmitterOptions<Type extends PossibleDatabaseTypes> extends TcpNetConnectOpts {
+    dbOptions: {
+        type: Type;
+        options: DatabaseOptions<Type>;
+    };
     username: string;
     password: string;
 }
@@ -11,25 +15,32 @@ export interface ReceiverOptions {
     port: number;
     backlog?: number;
 }
-export interface TransmitterCreateOptions {
+export interface TransmitterCreateOptions<Type extends PossibleDatabaseTypes> {
     path: `aoidb://${string}:${string}@${string}:${number}`;
-    dbOptions: DatabaseOptions;
+    dbOptions: {
+        type: Type;
+        options: DatabaseOptions<Type>;
+    };
 }
 export interface ReceiverDataFormat {
-    opCode: number;
-    timestamp: number;
-    seq: number;
-    data: any;
-    cost: number;
-    hash: string;
-    bucket: string;
-}
-export interface TransmitterDataFormat {
     op: number;
+    m: number;
     t: number;
     s: number;
     d: any;
     c: number;
     h: string;
+}
+export interface TransmitterDataFormat {
+    op: number;
+    m: number;
+    t: number;
+    s: number;
+    d: any;
+    h: string;
+}
+export interface TransmitterAnaylzeDataFormat {
+    method: keyof typeof DatabaseMethod;
+    data: any;
 }
 //# sourceMappingURL=interface.d.ts.map

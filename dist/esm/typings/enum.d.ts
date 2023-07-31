@@ -18,7 +18,12 @@ export declare enum DatabaseMethod {
     Ping = 8,
     Get = 9,
     All = 10,
-    Has = 11
+    Has = 11,
+    NOOP = 12,
+    FindOne = 13,
+    FindMany = 14,
+    DeleteMany = 15,
+    Analyze = 16
 }
 export declare enum DatabaseEvents {
     Connect = "connect",

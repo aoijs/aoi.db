@@ -217,7 +217,9 @@ export default class Table extends EventEmitter {
         this.#queued.set = true;
         if (this.#cache.size === -1) {
             for (const files of this.files) {
-                const Jdata = JSON.parse((await readFile(`${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`)).toString().trim());
+                const Jdata = JSON.parse((await readFile(`${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`))
+                    .toString()
+                    .trim());
                 if (this.db.options.encryptionConfig.encriptData) {
                     const decrypted = decrypt(Jdata, this.db.options.encryptionConfig.securityKey);
                     const json = JSON.parse(decrypted);
@@ -527,7 +529,8 @@ export default class Table extends EventEmitter {
         await this.referencer.deleteReference(key);
         if (!this.queue.delete[file]) {
             this.#queue.delete[file] = {};
-            this.#queue.delete[file] = this.#cache.toJSON(file);
+            this.#queue.delete[file] = await this.#fetchFile(file);
+            delete this.#cache.data[file][key];
         }
         else {
             delete this.#queue.delete[file][key];
@@ -877,7 +880,19 @@ export default class Table extends EventEmitter {
         else {
             const data = await this.findMany(query);
             for (const d of data) {
-                await this.delete(d.key);
+                if (!this.#queue.delete[d.file])
+                    this.#queue.delete[d.file] = await this.#fetchFile(d.file);
+                delete this.#queue.delete[d.file][d.key];
+            }
+            this.#wal(Data.emptyData(), DatabaseMethod.DeleteMany);
+            if (!this.#queued.delete) {
+                this.#queued.delete = true;
+                if (this.#intervals.delete) {
+                    clearInterval(this.#intervals.delete);
+                }
+                this.#intervals.delete = setInterval(async () => {
+                    await this.#deleteFlush();
+                }, 100);
             }
             return data;
         }

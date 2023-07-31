@@ -201,10 +201,10 @@ export default class Table extends EventEmitter {
                 }
             }
 
-            if(file.startsWith("$temp_")) {
+            if (file.startsWith("$temp_")) {
                 // this.files.find(x => x.name === file)?.writer?.close();
 
-                 unlinkSync(
+                unlinkSync(
                     `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
                 );
 
@@ -212,7 +212,6 @@ export default class Table extends EventEmitter {
             }
             index++;
         }
-        
     }
 
     /**
@@ -327,7 +326,7 @@ export default class Table extends EventEmitter {
      */
 
     async #set() {
-        if(this.#queued.set) return;
+        if (this.#queued.set) return;
         this.#queued.set = true;
         if (this.#cache.size === -1) {
             for (const files of this.files) {
@@ -336,7 +335,9 @@ export default class Table extends EventEmitter {
                         await readFile(
                             `${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`,
                         )
-                    ).toString().trim(),
+                    )
+                        .toString()
+                        .trim(),
                 );
 
                 if (this.db.options.encryptionConfig.encriptData) {
@@ -641,10 +642,12 @@ export default class Table extends EventEmitter {
      */
 
     async #get(key: string, file: string) {
-        const data = (await readFile(
-            `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
-            "utf-8",
-        )).trim();
+        const data = (
+            await readFile(
+                `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+                "utf-8",
+            )
+        ).trim();
 
         if (this.db.options.encryptionConfig.encriptData) {
             const decrypted = decrypt(
@@ -735,7 +738,8 @@ export default class Table extends EventEmitter {
 
         if (!this.queue.delete[file]) {
             this.#queue.delete[file] = {};
-            this.#queue.delete[file] = this.#cache.toJSON(file);
+            this.#queue.delete[file] = await this.#fetchFile(file);
+            delete (this.#cache.data[file] as Record<string, any>)[key];
         } else {
             delete this.#queue.delete[file][key];
         }
@@ -860,10 +864,12 @@ export default class Table extends EventEmitter {
      */
 
     async #fetchFile(file: string) {
-        const data = (await readFile(
-            `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
-            "utf-8",
-        )).trim();
+        const data = (
+            await readFile(
+                `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+                "utf-8",
+            )
+        ).trim();
         let json: Record<string, KeyValueJSONOption> = {};
         if (this.db.options.encryptionConfig.encriptData) {
             const decrypted = decrypt(
@@ -1190,7 +1196,21 @@ export default class Table extends EventEmitter {
         } else {
             const data = await this.findMany(query);
             for (const d of data) {
-                await this.delete(d.key);
+                if (!this.#queue.delete[d.file])
+                    this.#queue.delete[d.file] = await this.#fetchFile(d.file);
+                delete this.#queue.delete[d.file][d.key];
+            }
+            this.#wal(Data.emptyData(), DatabaseMethod.DeleteMany);
+            if (!this.#queued.delete) {
+                this.#queued.delete = true;
+
+                if (this.#intervals.delete) {
+                    clearInterval(this.#intervals.delete);
+                }
+
+                this.#intervals.delete = setInterval(async () => {
+                    await this.#deleteFlush();
+                }, 100);
             }
             return data;
         }

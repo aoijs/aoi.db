@@ -25,6 +25,11 @@ var DatabaseMethod;
     DatabaseMethod[DatabaseMethod["Get"] = 9] = "Get";
     DatabaseMethod[DatabaseMethod["All"] = 10] = "All";
     DatabaseMethod[DatabaseMethod["Has"] = 11] = "Has";
+    DatabaseMethod[DatabaseMethod["NOOP"] = 12] = "NOOP";
+    DatabaseMethod[DatabaseMethod["FindOne"] = 13] = "FindOne";
+    DatabaseMethod[DatabaseMethod["FindMany"] = 14] = "FindMany";
+    DatabaseMethod[DatabaseMethod["DeleteMany"] = 15] = "DeleteMany";
+    DatabaseMethod[DatabaseMethod["Analyze"] = 16] = "Analyze";
 })(DatabaseMethod || (exports.DatabaseMethod = DatabaseMethod = {}));
 var DatabaseEvents;
 (function (DatabaseEvents) {

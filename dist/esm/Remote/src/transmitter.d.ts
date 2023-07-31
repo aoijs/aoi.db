@@ -3,29 +3,35 @@
 /// <reference types="node" />
 import EventEmitter from "events";
 import { Socket } from "net";
-import { ReceiverDataFormat, TransmitterCreateOptions, TransmitterOptions } from "../typings/interface.js";
+import { ReceiverDataFormat, TransmitterCreateOptions, TransmitterOptions, TransmitterAnaylzeDataFormat } from "../typings/interface.js";
+import { Key, PossibleDatabaseTypes, TransmitterQuery, Value } from "../typings/type.js";
 import { DatabaseMethod } from "../../typings/enum.js";
-import { KeyValue, KeyValueData } from "../../index.js";
-export default class Transmitter<Database extends KeyValue> extends EventEmitter {
+import { KeyValueData } from "../../index.js";
+import { TransmitterOpCodes } from "../typings/enum.js";
+export default class Transmitter<Type extends PossibleDatabaseTypes> extends EventEmitter {
     #private;
     client: Socket;
-    options: TransmitterOptions;
+    options: TransmitterOptions<Type>;
     data: {
         seq: number;
         lastPingTimestamp: number;
         ping: number;
     };
     readyAt: number;
-    constructor(options: TransmitterOptions);
-    static createConnection(options: TransmitterCreateOptions): Transmitter<KeyValue>;
+    constructor(options: TransmitterOptions<Type>);
+    static createConnection<Type extends PossibleDatabaseTypes>(options: TransmitterCreateOptions<Type>): Transmitter<Type>;
     receiveDataFormat(buffer: Buffer): ReceiverDataFormat;
-    sendDataFormat(method: DatabaseMethod, timestamp: number, seq: number, data?: unknown): Buffer;
+    sendDataFormat(op: TransmitterOpCodes, method: DatabaseMethod, timestamp: number, seq: number, data?: unknown): Buffer;
     ping(): void;
-    get(table: string, key: Database extends KeyValue ? string : never): Promise<Database extends KeyValue ? KeyValueData : never>;
-    set(table: string, key: Database extends KeyValue ? string : never, value: Database extends KeyValue ? KeyValueData : never): Promise<void>;
-    delete(table: string, key: Database extends KeyValue ? string : never): Promise<void>;
+    get(table: string, key: Key<Type>): Promise<Value<Type>>;
+    set(table: string, key: Key<Type>, value: Value<Type>): Promise<void>;
+    delete(table: string, key: Key<Type>): Promise<void>;
     clear(table: string): Promise<void>;
-    all(table: string, query?: (value: Database extends KeyValue ? KeyValueData : never, index: number) => boolean, limit?: number): Promise<Database extends KeyValue ? KeyValueData[] : never>;
-    has(table: string, key: Database extends KeyValue ? string : never): Promise<boolean>;
+    all(table: string, query?: TransmitterQuery, limit?: number): Promise<Type extends "KeyValue" ? KeyValueData[] : never>;
+    has(table: string, key: Key<Type>): Promise<boolean>;
+    findOne(table: string, query: TransmitterQuery): Promise<Type extends "KeyValue" ? KeyValueData : never>;
+    findMany(table: string, query: TransmitterQuery): Promise<unknown>;
+    deleteMany(table: string, query: TransmitterQuery): Promise<unknown>;
+    analyze(table: string, data: TransmitterAnaylzeDataFormat): Promise<unknown>;
 }
 //# sourceMappingURL=transmitter.d.ts.map

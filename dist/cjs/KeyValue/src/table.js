@@ -222,7 +222,9 @@ class Table extends events_1.EventEmitter {
         this.#queued.set = true;
         if (this.#cache.size === -1) {
             for (const files of this.files) {
-                const Jdata = JSON.parse((await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`)).toString().trim());
+                const Jdata = JSON.parse((await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`))
+                    .toString()
+                    .trim());
                 if (this.db.options.encryptionConfig.encriptData) {
                     const decrypted = (0, utils_js_1.decrypt)(Jdata, this.db.options.encryptionConfig.securityKey);
                     const json = JSON.parse(decrypted);
@@ -532,7 +534,8 @@ class Table extends events_1.EventEmitter {
         await this.referencer.deleteReference(key);
         if (!this.queue.delete[file]) {
             this.#queue.delete[file] = {};
-            this.#queue.delete[file] = this.#cache.toJSON(file);
+            this.#queue.delete[file] = await this.#fetchFile(file);
+            delete this.#cache.data[file][key];
         }
         else {
             delete this.#queue.delete[file][key];
@@ -882,7 +885,19 @@ class Table extends events_1.EventEmitter {
         else {
             const data = await this.findMany(query);
             for (const d of data) {
-                await this.delete(d.key);
+                if (!this.#queue.delete[d.file])
+                    this.#queue.delete[d.file] = await this.#fetchFile(d.file);
+                delete this.#queue.delete[d.file][d.key];
+            }
+            this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.DeleteMany);
+            if (!this.#queued.delete) {
+                this.#queued.delete = true;
+                if (this.#intervals.delete) {
+                    clearInterval(this.#intervals.delete);
+                }
+                this.#intervals.delete = setInterval(async () => {
+                    await this.#deleteFlush();
+                }, 100);
             }
             return data;
         }

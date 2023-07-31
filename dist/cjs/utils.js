@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertV1KeyValuetov2 = exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
+exports.returnParseString = exports.parseTransmitterQuery = exports.convertV1KeyValuetov2 = exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
 const crypto_1 = require("crypto");
 const fs_1 = require("fs");
 const algorithm = "aes-256-ctr";
@@ -10,14 +10,14 @@ function encrypt(string, key, iV) {
     const encrypted = Buffer.concat([cipher.update(string), cipher.final()]);
     return {
         iv: iv.toString("hex"),
-        encrypted: encrypted.toString("hex"),
+        data: encrypted.toString("hex"),
     };
 }
 exports.encrypt = encrypt;
 function decrypt(hash, key) {
     const decipher = (0, crypto_1.createDecipheriv)(algorithm, key, Buffer.from(hash.iv, "hex"));
     const decrpyted = Buffer.concat([
-        decipher.update(Buffer.from(hash.encrypted, "hex")),
+        decipher.update(Buffer.from(hash.data, "hex")),
         decipher.final(),
     ]);
     return decrpyted.toString();
@@ -29,11 +29,11 @@ function createHashRawString(strings) {
 }
 exports.createHashRawString = createHashRawString;
 function createHash(string, key, iv) {
-    return encrypt(string, key, iv).encrypted;
+    return encrypt(string, key, iv).data;
 }
 exports.createHash = createHash;
 function decodeHash(hash, key, iv) {
-    const decrpyted = decrypt({ encrypted: hash, iv: iv }, key);
+    const decrpyted = decrypt({ data: hash, iv: iv }, key);
     return decrpyted.split(exports.ReferenceConstantSpace);
 }
 exports.decodeHash = decodeHash;
@@ -41,7 +41,7 @@ function JSONParser(data) {
     try {
         return {
             data: JSON.parse(data),
-            isBroken: false
+            isBroken: false,
         };
     }
     catch (e) {
@@ -49,11 +49,11 @@ function JSONParser(data) {
         if (data === "}")
             return {
                 data: {},
-                isBroken: true
+                isBroken: true,
             };
         return {
             data: JSON.parse(data),
-            isBroken: true
+            isBroken: true,
         };
     }
 }
@@ -63,7 +63,7 @@ async function convertV1KeyValuetov2(oldDbFolder, db) {
     for (const table of tables) {
         if (!db.tables[table])
             continue;
-        const files = (0, fs_1.readdirSync)(oldDbFolder + "/" + table).filter(x => !x.startsWith("$temp_"));
+        const files = (0, fs_1.readdirSync)(oldDbFolder + "/" + table).filter((x) => !x.startsWith("$temp_"));
         for (const file of files) {
             const data = (0, fs_1.readFileSync)(oldDbFolder + "/" + table + "/" + file).toString();
             const { data: json, isBroken } = JSONParser(data);
@@ -86,4 +86,100 @@ async function convertV1KeyValuetov2(oldDbFolder, db) {
     }
 }
 exports.convertV1KeyValuetov2 = convertV1KeyValuetov2;
+function parseTransmitterQuery(query) {
+    const str = returnParseString("&&", query, "===", "&&");
+    return new Function(" return (Data) => " + str)();
+}
+exports.parseTransmitterQuery = parseTransmitterQuery;
+function returnParseString(key, value, sign = "===", join = "&&") {
+    if (key === "value" || key === "key" || key === "ttl") {
+        if (sign === "$sw") {
+            return `Data.${key}.startsWith(${value})`;
+        }
+        if (sign === "$ew") {
+            return `Data.${key}.endsWith(${value})`;
+        }
+        if (sign === "$i") {
+            return `Data.${key}.includes(${value})`;
+        }
+        if (sign === "$re") {
+            return `Data.${key}.match(${value})`;
+        }
+        return `Data.${key} ${sign} ${value}`;
+    }
+    if (key === "=") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "===", join))
+            .join(join);
+    }
+    if (key === "!=") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "!==", join))
+            .join(join);
+    }
+    if (key === ">") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], ">", join))
+            .join(join);
+    }
+    if (key === "<") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "<", join))
+            .join(join);
+    }
+    if (key === ">=") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], ">=", join))
+            .join(join);
+    }
+    if (key === "<=") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "<=", join))
+            .join(join);
+    }
+    if (key === "$sw") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "$sw", join))
+            .join(join);
+    }
+    if (key === "$ew") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "$ew", join))
+            .join(join);
+    }
+    if (key === "$i") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "$i", join))
+            .join(join);
+    }
+    if (key === "$re") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "$re", join))
+            .join(join);
+    }
+    if (key === "||") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "===", join))
+            .join("||");
+    }
+    if (key === "&&") {
+        const keys = Object.keys(value);
+        return keys
+            .map((x) => returnParseString(x, value[x], "===", join))
+            .join("&&");
+    }
+    return "";
+}
+exports.returnParseString = returnParseString;
 //# sourceMappingURL=utils.js.map

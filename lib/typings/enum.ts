@@ -14,6 +14,126 @@ export enum CacheType {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export enum DatabaseMethod
 {
     Set,
@@ -28,7 +148,12 @@ export enum DatabaseMethod
     Ping,
     Get,
     All,
-    Has
+    Has,
+    NOOP,
+    FindOne,
+    FindMany,
+    DeleteMany,
+    Analyze
 }
 
 export enum DatabaseEvents {
