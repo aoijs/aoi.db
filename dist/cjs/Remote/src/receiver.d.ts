@@ -24,5 +24,6 @@ export default class Receiver extends EventEmitter {
         hash: string;
     }): Buffer;
     transmitterDataFormat(buffer: Buffer): TransmitterDataFormat;
+    connect(): void;
 }
 //# sourceMappingURL=receiver.d.ts.map

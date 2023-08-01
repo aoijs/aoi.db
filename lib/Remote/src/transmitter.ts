@@ -7,14 +7,22 @@ import {
     TransmitterOptions,
     TransmitterAnaylzeDataFormat,
 } from "../typings/interface.js";
-import { DatabaseOptions, Key, PossibleDatabaseTypes, TransmitterQuery, Value } from "../typings/type.js";
+import {
+    DatabaseOptions,
+    Key,
+    PossibleDatabaseTypes,
+    TransmitterQuery,
+    Value,
+} from "../typings/type.js";
 import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
 import { KeyValue, KeyValueData } from "../../index.js";
 import { randomBytes } from "crypto";
 import { ReceiverOpCodes, TransmitterOpCodes } from "../typings/enum.js";
 import { inspect } from "util";
 import { resolve } from "path";
-export default class Transmitter<Type extends PossibleDatabaseTypes> extends EventEmitter {
+export default class Transmitter<
+    Type extends PossibleDatabaseTypes,
+> extends EventEmitter {
     client: Socket;
     options: TransmitterOptions<Type>;
     data = {
@@ -22,6 +30,7 @@ export default class Transmitter<Type extends PossibleDatabaseTypes> extends Eve
         lastPingTimestamp: -1,
         ping: -1,
     };
+    pingInterval: NodeJS.Timeout | null = null;
     readyAt = -1;
     constructor(options: TransmitterOptions<Type>) {
         super();
@@ -37,6 +46,7 @@ export default class Transmitter<Type extends PossibleDatabaseTypes> extends Eve
                     db: this.#createDbConfig(),
                 },
             );
+            this.data.lastPingTimestamp = Date.now();
             this.client.write(reqData);
         });
         this.options = options;
@@ -76,21 +86,20 @@ export default class Transmitter<Type extends PossibleDatabaseTypes> extends Eve
     #bindEvents() {
         this.client.on("data", (buffer) => {
             const data = this.receiveDataFormat(buffer);
-
+            this.data.seq = data.s;
             switch (data.op) {
                 case ReceiverOpCodes.ConnectionDenied: {
                     this.emit(DatabaseEvents.Disconnect, data.d);
+                    this.data.ping = Date.now() - this.data.lastPingTimestamp;
                 }
                 case ReceiverOpCodes.AckConnect:
                     {
-                    }
-                    break;
-                case ReceiverOpCodes.AckOperation:
-                    {
+                        this.emit("AckConnect", data.d);
                     }
                     break;
                 case ReceiverOpCodes.Pong:
                     {
+                        this.data.ping = Date.now() - this.data.lastPingTimestamp;
                     }
                     break;
             }
@@ -98,6 +107,14 @@ export default class Transmitter<Type extends PossibleDatabaseTypes> extends Eve
             this.#createDebug(data);
         });
     }
+
+    connect() {
+        this.#bindEvents();
+        this.pingInterval = setInterval(() => {
+            this.ping();
+        },30000);
+    }
+
 
     receiveDataFormat(buffer: Buffer) {
         const data = JSON.parse(buffer.toString());
@@ -133,138 +150,78 @@ export default class Transmitter<Type extends PossibleDatabaseTypes> extends Eve
             ),
         );
     }
+    async #req(
+        op: TransmitterOpCodes,
+        method: DatabaseMethod,
+        data: any,
+    ): Promise<ReceiverDataFormat> {
+        return new Promise((resolve, reject) => {
+            const sendData = this.sendDataFormat(
+                op,
+                method,
+                Date.now(),
+                this.data.seq,
+                data,
+            );
+
+            const _req = (buffer: Buffer) => {
+                const data = this.receiveDataFormat(buffer);
+                const sendD = JSON.parse(
+                    sendData.toString(),
+                ) as ReceiverDataFormat;
+                if ((data.op === op, data.m === method && data.h === sendD.h)) {
+                    resolve(data);
+                }
+
+                this.client.off("data", _req);
+            };
+
+            this.client.write(sendData);
+            this.client.on("data", _req);
+        });
+    }
     async get(table: string, key: Key<Type>): Promise<Value<Type>> {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
-                TransmitterOpCodes.Operation,
-                DatabaseMethod.Get,
-                Date.now(),
-                this.data.seq,
-                {
-                    table,
-                    key,
-                },
-            );
-            const _get = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    (data.op === ReceiverOpCodes.AckOperation,
-                    data.m === DatabaseMethod.Get && data.h === sendD.h)
-                ) {
-                    resolve(data.d);
-                }
-
-                this.client.off("data", _get);
-            };
-            this.client.write(sendData);
-            this.client.on("data", _get);
-        });
+        return (
+            await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Get, {
+                table,
+                key,
+            })
+        ).d;
     }
 
-    async set(
-        table: string,
-        key: Key<Type>,
-        value: Value<Type>,
-    ): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
-                TransmitterOpCodes.Operation,
-                DatabaseMethod.Set,
-                Date.now(),
-                this.data.seq,
-                {
-                    table,
-                    key,
-                    value,
-                },
-            );
-
-            const _set = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    (data.op === ReceiverOpCodes.AckOperation,
-                    data.m === DatabaseMethod.Set && data.h === sendD.h)
-                ) {
-                    resolve();
-                }
-
-                this.client.off("data", _set);
-            };
-
-            this.client.write(sendData);
-            this.client.on("data", _set);
-        });
+    async set(table: string, key: Key<Type>, value: Value<Type>) {
+        return (
+            await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Set, {
+                table,
+                key,
+                value,
+            })
+        ).d;
     }
 
-    async delete(table: string, key: Key<Type>): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
+    async delete(table: string, key: Key<Type>): Promise<any> {
+        return (
+            await this.#req(
                 TransmitterOpCodes.Operation,
                 DatabaseMethod.Delete,
-                Date.now(),
-                this.data.seq,
                 {
                     table,
                     key,
                 },
-            );
-
-            const _delete = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    (data.op === ReceiverOpCodes.AckOperation,
-                    data.m === DatabaseMethod.Delete && data.h === sendD.h)
-                ) {
-                    resolve();
-                }
-
-                this.client.off("data", _delete);
-            };
-
-            this.client.write(sendData);
-            this.client.on("data", _delete);
-        });
+            )
+        ).d;
     }
 
     async clear(table: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
+        return (
+            await this.#req(
                 TransmitterOpCodes.Operation,
                 DatabaseMethod.Clear,
-                Date.now(),
-                this.data.seq,
                 {
                     table,
                 },
-            );
-
-            const _clear = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    (data.op === ReceiverOpCodes.AckOperation,
-                    data.m === DatabaseMethod.Clear && data.h === sendD.h)
-                ) {
-                    resolve();
-                }
-
-                this.client.off("data", _clear);
-            };
-
-            this.client.write(sendData);
-            this.client.on("data", _clear);
-        });
+            )
+        ).d;
     }
 
     async all(
@@ -272,211 +229,104 @@ export default class Transmitter<Type extends PossibleDatabaseTypes> extends Eve
         query?: TransmitterQuery,
         limit?: number,
     ): Promise<Type extends "KeyValue" ? KeyValueData[] : never> {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
-                TransmitterOpCodes.Operation,
-                DatabaseMethod.All,
-                Date.now(),
-                this.data.seq,
-                {
-                    table,
-                    query,
-                    limit,
-                },
-            );
-            const _all = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    data.op === ReceiverOpCodes.AckOperation &&
-                    data.m === DatabaseMethod.All &&
-                    data.h === sendD.h
-                ) {
-                    resolve(data.d);
-                }
-
-                this.client.off("data", _all);
-            };
-            this.client.write(sendData);
-            this.client.on("data", _all);
-        });
+        return (
+            await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.All, {
+                table,
+                query,
+                limit,
+            })
+        ).d;
     }
 
-    async has(
-        table: string,
-        key: Key<Type>,
-    ): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
-                TransmitterOpCodes.Operation,
-                DatabaseMethod.Has,
-                Date.now(),
-                this.data.seq,
-                {
-                    table,
-                    key,
-                },
-            );
-            const _has = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    data.op === ReceiverOpCodes.AckOperation &&
-                    data.m === DatabaseMethod.Has &&
-                    data.h === sendD.h
-                ) {
-                    resolve(data.d);
-                }
-
-                this.client.off("data", _has);
-            };
-            this.client.write(sendData);
-            this.client.on("data", _has);
-        });
+    async has(table: string, key: Key<Type>): Promise<boolean> {
+        return (
+            await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Has, {
+                table,
+                key,
+            })
+        ).d;
     }
     async findOne(
         table: string,
         query: TransmitterQuery,
     ): Promise<Type extends "KeyValue" ? KeyValueData : never> {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
+        return (
+            await this.#req(
                 TransmitterOpCodes.Operation,
                 DatabaseMethod.FindOne,
-                Date.now(),
-                this.data.seq,
                 {
                     table,
                     query,
                 },
-            );
-            const _findOne = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    data.op === ReceiverOpCodes.AckOperation &&
-                    data.m === DatabaseMethod.FindOne &&
-                    data.h === sendD.h
-                ) {
-                    resolve(data.d);
-                }
-
-                this.client.off("data", _findOne);
-            };
-            this.client.write(sendData);
-            this.client.on("data", _findOne);
-        });
+            )
+        ).d;
     }
-    async findMany(
-        table: string,
-        query: TransmitterQuery,
-    ) {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
+    async findMany(table: string, query: TransmitterQuery) {
+        return (
+            await this.#req(
                 TransmitterOpCodes.Operation,
                 DatabaseMethod.FindMany,
-                Date.now(),
-                this.data.seq,
                 {
                     table,
                     query,
                 },
-            );
-            const _findMany = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    data.op === ReceiverOpCodes.AckOperation &&
-                    data.m === DatabaseMethod.FindMany &&
-                    data.h === sendD.h
-                ) {
-                    resolve(data.d);
-                }
-
-                this.client.off("data", _findMany);
-            };
-            this.client.write(sendData);
-            this.client.on("data", _findMany);
-        });
+            )
+        ).d;
     }
 
-    async deleteMany(
-        table: string,
-        query: TransmitterQuery,
-    ) {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
+    async deleteMany(table: string, query: TransmitterQuery) {
+        return (
+            await this.#req(
                 TransmitterOpCodes.Operation,
                 DatabaseMethod.DeleteMany,
-                Date.now(),
-                this.data.seq,
                 {
                     table,
                     query,
                 },
-            );
-            const _deleteMany = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    data.op === ReceiverOpCodes.AckOperation &&
-                    data.m === DatabaseMethod.DeleteMany &&
-                    data.h === sendD.h
-                ) {
-                    resolve(data.d);
-                }
-
-                this.client.off("data", _deleteMany);
-            };
-            this.client.write(sendData);
-            this.client.on("data", _deleteMany);
-        });
+            )
+        ).d;
     }
 
-    async analyze(
-        table: string,
-        data:TransmitterAnaylzeDataFormat
-    ) {
-        return new Promise((resolve, reject) => {
-            const sendData = this.sendDataFormat(
-                TransmitterOpCodes.Analyze,
-                DatabaseMethod.Analyze,
-                Date.now(),
-                this.data.seq,
-                {
-                    table,
-                    data: {
-                        method: DatabaseMethod[data.method],
-                        data: data.data,
-                    }
-                },
-            );
-            const _analyze = (buffer: Buffer) => {
-                const data = this.receiveDataFormat(buffer);
-                const sendD = JSON.parse(
-                    sendData.toString(),
-                ) as ReceiverDataFormat;
-                if (
-                    data.op === ReceiverOpCodes.AckAnalyze &&
-                    data.m === DatabaseMethod.Analyze &&
-                    data.h === sendD.h
-                ) {
-                    resolve(data);
-                }
+    async analyze(table: string, data: TransmitterAnaylzeDataFormat) {
+        const sendD = this.sendDataFormat(
+            TransmitterOpCodes.Analyze,
+            DatabaseMethod[data.method],
+            Date.now(),
+            this.data.seq,
+        );
+        const res = await this.#req(
+            TransmitterOpCodes.Analyze,
+            DatabaseMethod[data.method],
+            {
+                table,
+                data,
+            },
+        );
 
-                this.client.off("data", _analyze);
-            };
-            this.client.write(sendData);
-            this.client.on("data", _analyze);
-        });
+        return this.#formatAnalyzeData(
+            res,
+            JSON.parse(sendD.toString()) as TransmitterDataFormat,
+        );
+    }
+
+    #formatAnalyzeData(data: ReceiverDataFormat, sednD: TransmitterDataFormat) {
+        const res = {
+            opCode: data.op,
+            method: DatabaseMethod[data.m],
+            timestamp: data.t,
+            seq: data.s,
+            data: {
+                value: data.d,
+                delay: {
+                    toServer: data.t - sednD.t,
+                    toClient: Date.now() - data.t,
+                    ping: this.data.ping,
+                },
+            },
+            cost: data.c,
+            hash: data.h,
+        };
+
+        return res;
     }
 }

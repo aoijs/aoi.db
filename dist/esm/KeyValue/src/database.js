@@ -144,6 +144,14 @@ export default class KeyValue extends EventEmitter {
                 mkdirSync(`${this.#options.dataConfig.path}/.backup`);
             }
         }
+        for (const table of this.#options.dataConfig.tables) {
+            if (!existsSync(`${this.#options.dataConfig.path}/${table}`)) {
+                mkdirSync(`${this.#options.dataConfig.path}/${table}`);
+                writeFileSync(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
+                    ? encrypt(`{}`, this.#options.encryptionConfig.securityKey)
+                    : {}));
+            }
+        }
         if (!existsSync(this.#options.dataConfig.referencePath)) {
             mkdirSync(this.#options.dataConfig.referencePath);
             for (const table of this.#options.dataConfig.tables) {

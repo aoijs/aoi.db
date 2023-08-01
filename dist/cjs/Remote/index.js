@@ -13,11 +13,16 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Transmitter = exports.Receiver = void 0;
 __exportStar(require("./typings/interface.js"), exports);
 __exportStar(require("./typings/type.js"), exports);
 __exportStar(require("./typings/enum.js"), exports);
-__exportStar(require("./KeyValue/index.js"), exports);
-__exportStar(require("./utils.js"), exports);
-__exportStar(require("./Remote/index.js"), exports);
+const receiver_js_1 = __importDefault(require("./src/receiver.js"));
+exports.Receiver = receiver_js_1.default;
+const transmitter_js_1 = __importDefault(require("./src/transmitter.js"));
+exports.Transmitter = transmitter_js_1.default;
 //# sourceMappingURL=index.js.map

@@ -23,6 +23,7 @@ import {
 import { ReceiverOpCodes, TransmitterOpCodes } from "../typings/enum.js";
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
+import { inspect } from "node:util";
 
 export default class Receiver extends EventEmitter {
     server: Server;
@@ -70,10 +71,14 @@ export default class Receiver extends EventEmitter {
         );
     }
 
+
     #bindEvents() {
         this.server.on("connection", (socket) => {
+            this.emit(DatabaseEvents.Debug,"[Receiver]: New Connection with ip: "+socket.remoteAddress);
             socket.on("data", async (buffer) => {
                 const data = this.transmitterDataFormat(buffer);
+                this.emit(DatabaseEvents.Debug,`[Receiver]: Received Data: ${inspect(data)}`);
+                let isAnaylze = false;
                 switch (data.op) {
                     case TransmitterOpCodes.Connect:
                         {
@@ -102,7 +107,7 @@ export default class Receiver extends EventEmitter {
                                     options.dataConfig?.path ?? "database";
                                 options.dataConfig = {
                                     path: `./${mainFolder}_${defaultFolder}`,
-                                    referencePath: `./${mainFolder}_${defaultFolder}/reference`,
+                                    referencePath: `./reference`,
                                 };
                                 options.fileConfig = {
                                     extension:
@@ -110,7 +115,7 @@ export default class Receiver extends EventEmitter {
                                     maxSize:
                                         options.fileConfig?.maxSize ||
                                         20 * 1024 * 1024,
-                                    transactionLogPath: `./${mainFolder}_${defaultFolder}/transactions`,
+                                    transactionLogPath: `./transactions`,
                                 };
                                 const keyvalue = new KeyValue(options);
 
@@ -121,13 +126,13 @@ export default class Receiver extends EventEmitter {
                                     );
 
                                     const [iv, ecrypted] = ownerHsh.split(":");
-                                    const hash = { iv, data:ecrypted };
+                                    const hash = { iv, data: ecrypted };
                                     const decrypted = decrypt(
                                         hash,
                                         options.encryptionConfig.securityKey,
                                     );
 
-                                    const splits = decrypted.split("@");
+                                    const splits = decrypted.split("@").slice(1);
                                     const [name, pass] = splits.map((x) => {
                                         const [_, prop] = x.split("=");
                                         return prop;
@@ -196,9 +201,8 @@ export default class Receiver extends EventEmitter {
                         }
                         break;
                     case TransmitterOpCodes.Analyze:
-                        {
-                        }
-                        break;
+                        isAnaylze = true;
+                    /* FALLTHROUGH */
                     case TransmitterOpCodes.Operation:
                         {
                             const db = this.connections.get(
@@ -238,7 +242,58 @@ export default class Receiver extends EventEmitter {
                                             performance.now() - startTime;
 
                                         const res = this.sendDataFormat({
-                                            op: ReceiverOpCodes.AckOperation,
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
+
+                                        socket.write(res);
+                                    }
+                                    break;
+                                case DatabaseMethod.Get:
+                                    {
+                                        const table = data.d.table;
+                                        const key = data.d.key;
+
+                                        const startTime = performance.now();
+                                        const d = await db.get(table, key);
+                                        const cost =
+                                            performance.now() - startTime;
+
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
+
+                                        socket.write(res);
+                                    }
+                                    break;
+
+                                case DatabaseMethod.Delete:
+                                    {
+                                        const table = data.d.table;
+                                        const key = data.d.key;
+
+                                        const startTime = performance.now();
+                                        const d = await db.delete(table, key);
+                                        const cost =
+                                            performance.now() - startTime;
+
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
                                             method: data.m,
                                             seq: seq,
                                             data: d?.value ?? null,
@@ -249,108 +304,173 @@ export default class Receiver extends EventEmitter {
                                         socket.write(res);
                                     }
                                     break;
-                                case DatabaseMethod.Get: {
-                                    const table = data.d.table;
-                                    const key = data.d.key;
 
-                                    const startTime = performance.now();
-                                    const d = await db.get(table, key);
-                                    const cost = performance.now() - startTime;
+                                case DatabaseMethod.Has:
+                                    {
+                                        const table = data.d.table;
+                                        const key = data.d.key;
 
-                                    const res = this.sendDataFormat({
-                                        op: ReceiverOpCodes.AckOperation,
-                                        method: data.m,
-                                        seq: seq,
-                                        data: d?.value ?? null,
-                                        cost: cost,
-                                        hash: data.h,
-                                    });
+                                        const startTime = performance.now();
+                                        const d = await db.has(table, key);
+                                        const cost =
+                                            performance.now() - startTime;
 
-                                    socket.write(res);
-                                } break;
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d ?? false,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
 
-                                case DatabaseMethod.Delete: {
-                                    const table = data.d.table;
-                                    const key = data.d.key;
+                                        socket.write(res);
+                                    }
+                                    break;
 
-                                    const startTime = performance.now();
-                                    const d = await db.delete(table, key);
-                                    const cost = performance.now() - startTime;
+                                case DatabaseMethod.Clear:
+                                    {
+                                        const table = data.d.table;
 
-                                    const res = this.sendDataFormat({
-                                        op: ReceiverOpCodes.AckOperation,
-                                        method: data.m,
-                                        seq: seq,
-                                        data: d?.value ?? null,
-                                        cost: cost,
-                                        hash: data.h,
-                                    });
+                                        const startTime = performance.now();
+                                        const d = await db.clear(table);
+                                        const cost =
+                                            performance.now() - startTime;
 
-                                    socket.write(res);
-                                } break;
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
 
-                                case DatabaseMethod.Has: {
-                                    const table = data.d.table;
-                                    const key = data.d.key;
+                                        socket.write(res);
+                                    }
+                                    break;
 
-                                    const startTime = performance.now();
-                                    const d = await db.has(table, key);
-                                    const cost = performance.now() - startTime;
+                                case DatabaseMethod.All:
+                                    {
+                                        const table = data.d.table;
+                                        const query = parseTransmitterQuery(
+                                            data.d.query,
+                                        );
 
-                                    const res = this.sendDataFormat({
-                                        op: ReceiverOpCodes.AckOperation,
-                                        method: data.m,
-                                        seq: seq,
-                                        data: d ?? false,
-                                        cost: cost,
-                                        hash: data.h,
-                                    });
+                                        const startTime = performance.now();
+                                        const d = await db.all(table, query);
+                                        const cost =
+                                            performance.now() - startTime;
 
-                                    socket.write(res);
-                                } break;
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
 
-                                case DatabaseMethod.Clear: {
-                                    const table = data.d.table;
+                                        socket.write(res);
+                                    }
+                                    break;
 
-                                    const startTime = performance.now();
-                                    const d = await db.clear(table);
-                                    const cost = performance.now() - startTime;
+                                case DatabaseMethod.FindOne:
+                                    {
+                                        const table = data.d.table;
+                                        const query = parseTransmitterQuery(
+                                            data.d.query,
+                                        );
 
-                                    const res = this.sendDataFormat({
-                                        op: ReceiverOpCodes.AckOperation,
-                                        method: data.m,
-                                        seq: seq,
-                                        data: d ,
-                                        cost: cost,
-                                        hash: data.h,
-                                    });
+                                        const startTime = performance.now();
+                                        const d = await db.findOne(
+                                            table,
+                                            query,
+                                        );
+                                        const cost =
+                                            performance.now() - startTime;
 
-                                    socket.write(res);
-                                } break;
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
 
-                                case DatabaseMethod.All: {
-                                    const table = data.d.table;
-                                    const query = parseTransmitterQuery(data.d.query);
+                                        socket.write(res);
+                                    }
+                                    break;
 
-                                    const startTime = performance.now();
-                                    const d = await db.all(table, query);
-                                    const cost = performance.now() - startTime;
+                                case DatabaseMethod.FindMany:
+                                    {
+                                        const table = data.d.table;
+                                        const query = parseTransmitterQuery(
+                                            data.d.query,
+                                        );
 
-                                    const res = this.sendDataFormat({
-                                        op: ReceiverOpCodes.AckOperation,
-                                        method: data.m,
-                                        seq: seq,
-                                        data: d,
-                                        cost: cost,
-                                        hash: data.h,
-                                    });
+                                        const startTime = performance.now();
+                                        const d = await db.findMany(
+                                            table,
+                                            query,
+                                        );
+                                        const cost =
+                                            performance.now() - startTime;
 
-                                    socket.write(res);
-                                } break;
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
 
-                                case DatabaseMethod.FindOne: {
+                                        socket.write(res);
+                                    }
+                                    break;
 
-                                }
+                                case DatabaseMethod.DeleteMany:
+                                    {
+                                        seq++;
+                                        const table = data.d.table;
+                                        const query = parseTransmitterQuery(
+                                            data.d.query,
+                                        );
+
+                                        const startTime = performance.now();
+                                        const d = await db.deleteMany(
+                                            table,
+                                            query,
+                                        );
+                                        const cost =
+                                            performance.now() - startTime;
+
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? ReceiverOpCodes.AckAnalyze
+                                                : ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
+
+                                        socket.write(res);
+                                    }
+                                    break;
                             }
                         }
                         break;
@@ -386,5 +506,9 @@ export default class Receiver extends EventEmitter {
     }
     transmitterDataFormat(buffer: Buffer) {
         return JSON.parse(buffer.toString()) as TransmitterDataFormat;
+    }
+
+    connect() {
+        return this.#bindEvents();
     }
 }

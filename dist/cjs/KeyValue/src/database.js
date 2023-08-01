@@ -149,6 +149,14 @@ class KeyValue extends events_1.EventEmitter {
                 (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/.backup`);
             }
         }
+        for (const table of this.#options.dataConfig.tables) {
+            if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/${table}`)) {
+                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/${table}`);
+                (0, fs_1.writeFileSync)(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
+                    ? (0, utils_js_1.encrypt)(`{}`, this.#options.encryptionConfig.securityKey)
+                    : {}));
+            }
+        }
         if (!(0, fs_1.existsSync)(this.#options.dataConfig.referencePath)) {
             (0, fs_1.mkdirSync)(this.#options.dataConfig.referencePath);
             for (const table of this.#options.dataConfig.tables) {

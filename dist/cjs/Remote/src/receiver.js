@@ -9,6 +9,7 @@ const index_js_1 = require("../../index.js");
 const enum_js_1 = require("../typings/enum.js");
 const node_fs_1 = require("node:fs");
 const promises_1 = require("node:fs/promises");
+const node_util_1 = require("node:util");
 class Receiver extends node_events_1.default {
     server;
     options;
@@ -48,8 +49,11 @@ class Receiver extends node_events_1.default {
     }
     #bindEvents() {
         this.server.on("connection", (socket) => {
+            this.emit(index_js_1.DatabaseEvents.Debug, "[Receiver]: New Connection with ip: " + socket.remoteAddress);
             socket.on("data", async (buffer) => {
                 const data = this.transmitterDataFormat(buffer);
+                this.emit(index_js_1.DatabaseEvents.Debug, `[Receiver]: Received Data: ${(0, node_util_1.inspect)(data)}`);
+                let isAnaylze = false;
                 switch (data.op) {
                     case enum_js_1.TransmitterOpCodes.Connect:
                         {
@@ -75,13 +79,13 @@ class Receiver extends node_events_1.default {
                                 const defaultFolder = options.dataConfig?.path ?? "database";
                                 options.dataConfig = {
                                     path: `./${mainFolder}_${defaultFolder}`,
-                                    referencePath: `./${mainFolder}_${defaultFolder}/reference`,
+                                    referencePath: `./reference`,
                                 };
                                 options.fileConfig = {
                                     extension: options.fileConfig?.extension || ".sql",
                                     maxSize: options.fileConfig?.maxSize ||
                                         20 * 1024 * 1024,
-                                    transactionLogPath: `./${mainFolder}_${defaultFolder}/transactions`,
+                                    transactionLogPath: `./transactions`,
                                 };
                                 const keyvalue = new index_js_1.KeyValue(options);
                                 if ((0, node_fs_1.existsSync)(options.dataConfig.path)) {
@@ -89,7 +93,7 @@ class Receiver extends node_events_1.default {
                                     const [iv, ecrypted] = ownerHsh.split(":");
                                     const hash = { iv, data: ecrypted };
                                     const decrypted = (0, index_js_1.decrypt)(hash, options.encryptionConfig.securityKey);
-                                    const splits = decrypted.split("@");
+                                    const splits = decrypted.split("@").slice(1);
                                     const [name, pass] = splits.map((x) => {
                                         const [_, prop] = x.split("=");
                                         return prop;
@@ -139,9 +143,8 @@ class Receiver extends node_events_1.default {
                         }
                         break;
                     case enum_js_1.TransmitterOpCodes.Analyze:
-                        {
-                        }
-                        break;
+                        isAnaylze = true;
+                    /* FALLTHROUGH */
                     case enum_js_1.TransmitterOpCodes.Operation:
                         {
                             const db = this.connections.get(socket.remoteAddress);
@@ -170,10 +173,12 @@ class Receiver extends node_events_1.default {
                                         const d = await db.set(table, key, value);
                                         const cost = performance.now() - startTime;
                                         const res = this.sendDataFormat({
-                                            op: enum_js_1.ReceiverOpCodes.AckOperation,
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
                                             method: data.m,
                                             seq: seq,
-                                            data: d?.value ?? null,
+                                            data: d,
                                             cost: cost,
                                             hash: data.h,
                                         });
@@ -188,10 +193,12 @@ class Receiver extends node_events_1.default {
                                         const d = await db.get(table, key);
                                         const cost = performance.now() - startTime;
                                         const res = this.sendDataFormat({
-                                            op: enum_js_1.ReceiverOpCodes.AckOperation,
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
                                             method: data.m,
                                             seq: seq,
-                                            data: d?.value ?? null,
+                                            data: d,
                                             cost: cost,
                                             hash: data.h,
                                         });
@@ -206,7 +213,9 @@ class Receiver extends node_events_1.default {
                                         const d = await db.delete(table, key);
                                         const cost = performance.now() - startTime;
                                         const res = this.sendDataFormat({
-                                            op: enum_js_1.ReceiverOpCodes.AckOperation,
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
                                             method: data.m,
                                             seq: seq,
                                             data: d?.value ?? null,
@@ -224,7 +233,9 @@ class Receiver extends node_events_1.default {
                                         const d = await db.has(table, key);
                                         const cost = performance.now() - startTime;
                                         const res = this.sendDataFormat({
-                                            op: enum_js_1.ReceiverOpCodes.AckOperation,
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
                                             method: data.m,
                                             seq: seq,
                                             data: d ?? false,
@@ -241,7 +252,9 @@ class Receiver extends node_events_1.default {
                                         const d = await db.clear(table);
                                         const cost = performance.now() - startTime;
                                         const res = this.sendDataFormat({
-                                            op: enum_js_1.ReceiverOpCodes.AckOperation,
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
                                             method: data.m,
                                             seq: seq,
                                             data: d,
@@ -259,7 +272,9 @@ class Receiver extends node_events_1.default {
                                         const d = await db.all(table, query);
                                         const cost = performance.now() - startTime;
                                         const res = this.sendDataFormat({
-                                            op: enum_js_1.ReceiverOpCodes.AckOperation,
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
                                             method: data.m,
                                             seq: seq,
                                             data: d,
@@ -269,8 +284,67 @@ class Receiver extends node_events_1.default {
                                         socket.write(res);
                                     }
                                     break;
-                                case index_js_1.DatabaseMethod.FindOne: {
-                                }
+                                case index_js_1.DatabaseMethod.FindOne:
+                                    {
+                                        const table = data.d.table;
+                                        const query = (0, index_js_1.parseTransmitterQuery)(data.d.query);
+                                        const startTime = performance.now();
+                                        const d = await db.findOne(table, query);
+                                        const cost = performance.now() - startTime;
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
+                                        socket.write(res);
+                                    }
+                                    break;
+                                case index_js_1.DatabaseMethod.FindMany:
+                                    {
+                                        const table = data.d.table;
+                                        const query = (0, index_js_1.parseTransmitterQuery)(data.d.query);
+                                        const startTime = performance.now();
+                                        const d = await db.findMany(table, query);
+                                        const cost = performance.now() - startTime;
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
+                                        socket.write(res);
+                                    }
+                                    break;
+                                case index_js_1.DatabaseMethod.DeleteMany:
+                                    {
+                                        seq++;
+                                        const table = data.d.table;
+                                        const query = (0, index_js_1.parseTransmitterQuery)(data.d.query);
+                                        const startTime = performance.now();
+                                        const d = await db.deleteMany(table, query);
+                                        const cost = performance.now() - startTime;
+                                        const res = this.sendDataFormat({
+                                            op: isAnaylze
+                                                ? enum_js_1.ReceiverOpCodes.AckAnalyze
+                                                : enum_js_1.ReceiverOpCodes.AckOperation,
+                                            method: data.m,
+                                            seq: seq,
+                                            data: d,
+                                            cost: cost,
+                                            hash: data.h,
+                                        });
+                                        socket.write(res);
+                                    }
+                                    break;
                             }
                         }
                         break;
@@ -292,6 +366,9 @@ class Receiver extends node_events_1.default {
     }
     transmitterDataFormat(buffer) {
         return JSON.parse(buffer.toString());
+    }
+    connect() {
+        return this.#bindEvents();
     }
 }
 exports.default = Receiver;
