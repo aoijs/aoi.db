@@ -1,7 +1,7 @@
 const { KeyValue, DatabaseEvents } = require("../../dist/cjs/index.js");
 const { setTimeout } = require("timers/promises");
 const db = new KeyValue({
-    dataConfig: { path: "./__tests__/database" },
+    dataConfig: { path: "./__tests__/database", },
     encryptionConfig: {
         encriptData: false,
     },

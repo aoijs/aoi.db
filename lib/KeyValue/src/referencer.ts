@@ -1,13 +1,11 @@
 import {
     WriteStream,
-    ReadStream,
     createWriteStream,
-    createReadStream,
     readdirSync,
     statSync,
 } from "fs";
 import { ReferenceConstantSpace } from "../../utils.js";
-import { appendFile, readFile, readdir, truncate, unlink } from "fs/promises";
+import { readFile, truncate, unlink } from "fs/promises";
 import { ReferenceType } from "../../typings/enum.js";
 
 export default class Referencer {

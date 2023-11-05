@@ -56,7 +56,7 @@ class KeyValue extends events_1.EventEmitter {
             },
             encryptionConfig: {
                 securityKey: "a-32-characters-long-string-here",
-                encriptData: true,
+                encriptData: false,
             },
             cacheConfig: {
                 cache: enum_js_1.CacheType.LRU,

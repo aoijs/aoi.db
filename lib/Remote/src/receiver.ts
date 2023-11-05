@@ -13,12 +13,9 @@ import {
     encrypt,
     parseTransmitterQuery,
 } from "../../index.js";
-import { randomBytes } from "node:crypto";
 import {
     DatabaseOptions,
-    Key,
     PossibleDatabaseTypes,
-    Value,
 } from "../typings/type.js";
 import { ReceiverOpCodes, TransmitterOpCodes } from "../typings/enum.js";
 import { existsSync } from "node:fs";

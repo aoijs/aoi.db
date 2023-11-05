@@ -1,6 +1,5 @@
 import {
     WriteStream,
-    appendFileSync,
     createReadStream,
     createWriteStream,
     readFileSync,
@@ -27,7 +26,6 @@ import {
 import Data from "./data.js";
 import KeyValue from "./database.js";
 import {
-    appendFile,
     readFile,
     rename,
     stat,

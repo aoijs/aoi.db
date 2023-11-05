@@ -6,7 +6,6 @@ import {
     createWriteStream,
     existsSync,
     mkdirSync,
-    readFileSync,
     writeFileSync,
 } from "fs";
 import { randomBytes } from "crypto";
@@ -76,7 +75,7 @@ export default class KeyValue extends EventEmitter {
             },
             encryptionConfig: {
                 securityKey: "a-32-characters-long-string-here",
-                encriptData: true,
+                encriptData: false,
             },
             cacheConfig: {
                 cache: CacheType.LRU,
