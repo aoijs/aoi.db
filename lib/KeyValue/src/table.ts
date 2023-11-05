@@ -237,7 +237,6 @@ export default class Table extends EventEmitter {
                                 key: data.key,
                                 value: data.value as string,
                                 type: data.type,
-                                ttl: data.ttl,
                             }),
                         );
                     }
@@ -288,13 +287,12 @@ export default class Table extends EventEmitter {
 
     async #wal(data: Data, method: DatabaseMethod) {
         const json = data.toJSON();
-        const { key, type, ttl, value } = json;
+        const { key, type, value } = json;
 
         const delimitedString = createHashRawString([
             key,
             (value ?? "null")?.toString(),
             type,
-            ttl?.toString(),
             method?.toString(),
         ]);
 
@@ -458,7 +456,6 @@ export default class Table extends EventEmitter {
                 file: newFile,
                 key: "",
                 value: null,
-                ttl: -1,
                 type: "",
             }),
             DatabaseMethod.NewFile,
@@ -491,7 +488,6 @@ export default class Table extends EventEmitter {
                 file,
                 key,
                 value: value.value as any,
-                ttl: value.ttl ?? -1,
                 type: value.type ?? undefined,
             });
         } else {
@@ -500,7 +496,6 @@ export default class Table extends EventEmitter {
                 file,
                 key,
                 value: value.value as any,
-                ttl: value.ttl ?? -1,
                 type: value.type ?? undefined,
             });
         }
@@ -617,7 +612,6 @@ export default class Table extends EventEmitter {
                 file,
                 key,
                 value: data.value,
-                ttl: data.ttl,
                 type: data.type,
             });
         }
@@ -627,7 +621,6 @@ export default class Table extends EventEmitter {
             file,
             key,
             value: d.value,
-            ttl: d.ttl,
             type: d.type,
         });
     }
@@ -699,7 +692,6 @@ export default class Table extends EventEmitter {
                 file,
                 key,
                 value: c?.value,
-                ttl: c?.ttl,
                 type: c?.type,
             });
             this.#cache.delete(key, file);
@@ -724,7 +716,6 @@ export default class Table extends EventEmitter {
                 file,
                 key,
                 value: c?.value,
-                ttl: c?.ttl,
                 type: c?.type,
             });
         }
@@ -908,7 +899,6 @@ export default class Table extends EventEmitter {
                         file,
                         key: values.key,
                         value: values.value,
-                        ttl: values.ttl,
                         type: values.type,
                     });
                     if (query(data, index++)) {
@@ -924,7 +914,6 @@ export default class Table extends EventEmitter {
                         file,
                         key: values.key,
                         value: values.value,
-                        ttl: values.ttl,
                         type: values.type,
                     });
                     if (query(data, index++)) {
@@ -962,7 +951,6 @@ export default class Table extends EventEmitter {
                         file,
                         key: values.key,
                         value: values.value,
-                        ttl: values.ttl,
                         type: values.type,
                     });
                     if (query(d, index++)) {
@@ -978,7 +966,6 @@ export default class Table extends EventEmitter {
                         file,
                         key: values.key,
                         value: values.value,
-                        ttl: values.ttl,
                         type: values.type,
                     });
                     if (query(d, index++)) {

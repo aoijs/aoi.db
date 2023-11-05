@@ -19,7 +19,6 @@ class Data {
      * file:"file",
      * key:"key",
      * value:"value",
-     * ttl:1000,
      * type:"string"
      * })
      * ```
@@ -29,7 +28,6 @@ class Data {
         this.key = data.key;
         this.type = data.type ?? this.#getType(data.value);
         this.value = this.#parseValue(data);
-        this.ttl = data.ttl !== -1 && data.ttl ? Date.now() + data.ttl : -1;
     }
     /**
      * @private
@@ -79,7 +77,6 @@ class Data {
                     : this.value,
             type: this.type,
             key: this.key,
-            ttl: this.ttl ?? -1,
         };
     }
     get size() {
@@ -96,7 +93,6 @@ class Data {
             key: "",
             value: "",
             type: "",
-            ttl: -1,
         });
     }
 }

@@ -20,18 +20,16 @@ export default class Data {
      * file:"file",
      * key:"key",
      * value:"value",
-     * ttl:1000,
      * type:"string"
      * })
      * ```
      */
 
-    constructor(data: Optional<KeyValueDataInterface, "type" | "ttl">) {
+    constructor(data: Optional<KeyValueDataInterface, "type" >) {
         this.file = data.file;
         this.key = data.key;
         this.type = data.type ?? this.#getType(data.value);
         this.value = this.#parseValue(data);
-        this.ttl = data.ttl !== -1 && data.ttl ? Date.now() + data.ttl : -1;
     }
     /**
      * @private
@@ -48,7 +46,7 @@ export default class Data {
      * @param data data to parse
      * @returns
      */
-    #parseValue(data: Optional<KeyValueDataInterface, "type" | "ttl">): any {
+    #parseValue(data: Optional<KeyValueDataInterface, "type" >): any {
         return data.type === "date" &&
             (typeof data.value === "string" ||
                 typeof data.value === "number" ||
@@ -81,7 +79,6 @@ export default class Data {
                 : this.value,
             type: this.type,
             key: this.key,
-            ttl: this.ttl ?? -1,
         };
     }
 
@@ -99,7 +96,6 @@ export default class Data {
             key: "",
             value: "",
             type: "",
-            ttl: -1,
         });
     }
 }

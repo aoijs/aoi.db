@@ -34,13 +34,11 @@ export interface KeyValueDataInterface {
     file: string;
     value: KeyValueDataValueType;
     key: string;
-    ttl: number;
     type: string;
 }
 export interface KeyValueJSONOption {
     value: KeyValueDataValueType;
     key: string;
-    ttl: number;
     type: string;
 }
 export interface CacherOptions {

@@ -19,12 +19,11 @@ export default class Data {
      * file:"file",
      * key:"key",
      * value:"value",
-     * ttl:1000,
      * type:"string"
      * })
      * ```
      */
-    constructor(data: Optional<KeyValueDataInterface, "type" | "ttl">);
+    constructor(data: Optional<KeyValueDataInterface, "type">);
     /**
      * @description convert data to json
      * @returns

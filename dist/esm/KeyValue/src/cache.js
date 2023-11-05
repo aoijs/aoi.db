@@ -1,4 +1,6 @@
-export default class Cacher {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class Cacher {
     options;
     data;
     size;
@@ -47,4 +49,5 @@ export default class Cacher {
         return this.data[file];
     }
 }
+exports.default = Cacher;
 //# sourceMappingURL=cache.js.map

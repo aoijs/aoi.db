@@ -146,7 +146,6 @@ class Table extends events_1.EventEmitter {
                             key: data.key,
                             value: data.value,
                             type: data.type,
-                            ttl: data.ttl,
                         }));
                     }
                 }
@@ -190,12 +189,11 @@ class Table extends events_1.EventEmitter {
      */
     async #wal(data, method) {
         const json = data.toJSON();
-        const { key, type, ttl, value } = json;
+        const { key, type, value } = json;
         const delimitedString = (0, utils_js_1.createHashRawString)([
             key,
             (value ?? "null")?.toString(),
             type,
-            ttl?.toString(),
             method?.toString(),
         ]);
         const hash = (0, utils_js_1.createHash)(delimitedString, this.db.options.encryptionConfig.securityKey, this.logHash);
@@ -305,7 +303,6 @@ class Table extends events_1.EventEmitter {
             file: newFile,
             key: "",
             value: null,
-            ttl: -1,
             type: "",
         }), enum_js_1.DatabaseMethod.NewFile);
         return newFile;
@@ -333,7 +330,6 @@ class Table extends events_1.EventEmitter {
                 file,
                 key,
                 value: value.value,
-                ttl: value.ttl ?? -1,
                 type: value.type ?? undefined,
             });
         }
@@ -343,7 +339,6 @@ class Table extends events_1.EventEmitter {
                 file,
                 key,
                 value: value.value,
-                ttl: value.ttl ?? -1,
                 type: value.type ?? undefined,
             });
         }
@@ -437,7 +432,6 @@ class Table extends events_1.EventEmitter {
                 file,
                 key,
                 value: data.value,
-                ttl: data.ttl,
                 type: data.type,
             });
         }
@@ -446,7 +440,6 @@ class Table extends events_1.EventEmitter {
             file,
             key,
             value: d.value,
-            ttl: d.ttl,
             type: d.type,
         });
     }
@@ -504,7 +497,6 @@ class Table extends events_1.EventEmitter {
                 file,
                 key,
                 value: c?.value,
-                ttl: c?.ttl,
                 type: c?.type,
             });
             this.#cache.delete(key, file);
@@ -525,7 +517,6 @@ class Table extends events_1.EventEmitter {
                 file,
                 key,
                 value: c?.value,
-                ttl: c?.ttl,
                 type: c?.type,
             });
         }
@@ -658,7 +649,6 @@ class Table extends events_1.EventEmitter {
                         file,
                         key: values.key,
                         value: values.value,
-                        ttl: values.ttl,
                         type: values.type,
                     });
                     if (query(data, index++)) {
@@ -675,7 +665,6 @@ class Table extends events_1.EventEmitter {
                         file,
                         key: values.key,
                         value: values.value,
-                        ttl: values.ttl,
                         type: values.type,
                     });
                     if (query(data, index++)) {
@@ -708,7 +697,6 @@ class Table extends events_1.EventEmitter {
                         file,
                         key: values.key,
                         value: values.value,
-                        ttl: values.ttl,
                         type: values.type,
                     });
                     if (query(d, index++)) {
@@ -725,7 +713,6 @@ class Table extends events_1.EventEmitter {
                         file,
                         key: values.key,
                         value: values.value,
-                        ttl: values.ttl,
                         type: values.type,
                     });
                     if (query(d, index++)) {

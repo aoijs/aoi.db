@@ -1,5 +1,7 @@
-import { types } from "util";
-export default class Data {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const util_1 = require("util");
+class Data {
     file;
     key;
     value;
@@ -17,7 +19,6 @@ export default class Data {
      * file:"file",
      * key:"key",
      * value:"value",
-     * ttl:1000,
      * type:"string"
      * })
      * ```
@@ -27,7 +28,6 @@ export default class Data {
         this.key = data.key;
         this.type = data.type ?? this.#getType(data.value);
         this.value = this.#parseValue(data);
-        this.ttl = data.ttl !== -1 && data.ttl ? Date.now() + data.ttl : -1;
     }
     /**
      * @private
@@ -48,7 +48,7 @@ export default class Data {
         return data.type === "date" &&
             (typeof data.value === "string" ||
                 typeof data.value === "number" ||
-                types.isDate(data.value))
+                util_1.types.isDate(data.value))
             ? // @ts-ignore
                 new Date(data.value)
             : data.type === "bigint" &&
@@ -70,14 +70,13 @@ export default class Data {
      */
     toJSON() {
         return {
-            value: types.isDate(this.value)
+            value: util_1.types.isDate(this.value)
                 ? this.value.toISOString()
                 : typeof this.value === "bigint"
                     ? this.value.toString()
                     : this.value,
             type: this.type,
             key: this.key,
-            ttl: this.ttl ?? -1,
         };
     }
     get size() {
@@ -94,8 +93,8 @@ export default class Data {
             key: "",
             value: "",
             type: "",
-            ttl: -1,
         });
     }
 }
+exports.default = Data;
 //# sourceMappingURL=data.js.map

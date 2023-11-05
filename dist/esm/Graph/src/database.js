@@ -1,8 +1,13 @@
-import EventEmitter from "events";
-import { CacheType, DatabaseEvents, ReferenceType, encrypt } from "../../index.js";
-import { randomBytes } from "crypto";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-export default class GraphDB extends EventEmitter {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const events_1 = __importDefault(require("events"));
+const index_js_1 = require("../../index.js");
+const crypto_1 = require("crypto");
+const fs_1 = require("fs");
+class GraphDB extends events_1.default {
     #options;
     tables = {};
     readyAt;
@@ -27,8 +32,8 @@ export default class GraphDB extends EventEmitter {
                 encriptData: false,
             },
             cacheConfig: {
-                cache: CacheType.LRU,
-                reference: ReferenceType.Cache,
+                cache: index_js_1.CacheType.LRU,
+                reference: index_js_1.ReferenceType.Cache,
                 limit: 1000,
                 sorted: false,
                 sortFunction: (a, b) => {
@@ -71,49 +76,49 @@ export default class GraphDB extends EventEmitter {
                     return;
             }
             this.readyAt = Date.now();
-            this.removeListener(DatabaseEvents.TableReady, isReady);
-            this.emit(DatabaseEvents.Connect);
+            this.removeListener(index_js_1.DatabaseEvents.TableReady, isReady);
+            this.emit(index_js_1.DatabaseEvents.Connect);
         };
-        this.on(DatabaseEvents.TableReady, isReady);
-        if (!existsSync(this.#options.dataConfig.path)) {
-            mkdirSync(this.#options.dataConfig.path);
+        this.on(index_js_1.DatabaseEvents.TableReady, isReady);
+        if (!(0, fs_1.existsSync)(this.#options.dataConfig.path)) {
+            (0, fs_1.mkdirSync)(this.#options.dataConfig.path);
             for (const table of this.#options.dataConfig.tables) {
-                mkdirSync(`${this.#options.dataConfig.path}/${table}`, {
+                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/${table}`, {
                     recursive: true,
                 });
-                writeFileSync(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
-                    ? encrypt(`{}`, this.#options.encryptionConfig.securityKey)
+                (0, fs_1.writeFileSync)(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
+                    ? (0, index_js_1.encrypt)(`{}`, this.#options.encryptionConfig.securityKey)
                     : {}));
             }
-            if (!existsSync(`${this.#options.dataConfig.path}/.backup`)) {
-                mkdirSync(`${this.#options.dataConfig.path}/.backup`);
+            if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/.backup`)) {
+                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/.backup`);
             }
         }
         for (const table of this.#options.dataConfig.tables) {
-            if (!existsSync(`${this.#options.dataConfig.path}/${table}`)) {
-                mkdirSync(`${this.#options.dataConfig.path}/${table}`);
-                writeFileSync(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
-                    ? encrypt(`{}`, this.#options.encryptionConfig.securityKey)
+            if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/${table}`)) {
+                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/${table}`);
+                (0, fs_1.writeFileSync)(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
+                    ? (0, index_js_1.encrypt)(`{}`, this.#options.encryptionConfig.securityKey)
                     : {}));
             }
         }
-        if (!existsSync(this.#options.dataConfig.referencePath)) {
-            mkdirSync(this.#options.dataConfig.referencePath);
+        if (!(0, fs_1.existsSync)(this.#options.dataConfig.referencePath)) {
+            (0, fs_1.mkdirSync)(this.#options.dataConfig.referencePath);
             for (const table of this.#options.dataConfig.tables) {
-                mkdirSync(`${this.#options.dataConfig.referencePath}/${table}`, {
+                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.referencePath}/${table}`, {
                     recursive: true,
                 });
-                writeFileSync(`${this.#options.dataConfig.referencePath}/${table}/reference_1.log`, ``);
+                (0, fs_1.writeFileSync)(`${this.#options.dataConfig.referencePath}/${table}/reference_1.log`, ``);
             }
         }
-        if (!existsSync(this.#options.fileConfig.transactionLogPath)) {
-            mkdirSync(this.#options.fileConfig.transactionLogPath);
+        if (!(0, fs_1.existsSync)(this.#options.fileConfig.transactionLogPath)) {
+            (0, fs_1.mkdirSync)(this.#options.fileConfig.transactionLogPath);
             for (const table of this.#options.dataConfig.tables) {
-                mkdirSync(`${this.#options.fileConfig.transactionLogPath}/${table}`, {
+                (0, fs_1.mkdirSync)(`${this.#options.fileConfig.transactionLogPath}/${table}`, {
                     recursive: true,
                 });
-                writeFileSync(`${this.#options.fileConfig.transactionLogPath}/${table}/transaction.log`, `${randomBytes(16).toString("hex")}\n`);
-                writeFileSync(`${this.#options.fileConfig.transactionLogPath}/${table}/fullWriter.log`, ``);
+                (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/transaction.log`, `${(0, crypto_1.randomBytes)(16).toString("hex")}\n`);
+                (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/fullWriter.log`, ``);
             }
         }
         for (const table of this.#options.dataConfig.tables) {
@@ -131,4 +136,5 @@ export default class GraphDB extends EventEmitter {
         }
     }
 }
+exports.default = GraphDB;
 //# sourceMappingURL=database.js.map
