@@ -324,9 +324,11 @@ export default class Table extends EventEmitter {
     async #set() {
         if (this.#queued.set) return;
         this.#queued.set = true;
-        if(!this.#queue.set.length && !this.#queued.set) {
+        if(!this.#queue.set.length) {
+            this.#queued.set = false;
             clearInterval(this.#intervals.set as NodeJS.Timeout);
             this.#intervals.set = null;
+            return ;
         }
         if (this.#cache.size !== -1) {
             for (const files of this.files) {
