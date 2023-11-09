@@ -218,9 +218,11 @@ class Table extends events_1.EventEmitter {
         if (this.#queued.set)
             return;
         this.#queued.set = true;
-        if (!this.#queue.set.length && !this.#queued.set) {
+        if (!this.#queue.set.length) {
+            this.#queued.set = false;
             clearInterval(this.#intervals.set);
             this.#intervals.set = null;
+            return;
         }
         if (this.#cache.size !== -1) {
             for (const files of this.files) {
