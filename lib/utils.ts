@@ -52,8 +52,10 @@ export function JSONParser(data: string) {
             isBroken: false,
         };
     } catch (e) {
-        data = data.split("}").slice(0, -1).join("}").trim() + "}";
-        if (data === "}")
+        data = data.split("}").slice(0, -1).join("}").trim();
+        if(!data.endsWith("}")) data += "}}";
+        else data += "}";
+        if (data === "}" || data === "}}")
             return {
                 data: {},
                 isBroken: true,
