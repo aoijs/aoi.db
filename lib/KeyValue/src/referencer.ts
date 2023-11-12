@@ -31,6 +31,7 @@ export default class Referencer {
         this.maxSize = maxSize;
     }
 
+
     /**
      * Description initialize the Referencer
      * @returns 

@@ -150,7 +150,7 @@ export default class Table extends EventEmitter {
      * @description Checks the integrity of the table and does a small self repair if needed
      */
 
-    #checkIntegrity() {
+    async #checkIntegrity() {
         const files = this.files.map((x) => x.name);
         let index = 0;
         for (const file of files) {
@@ -207,6 +207,12 @@ export default class Table extends EventEmitter {
                 );
 
                 this.files.splice(index, 1);
+            }
+            const reference = await this.referencer.getReference();
+            for(const key of Object.keys(json)) {
+                if(!reference[key]) {
+                    await this.referencer.setReference(key, file);
+                }
             }
             index++;
         }

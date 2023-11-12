@@ -95,7 +95,7 @@ class Table extends events_1.EventEmitter {
      * @private
      * @description Checks the integrity of the table and does a small self repair if needed
      */
-    #checkIntegrity() {
+    async #checkIntegrity() {
         const files = this.files.map((x) => x.name);
         let index = 0;
         for (const file of files) {
@@ -121,6 +121,12 @@ class Table extends events_1.EventEmitter {
                 // this.files.find(x => x.name === file)?.writer?.close();
                 (0, fs_1.unlinkSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
                 this.files.splice(index, 1);
+            }
+            const reference = await this.referencer.getReference();
+            for (const key of Object.keys(json)) {
+                if (!reference[key]) {
+                    await this.referencer.setReference(key, file);
+                }
             }
             index++;
         }
