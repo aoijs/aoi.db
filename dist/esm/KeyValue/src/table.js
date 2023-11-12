@@ -445,8 +445,8 @@ class Table extends events_1.EventEmitter {
         return new data_js_1.default({
             file,
             key,
-            value: d.value,
-            type: d.type,
+            value: d?.value,
+            type: d?.type,
         });
     }
     /**

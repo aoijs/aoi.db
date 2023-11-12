@@ -626,8 +626,8 @@ export default class Table extends EventEmitter {
         return new Data({
             file,
             key,
-            value: d.value,
-            type: d.type,
+            value: d?.value,
+            type: d?.type,
         });
     }
 
