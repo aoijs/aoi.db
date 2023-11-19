@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "node tests/keyValue/keyValuecjs.js && node tests/keyValue/keyValuemjs.mjs && node tests/widecolumn/widecolcjs.js && node tests/widecolumn/widecolmjs.mjs && node tests/readdata.js",
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && npm run createpack",
+    "build": "npx tsc -p tsconfig.json && npx tsc -p tsconfig-cjs.json && npm run createpack",
     "createpack": "node builder/pack.js",
     "exec": "node executions/keyvalue/exec.js && node executions/widecolumn/exec.js",
     "docs": "typedoc"

@@ -1,22 +1,29 @@
 const { KeyValue, DatabaseEvents } = require("../../dist/cjs/index.js");
-const { setTimeout } = require("timers/promises");
+const { setTimeout : st } = require("timers/promises");
 const db = new KeyValue({
     dataConfig: { path: "./__tests__/database", },
     encryptionConfig: {
         encriptData: false,
     },
+    debug:true,
 });
 console.log(db.options)
 
-const wait = async ms => await setTimeout(ms);
+const wait = async ms => await st(ms);
 
 db.on(DatabaseEvents.Connect, async () => {
     console.log("ready");
-    // console.time("add");
-    // await Add10k();
-    // console.timeEnd("add");
+    console.time("add");
+    await Add10k();
+    console.timeEnd("add");
 
-    // await wait(2000);
+    await wait(2000);
+
+    db.set("main","key",{
+        value: "test"
+    })
+
+
 
     // console.time("get");
     // await get10k();
@@ -45,11 +52,7 @@ db.on(DatabaseEvents.Connect, async () => {
     // console.time("delete");
     // await delete10k();
     // console.timeEnd("delete");
-await wait(2000);
-    console.time("repair");
-    db.fullRepair("main")
-    console.timeEnd("repair");
-    
+
 })
 
 db.connect();
@@ -97,3 +100,7 @@ async function FindMany10k() {
         );
     }
 }
+
+    setTimeout(async () => {
+        await db.delete("main", "key");
+    }, 4000)

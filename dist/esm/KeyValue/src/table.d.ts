@@ -28,6 +28,7 @@ export default class Table extends EventEmitter {
         size: number;
         fullWriter: WriteStream;
     };
+    locked: boolean;
     repairMode: boolean;
     /**
      *
@@ -189,5 +190,6 @@ export default class Table extends EventEmitter {
      * ```
      */
     deleteMany(query?: (value: Data, index: number) => boolean): Promise<true | Data[]>;
+    addTableToLog(): Promise<void>;
 }
 //# sourceMappingURL=table.d.ts.map

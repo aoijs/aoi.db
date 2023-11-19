@@ -34,6 +34,7 @@ class Table extends events_1.EventEmitter {
     referencer;
     readyAt;
     logData;
+    locked = false;
     repairMode = false;
     /**
      *
@@ -102,19 +103,27 @@ class Table extends events_1.EventEmitter {
             const data = (0, fs_1.readFileSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8").trim();
             const { data: json, isBroken } = (0, utils_js_1.JSONParser)(data);
             if (isBroken && !file.startsWith("$temp_")) {
-                console.warn(`Attempting self fix on file ${file} in table ${this.options.name}.`);
-                if (this.db.options.encryptionConfig.encriptData) {
-                    const decrypted = (0, utils_js_1.decrypt)(json, this.db.options.encryptionConfig.securityKey);
-                    const { data: parsed, isBroken } = (0, utils_js_1.JSONParser)(decrypted);
-                    if (isBroken) {
-                        (0, fs_1.writeFileSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(parsed), this.db.options.encryptionConfig
-                            .securityKey)));
-                        console.warn(`Attempted self fix on file ${file} in table ${this.options.name}. If the file is still corrupted, please use the <KeyValue>.fullRepair("tableName") to restore the data.`);
-                    }
+                if (Object.keys(json).length === 0) {
+                    console.warn(`File ${file} in table ${this.options.name} is corrupted. Data found: 0. Locking table. please add backup or use the <KeyValue>.fullRepair("tableName") to restore the data. from logs`);
+                    // latest backup
+                    this.locked = true;
+                    return;
                 }
                 else {
-                    (0, fs_1.writeFileSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, JSON.stringify(json));
-                    console.warn(`Attempted self fix on file ${file} in table ${this.options.name}. If the file is still corrupted, please use the <KeyValue>.fullRepair("tableName") to restore the data.`);
+                    console.warn(`Attempting self fix on file ${file} in table ${this.options.name}.`);
+                    if (this.db.options.encryptionConfig.encriptData) {
+                        const decrypted = (0, utils_js_1.decrypt)(json, this.db.options.encryptionConfig.securityKey);
+                        const { data: parsed, isBroken } = (0, utils_js_1.JSONParser)(decrypted);
+                        if (isBroken) {
+                            (0, fs_1.writeFileSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(parsed), this.db.options.encryptionConfig
+                                .securityKey)));
+                            console.warn(`Attempted self fix on file ${file} in table ${this.options.name}. If the file is still corrupted, please use the <KeyValue>.fullRepair("tableName") to restore the data.`);
+                        }
+                    }
+                    else {
+                        (0, fs_1.writeFileSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, JSON.stringify(json));
+                        console.warn(`Attempted self fix on file ${file} in table ${this.options.name}. If the file is still corrupted, please use the <KeyValue>.fullRepair("tableName") to restore the data.`);
+                    }
                 }
             }
             if (file.startsWith("$temp_")) {
@@ -334,6 +343,8 @@ class Table extends events_1.EventEmitter {
      *
      */
     async set(key, value) {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const reference = await this.referencer.getReference();
         let data;
         if (reference.hasOwnProperty(key)) {
@@ -395,6 +406,8 @@ class Table extends events_1.EventEmitter {
      * ```
      */
     async getLogs() {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const logs = await (0, promises_1.readFile)(this.paths.log);
         const arr = logs.toString().trim().split("\n").slice(2);
         const block = [];
@@ -434,6 +447,8 @@ class Table extends events_1.EventEmitter {
      * ```
      */
     async get(key) {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const reference = await this.referencer.getReference();
         if (!reference[key])
             return null;
@@ -488,6 +503,8 @@ class Table extends events_1.EventEmitter {
      * ```
      */
     async delete(key) {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const reference = await this.referencer.getReference();
         if (!reference[key])
             return null;
@@ -538,7 +555,7 @@ class Table extends events_1.EventEmitter {
         if (!this.queue.delete[file]) {
             this.#queue.delete[file] = {};
             this.#queue.delete[file] = await this.#fetchFile(file);
-            delete this.#cache.data[file][key];
+            delete this.#queue.delete[file][key];
         }
         else {
             delete this.#queue.delete[file][key];
@@ -569,6 +586,10 @@ class Table extends events_1.EventEmitter {
         }
         for (const file of Object.keys(this.#queue.delete)) {
             const json = this.#queue.delete[file];
+            if (Object.keys(json).length === 0) {
+                delete this.#queue.delete[file];
+                continue;
+            }
             if (this.db.options.encryptionConfig.encriptData) {
                 const encrypted = (0, utils_js_1.encrypt)(JSON.stringify(json), this.db.options.encryptionConfig.securityKey);
                 await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, JSON.stringify(encrypted));
@@ -576,6 +597,7 @@ class Table extends events_1.EventEmitter {
             else {
                 await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, JSON.stringify(json));
             }
+            delete this.#queue.delete[file];
             await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
         }
     }
@@ -589,6 +611,8 @@ class Table extends events_1.EventEmitter {
      * ```
      */
     async clear() {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         this.#cache.clearAll();
         await (0, promises_1.truncate)(this.paths.log, 33);
         for (const file of this.files) {
@@ -617,6 +641,8 @@ class Table extends events_1.EventEmitter {
      * ```
      */
     async has(key) {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const reference = await this.referencer.getReference();
         if (!reference[key])
             return false;
@@ -629,6 +655,8 @@ class Table extends events_1.EventEmitter {
      * @private
      */
     async #fetchFile(file) {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const data = (await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8")).trim();
         let json = {};
         if (this.db.options.encryptionConfig.encriptData) {
@@ -651,6 +679,8 @@ class Table extends events_1.EventEmitter {
      * ```
      */
     async findOne(query) {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const files = this.files.map((file) => file.name);
         for (const file of files) {
             let json = this.#cache.getFileCache(file);
@@ -698,6 +728,8 @@ class Table extends events_1.EventEmitter {
      * ```
      */
     async findMany(query) {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const files = this.files.map((file) => file.name);
         const data = [];
         for (const file of files) {
@@ -747,6 +779,8 @@ class Table extends events_1.EventEmitter {
      * ```
      */
     async all(query, limit) {
+        if (this.locked)
+            throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.");
         const allData = await this.findMany(query ?? (() => true));
         if (limit)
             return allData.slice(0, limit);
@@ -763,6 +797,7 @@ class Table extends events_1.EventEmitter {
      */
     async fullRepair() {
         this.repairMode = true;
+        this.locked = false;
         for (const file of this.files) {
             file.writer?.close();
             if (file.name !==
@@ -899,6 +934,15 @@ class Table extends events_1.EventEmitter {
                 }, 100);
             }
             return data;
+        }
+    }
+    async addTableToLog() {
+        const allData = await this.all();
+        for (const data of allData) {
+            await this.#wal(data, enum_js_1.DatabaseMethod.Set);
+        }
+        if (this.db.options.debug) {
+            console.log(`Synced table ${this.options.name} with the transaction log`);
         }
     }
 }

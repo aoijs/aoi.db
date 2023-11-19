@@ -37,6 +37,7 @@ import Referencer from "./referencer.js";
 import { Hash } from "../../typings/interface.js";
 import { EventEmitter } from "events";
 import Cacher from "./cache.js";
+import tar from "tar";
 
 export default class Table extends EventEmitter {
     options: KeyValueTableOptions;
@@ -72,6 +73,7 @@ export default class Table extends EventEmitter {
         size: number;
         fullWriter: WriteStream;
     };
+    locked = false;
 
     repairMode = false;
 
@@ -162,40 +164,50 @@ export default class Table extends EventEmitter {
             const { data: json, isBroken } = JSONParser(data);
 
             if (isBroken && !file.startsWith("$temp_")) {
-                console.warn(
-                    `Attempting self fix on file ${file} in table ${this.options.name}.`,
-                );
-                if (this.db.options.encryptionConfig.encriptData) {
-                    const decrypted = decrypt(
-                        json as Hash,
-                        this.db.options.encryptionConfig.securityKey,
+                if (Object.keys(json).length === 0) {
+                    console.warn(
+                        `File ${file} in table ${this.options.name} is corrupted. Data found: 0. Locking table. please add backup or use the <KeyValue>.fullRepair("tableName") to restore the data. from logs`,
                     );
-                    const { data: parsed, isBroken } = JSONParser(decrypted);
-                    if (isBroken) {
+                    // latest backup
+                    this.locked = true;
+                    return ;
+                } else {
+                    console.warn(
+                        `Attempting self fix on file ${file} in table ${this.options.name}.`,
+                    );
+                    if (this.db.options.encryptionConfig.encriptData) {
+                        const decrypted = decrypt(
+                            json as Hash,
+                            this.db.options.encryptionConfig.securityKey,
+                        );
+                        const { data: parsed, isBroken } =
+                            JSONParser(decrypted);
+                        if (isBroken) {
+                            writeFileSync(
+                                `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+                                JSON.stringify(
+                                    encrypt(
+                                        JSON.stringify(parsed),
+                                        this.db.options.encryptionConfig
+                                            .securityKey,
+                                    ),
+                                ),
+                            );
+
+                            console.warn(
+                                `Attempted self fix on file ${file} in table ${this.options.name}. If the file is still corrupted, please use the <KeyValue>.fullRepair("tableName") to restore the data.`,
+                            );
+                        }
+                    } else {
                         writeFileSync(
                             `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
-                            JSON.stringify(
-                                encrypt(
-                                    JSON.stringify(parsed),
-                                    this.db.options.encryptionConfig
-                                        .securityKey,
-                                ),
-                            ),
+                            JSON.stringify(json),
                         );
 
                         console.warn(
                             `Attempted self fix on file ${file} in table ${this.options.name}. If the file is still corrupted, please use the <KeyValue>.fullRepair("tableName") to restore the data.`,
                         );
                     }
-                } else {
-                    writeFileSync(
-                        `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
-                        JSON.stringify(json),
-                    );
-
-                    console.warn(
-                        `Attempted self fix on file ${file} in table ${this.options.name}. If the file is still corrupted, please use the <KeyValue>.fullRepair("tableName") to restore the data.`,
-                    );
                 }
             }
 
@@ -209,8 +221,8 @@ export default class Table extends EventEmitter {
                 this.files.splice(index, 1);
             }
             const reference = await this.referencer.getReference();
-            for(const key of Object.keys(json)) {
-                if(!reference[key]) {
+            for (const key of Object.keys(json)) {
+                if (!reference[key]) {
                     await this.referencer.setReference(key, file);
                 }
             }
@@ -330,11 +342,11 @@ export default class Table extends EventEmitter {
     async #set() {
         if (this.#queued.set) return;
         this.#queued.set = true;
-        if(!this.#queue.set.length) {
+        if (!this.#queue.set.length) {
             this.#queued.set = false;
             clearInterval(this.#intervals.set as NodeJS.Timeout);
             this.#intervals.set = null;
-            return ;
+            return;
         }
         if (this.#cache.size !== -1) {
             for (const files of this.files) {
@@ -492,6 +504,7 @@ export default class Table extends EventEmitter {
      */
 
     async set(key: string, value: Partial<KeyValueDataInterface>) {
+        if(this.locked) throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.")
         const reference = await this.referencer.getReference();
         let data: Data;
         if (reference.hasOwnProperty(key)) {
@@ -561,6 +574,10 @@ export default class Table extends EventEmitter {
      * ```
      */
     async getLogs() {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         const logs = await readFile(this.paths.log);
         const arr = logs.toString().trim().split("\n").slice(2);
         const block = [] as {
@@ -614,6 +631,10 @@ export default class Table extends EventEmitter {
      */
 
     async get(key: string) {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         const reference = await this.referencer.getReference();
         if (!reference[key]) return null;
 
@@ -682,6 +703,10 @@ export default class Table extends EventEmitter {
      */
 
     async delete(key: string) {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         const reference = await this.referencer.getReference();
         if (!reference[key]) return null;
         const file = reference[key].file;
@@ -740,7 +765,7 @@ export default class Table extends EventEmitter {
         if (!this.queue.delete[file]) {
             this.#queue.delete[file] = {};
             this.#queue.delete[file] = await this.#fetchFile(file);
-            delete (this.#cache.data[file] as Record<string, any>)[key];
+            delete (this.#queue.delete[file] as Record<string, any>)[key];
         } else {
             delete this.#queue.delete[file][key];
         }
@@ -777,7 +802,11 @@ export default class Table extends EventEmitter {
 
         for (const file of Object.keys(this.#queue.delete)) {
             const json = this.#queue.delete[file];
-
+            if (Object.keys(json).length === 0) {
+                delete this.#queue.delete[file];
+                continue;
+            }
+            
             if (this.db.options.encryptionConfig.encriptData) {
                 const encrypted = encrypt(
                     JSON.stringify(json),
@@ -795,6 +824,8 @@ export default class Table extends EventEmitter {
                 );
             }
 
+            delete this.#queue.delete[file];
+            
             await rename(
                 `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
@@ -813,6 +844,10 @@ export default class Table extends EventEmitter {
      */
 
     async clear() {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         this.#cache.clearAll();
         await truncate(this.paths.log, 33);
         for (const file of this.files) {
@@ -852,6 +887,10 @@ export default class Table extends EventEmitter {
      */
 
     async has(key: string) {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         const reference = await this.referencer.getReference();
         if (!reference[key]) return false;
         return true;
@@ -865,6 +904,10 @@ export default class Table extends EventEmitter {
      */
 
     async #fetchFile(file: string) {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         const data = (
             await readFile(
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
@@ -897,6 +940,10 @@ export default class Table extends EventEmitter {
      */
 
     async findOne(query: (value: Data, index: number) => boolean) {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         const files = this.files.map((file) => file.name);
 
         for (const file of files) {
@@ -949,6 +996,10 @@ export default class Table extends EventEmitter {
      */
 
     async findMany(query: (value: Data, index: number) => boolean) {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         const files = this.files.map((file) => file.name);
         const data = [] as Data[];
         for (const file of files) {
@@ -1002,6 +1053,10 @@ export default class Table extends EventEmitter {
      */
 
     async all(query?: (value: Data, index: number) => boolean, limit?: number) {
+                if (this.locked)
+                    throw new Error(
+                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+                    );
         const allData = await this.findMany(query ?? (() => true));
         if (limit) return allData.slice(0, limit);
         return allData;
@@ -1019,6 +1074,7 @@ export default class Table extends EventEmitter {
 
     async fullRepair() {
         this.repairMode = true;
+        this.locked = false;
         for (const file of this.files) {
             file.writer?.close();
 
@@ -1210,6 +1266,19 @@ export default class Table extends EventEmitter {
                 }, 100);
             }
             return data;
+        }
+    }
+
+    async addTableToLog() {
+        const allData = await this.all();
+        for (const data of allData) {
+            await this.#wal(data, DatabaseMethod.Set);
+        }
+
+        if (this.db.options.debug) {
+            console.log(
+                `Synced table ${this.options.name} with the transaction log`,
+            );
         }
     }
 }

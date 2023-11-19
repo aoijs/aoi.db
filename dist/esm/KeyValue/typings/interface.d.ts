@@ -5,6 +5,7 @@ export interface KeyValueOptions {
     fileConfig?: KeyValueFileConfig;
     encryptionConfig: KeyValueEncryptionConfig;
     cacheConfig?: KeyValueCacheConfig;
+    debug?: boolean;
 }
 export interface KeyValueDataConfig {
     path?: string;

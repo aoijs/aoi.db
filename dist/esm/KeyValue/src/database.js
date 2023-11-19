@@ -67,6 +67,7 @@ class KeyValue extends events_1.EventEmitter {
                     return 0;
                 },
             },
+            debug: false,
         };
     }
     /**
@@ -111,6 +112,7 @@ class KeyValue extends events_1.EventEmitter {
                 sortFunction: options?.cacheConfig?.sortFunction ??
                     defaultOptions.cacheConfig.sortFunction,
             },
+            debug: options?.debug ?? defaultOptions.debug,
         };
         return finalOptions;
     }

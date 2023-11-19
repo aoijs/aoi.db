@@ -86,6 +86,7 @@ export default class KeyValue extends EventEmitter {
                     return 0;
                 },
             },
+            debug: false,
         };
     }
 
@@ -149,6 +150,7 @@ export default class KeyValue extends EventEmitter {
                     options?.cacheConfig?.sortFunction ??
                     defaultOptions.cacheConfig.sortFunction,
             },
+            debug: options?.debug ?? defaultOptions.debug,
         };
 
         return finalOptions;
