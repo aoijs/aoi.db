@@ -364,7 +364,11 @@ class KeyValue extends events_1.EventEmitter {
      */
     backup() {
         const backupPath = `${this.#options.dataConfig.path}/.backup`;
-        const backupName = `${backupPath}/Snapshot_${new Date().toDateString()}.tar.gz`;
+        const backupName = `${backupPath}/Snapshot_${new Date()
+            .toISOString()
+            .replaceAll(" ", "_")
+            .replaceAll(",", "_")
+            .replaceAll(":", "_")}.tar.gz`;
         (0, fs_1.writeFileSync)(backupName, "");
         const writer = (0, fs_1.createWriteStream)(backupName);
         tar_1.default.c({
