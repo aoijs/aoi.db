@@ -19,9 +19,7 @@ db.on(DatabaseEvents.Connect, async () => {
 
     await wait(2000);
 
-    db.set("main","key",{
-        value: "test"
-    })
+    await db.backup();
 
 
 
@@ -101,6 +99,4 @@ async function FindMany10k() {
     }
 }
 
-    setTimeout(async () => {
-        await db.delete("main", "key");
-    }, 4000)
+ 

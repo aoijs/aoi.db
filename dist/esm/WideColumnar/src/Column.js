@@ -13,6 +13,8 @@ class WideColumnarColumn {
         if (!this.primaryKey && this.default === undefined)
             throw new Error("Default value is required for non primary key columns");
     }
+    #initialize() {
+    }
 }
 exports.default = WideColumnarColumn;
 //# sourceMappingURL=Column.js.map

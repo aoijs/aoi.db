@@ -489,7 +489,8 @@ export default class KeyValue extends EventEmitter {
      */
     backup() {
         const backupPath = `${this.#options.dataConfig.path}/.backup`;
-        const backupName = `${backupPath}/Snapshot_${new Date().toISOString()}.tar.gz`;
+        const backupName = `${backupPath}/Snapshot_${new Date().toDateString()}.tar.gz`;
+        writeFileSync(backupName,"");
         const writer = createWriteStream(backupName);
         tar.c(
             {

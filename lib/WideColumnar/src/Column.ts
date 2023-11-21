@@ -18,4 +18,8 @@ export default class WideColumnarColumn {
     }
 
 
+    #initialize() {
+        
+    }
+
 }
