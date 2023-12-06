@@ -774,7 +774,7 @@ class Table extends events_1.EventEmitter {
         // read logger line by line
         let line = "";
         let buffer = "";
-        await new Promise((resolve, reject) => {
+        return await new Promise((resolve, reject) => {
             fullLogReader.on("data", (data) => {
                 data = data.toString();
                 buffer += data;
@@ -809,55 +809,55 @@ class Table extends events_1.EventEmitter {
                             .securityKey)
                         : mainObj[file]));
                 }
-                resolve();
+                this.files = (0, fs_1.readdirSync)(`${this.db.options.dataConfig.path}/${this.options.name}`).map((file) => {
+                    const stats = (0, fs_1.statSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
+                    return {
+                        name: file,
+                        size: stats.size,
+                        isInWriteMode: false,
+                    };
+                });
+                this.logData.writer = (0, fs_1.createWriteStream)(this.paths.log, {
+                    flags: "a",
+                });
+                this.logData.size = (0, fs_1.statSync)(this.paths.log).size;
+                const keyFileList = Object.entries(mainObj).map(([file, data]) => {
+                    return {
+                        string: `${data.key}${utils_js_1.ReferenceConstantSpace}${file}`,
+                        size: Buffer.byteLength(`${data.key}${utils_js_1.ReferenceConstantSpace}${file}`),
+                    };
+                });
+                // split the keyFiles according to the max size
+                const keyFileParts = [[]];
+                let currentPart = 0;
+                let currentSize = 0;
+                for (const kf of keyFileList) {
+                    if (currentSize + kf.size > this.db.options.fileConfig.maxSize) {
+                        currentPart += 1;
+                        currentSize = 0;
+                        keyFileParts[currentPart] = [kf];
+                    }
+                    else {
+                        keyFileParts[currentPart].push(kf);
+                    }
+                }
+                let currentRefFile = "reference_1.log";
+                let refFileNum = 1;
+                for (const part of keyFileParts) {
+                    const data = part.map((x) => x.string).join("\n");
+                    await (0, promises_1.writeFile)(`${this.db.options.dataConfig.referencePath}/${this.options.name}/${currentRefFile}`, data);
+                    refFileNum += 1;
+                    currentRefFile = `reference_${refFileNum}.log`;
+                }
+                this.referencer.restart();
+                this.repairMode = false;
+                this.locked = false;
+                resolve(true);
             });
             fullLogReader.on("error", (err) => {
-                reject(err);
+                reject(false);
             });
         });
-        this.files = (0, fs_1.readdirSync)(`${this.db.options.dataConfig.path}/${this.options.name}`).map((file) => {
-            const stats = (0, fs_1.statSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
-            return {
-                name: file,
-                size: stats.size,
-                isInWriteMode: false,
-            };
-        });
-        this.logData.writer = (0, fs_1.createWriteStream)(this.paths.log, {
-            flags: "a",
-        });
-        this.logData.size = (0, fs_1.statSync)(this.paths.log).size;
-        const keyFileList = Object.entries(mainObj).map(([file, data]) => {
-            return {
-                string: `${data.key}${utils_js_1.ReferenceConstantSpace}${file}`,
-                size: Buffer.byteLength(`${data.key}${utils_js_1.ReferenceConstantSpace}${file}`),
-            };
-        });
-        // split the keyFiles according to the max size
-        const keyFileParts = [[]];
-        let currentPart = 0;
-        let currentSize = 0;
-        for (const kf of keyFileList) {
-            if (currentSize + kf.size > this.db.options.fileConfig.maxSize) {
-                currentPart += 1;
-                currentSize = 0;
-                keyFileParts[currentPart] = [kf];
-            }
-            else {
-                keyFileParts[currentPart].push(kf);
-            }
-        }
-        let currentRefFile = "reference_1.log";
-        let refFileNum = 1;
-        for (const part of keyFileParts) {
-            const data = part.map((x) => x.string).join("\n");
-            await (0, promises_1.writeFile)(`${this.db.options.dataConfig.referencePath}/${this.options.name}/${currentRefFile}`, data);
-            refFileNum += 1;
-            currentRefFile = `reference_${refFileNum}.log`;
-        }
-        this.referencer.restart();
-        this.repairMode = false;
-        return true;
     }
     /**
      * @description Deletes the data

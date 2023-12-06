@@ -992,7 +992,7 @@ export default class Table extends EventEmitter {
      * @note This method is very slow and should only be used when the table is corrupted
      */
 
-    async fullRepair() {
+    async fullRepair(): Promise<boolean> {
         this.repairMode = true;
         this.locked = false;
         for (const file of this.files) {
@@ -1028,7 +1028,7 @@ export default class Table extends EventEmitter {
         // read logger line by line
         let line = "";
         let buffer = "";
-        await new Promise<void>((resolve, reject) => {
+        return await new Promise<boolean>((resolve, reject) => {
             fullLogReader.on("data", (data) => {
                 data = data.toString();
                 buffer += data;
@@ -1075,20 +1075,13 @@ export default class Table extends EventEmitter {
                     );
                 }
 
-                resolve();
-            });
-            fullLogReader.on("error", (err) => {
-                reject(err);
-            });
-        });
-
+                
         this.files = readdirSync(
             `${this.db.options.dataConfig.path}/${this.options.name}`,
         ).map((file) => {
             const stats = statSync(
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
             );
-
 
             return {
                 name: file,
@@ -1147,7 +1140,15 @@ export default class Table extends EventEmitter {
 
         this.referencer.restart();
         this.repairMode = false;
-        return true;
+        this.locked = false;
+
+                resolve(true);
+            });
+            fullLogReader.on("error", (err) => {
+                reject(false);
+            });
+        });
+
     }
 
     /**
