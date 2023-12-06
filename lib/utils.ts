@@ -5,6 +5,9 @@ import { KeyValue } from "./KeyValue/index.js";
 import { readFileSync, readdirSync } from "fs";
 import { TransmitterQuery } from "./Remote/typings/type.js";
 const algorithm = "aes-256-ctr";
+//@ts-ignore
+import { jsonrepair } from "jsonrepair";
+import { ColumnType } from "./WideColumnar/typings/types.js";
 export function encrypt(string: string, key: string, iV?: string): Hash {
     const iv = iV ? Buffer.from(iV, "hex") : randomBytes(16);
     const cipher = createCipheriv(algorithm, key, iv);
@@ -52,18 +55,25 @@ export function JSONParser(data: string) {
             isBroken: false,
         };
     } catch (e) {
-        data = data.split("}").slice(0, -1).join("}").trim();
-        if(!data.endsWith("}")) data += "}}";
-        else data += "}";
-        if (data === "}" || data === "}}")
+        try {
             return {
-                data: {},
+                data: jsonrepair(data),
                 isBroken: true,
             };
-        return {
-            data: JSON.parse(data),
-            isBroken: true,
-        };
+        } catch (e) {
+            data = data.split("}").slice(0, -1).join("}").trim();
+            if (!data.endsWith("}")) data += "}}";
+            else data += "}";
+            if (data === "}" || data === "}}")
+                return {
+                    data: {},
+                    isBroken: true,
+                };
+            return {
+                data: JSON.parse(data),
+                isBroken: true,
+            };
+        }
     }
 }
 
@@ -101,8 +111,10 @@ export async function convertV1KeyValuetov2(oldDbFolder: string, db: KeyValue) {
     }
 }
 
-export function parseTransmitterQuery(query: TransmitterQuery): (Data: any) => boolean {
-    const str =  returnParseString("&&", query, "===", "&&");
+export function parseTransmitterQuery(
+    query: TransmitterQuery,
+): (Data: any) => boolean {
+    const str = returnParseString("&&", query, "===", "&&");
     return new Function(" return (Data) => " + str)();
 }
 
@@ -111,7 +123,7 @@ export function returnParseString(
     value: any,
     sign = "===",
     join = "&&",
-):string {
+): string {
     if (key === "value" || key === "key" || key === "ttl") {
         if (sign === "$sw") {
             return `Data.${key}.startsWith(${value})`;
@@ -200,4 +212,25 @@ export function returnParseString(
             .join("&&");
     }
     return "";
+}
+
+export function stringify(data:any) {
+    if(typeof data === "string") return data;
+    if(typeof data === "undefined") return "undefined";
+    if(typeof data === "object") return JSON.stringify(data);
+    if(data === null) return "null";
+    if(data instanceof Date) return data.toISOString();
+    return data.toString();
+}
+
+export function parse(data:string ,type: ColumnType) {
+    if(type === "string") return data;
+    if(type === "undefined") return undefined;
+    if(type === "null") return null;
+    if(type === "object") return JSON.parse(data);
+    if(type === "number") return Number(data);
+    if(type === "boolean") return Boolean(data);
+    if(type === "bigint") return BigInt(data);
+    if(type === "date") return new Date(data);
+    return data;
 }

@@ -773,18 +773,20 @@ class Table extends events_1.EventEmitter {
         let line = "";
         let buffer = "";
         await new Promise((resolve, reject) => {
-            fullLogReader.on("readable", () => {
-                buffer += fullLogReader.read();
+            fullLogReader.on("data", (data) => {
+                data = data.toString();
+                buffer += data;
                 const lines = buffer.split("\n");
                 buffer = lines.pop();
                 for (const line of lines) {
-                    const [key, value, type, ttl, method] = line.split(utils_js_1.ReferenceConstantSpace);
+                    let [key, value, type, ttl, method] = line.split(utils_js_1.ReferenceConstantSpace);
+                    if (!method)
+                        method = ttl;
                     if (method === enum_js_1.DatabaseMethod.Set.toString()) {
                         const data = {
                             key,
                             value,
                             type,
-                            ttl: Number(ttl),
                         };
                         mainObj[currentFile][key] = data;
                     }
@@ -798,7 +800,7 @@ class Table extends events_1.EventEmitter {
                     }
                 }
             });
-            fullLogReader.on("close", async () => {
+            fullLogReader.on("end", async () => {
                 for (const file of Object.keys(mainObj)) {
                     await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, JSON.stringify(this.db.options.encryptionConfig.encriptData
                         ? (0, utils_js_1.encrypt)(JSON.stringify(mainObj[file]), this.db.options.encryptionConfig
@@ -813,11 +815,10 @@ class Table extends events_1.EventEmitter {
         });
         this.files = (0, fs_1.readdirSync)(`${this.db.options.dataConfig.path}/${this.options.name}`).map((file) => {
             const stats = (0, fs_1.statSync)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
-            const writer = (0, fs_1.createWriteStream)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`);
             return {
                 name: file,
                 size: stats.size,
-                writer,
+                isInWriteMode: false,
             };
         });
         this.logData.writer = (0, fs_1.createWriteStream)(this.paths.log, {

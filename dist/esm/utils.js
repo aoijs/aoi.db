@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.returnParseString = exports.parseTransmitterQuery = exports.convertV1KeyValuetov2 = exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
+exports.parse = exports.stringify = exports.returnParseString = exports.parseTransmitterQuery = exports.convertV1KeyValuetov2 = exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
 const crypto_1 = require("crypto");
 const fs_1 = require("fs");
 const algorithm = "aes-256-ctr";
+//@ts-ignore
+const jsonrepair_1 = require("jsonrepair");
 function encrypt(string, key, iV) {
     const iv = iV ? Buffer.from(iV, "hex") : (0, crypto_1.randomBytes)(16);
     const cipher = (0, crypto_1.createCipheriv)(algorithm, key, iv);
@@ -45,20 +47,28 @@ function JSONParser(data) {
         };
     }
     catch (e) {
-        data = data.split("}").slice(0, -1).join("}").trim();
-        if (!data.endsWith("}"))
-            data += "}}";
-        else
-            data += "}";
-        if (data === "}" || data === "}}")
+        try {
             return {
-                data: {},
+                data: (0, jsonrepair_1.jsonrepair)(data),
                 isBroken: true,
             };
-        return {
-            data: JSON.parse(data),
-            isBroken: true,
-        };
+        }
+        catch (e) {
+            data = data.split("}").slice(0, -1).join("}").trim();
+            if (!data.endsWith("}"))
+                data += "}}";
+            else
+                data += "}";
+            if (data === "}" || data === "}}")
+                return {
+                    data: {},
+                    isBroken: true,
+                };
+            return {
+                data: JSON.parse(data),
+                isBroken: true,
+            };
+        }
     }
 }
 exports.JSONParser = JSONParser;
@@ -186,4 +196,38 @@ function returnParseString(key, value, sign = "===", join = "&&") {
     return "";
 }
 exports.returnParseString = returnParseString;
+function stringify(data) {
+    if (typeof data === "string")
+        return data;
+    if (typeof data === "undefined")
+        return "undefined";
+    if (typeof data === "object")
+        return JSON.stringify(data);
+    if (data === null)
+        return "null";
+    if (data instanceof Date)
+        return data.toISOString();
+    return data.toString();
+}
+exports.stringify = stringify;
+function parse(data, type) {
+    if (type === "string")
+        return data;
+    if (type === "undefined")
+        return undefined;
+    if (type === "null")
+        return null;
+    if (type === "object")
+        return JSON.parse(data);
+    if (type === "number")
+        return Number(data);
+    if (type === "boolean")
+        return Boolean(data);
+    if (type === "bigint")
+        return BigInt(data);
+    if (type === "date")
+        return new Date(data);
+    return data;
+}
+exports.parse = parse;
 //# sourceMappingURL=utils.js.map

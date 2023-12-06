@@ -1,0 +1,1 @@
+{"version":3,"file":"Data.d.ts","sourceRoot":"","sources":["../../../../lib/WideColumnar/src/Data.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,yBAAyB,EAAE,MAAM,yBAAyB,CAAC;AAEpE,MAAM,CAAC,OAAO,OAAO,gBAAgB;IACjC,OAAO,EAAE,yBAAyB,CAAC;IACnC,MAAM,EAAE,yBAAyB,CAAC;gBACtB,IAAI,EAAE;QACd,OAAO,EAAE,yBAAyB,CAAC;QACnC,MAAM,EAAE,yBAAyB,CAAC;KACrC;IAID,QAAQ;IAIR,MAAM;;;;CAOT"}

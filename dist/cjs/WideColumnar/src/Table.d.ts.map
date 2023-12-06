@@ -1,1 +1,1 @@
-{"version":3,"file":"Table.d.ts","sourceRoot":"","sources":["../../../../lib/WideColumnar/src/Table.ts"],"names":[],"mappings":""}
+{"version":3,"file":"Table.d.ts","sourceRoot":"","sources":["../../../../lib/WideColumnar/src/Table.ts"],"names":[],"mappings":"AAAA,OAAO,EAA6B,wBAAwB,EAAE,MAAM,yBAAyB,CAAC;AAC9F,OAAO,EAAE,UAAU,EAAE,MAAM,qBAAqB,CAAC;AACjD,OAAO,kBAAkB,MAAM,aAAa,CAAC;AAC7C,OAAO,YAAY,MAAM,eAAe,CAAC;AAEzC,MAAM,CAAC,OAAO,OAAO,iBAAiB;;IAClC,IAAI,EAAE,MAAM,CAAC;IACb,OAAO,EAAG,kBAAkB,EAAE,CAAC;gBAMnB,OAAO,EAAE,wBAAwB;IA0B7C,IAAI,EAAE,iBAEL;IAED,IAAI,OAAO;;;MAEV;CAGJ"}

@@ -1,7 +1,19 @@
 export type ColumnType =
     | "string"
     | "number"
-    | "integer"
     | "boolean"
-    | "date"
-    | "object"; 
+    | "object"
+    | "null"
+    | "undefined"
+    | "bigint"
+    | "date";
+
+    export type WideColumnarDataType =
+    | string
+    | number
+    | boolean
+    | object
+    | null
+    | undefined
+    | bigint
+    | Date;

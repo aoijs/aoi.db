@@ -1028,21 +1028,21 @@ export default class Table extends EventEmitter {
         let line = "";
         let buffer = "";
         await new Promise<void>((resolve, reject) => {
-            fullLogReader.on("readable", () => {
-                buffer += fullLogReader.read();
+            fullLogReader.on("data", (data) => {
+                data = data.toString();
+                buffer += data;
                 const lines = buffer.split("\n");
                 buffer = lines.pop() as string;
                 for (const line of lines) {
-                    const [key, value, type, ttl, method] = line.split(
+                    let [key, value, type, ttl, method] = line.split(
                         ReferenceConstantSpace,
                     );
-
+                        if(!method) method = ttl;
                     if (method === DatabaseMethod.Set.toString()) {
                         const data = {
                             key,
                             value,
                             type,
-                            ttl: Number(ttl),
                         };
 
                         mainObj[currentFile][key] = data;
@@ -1058,7 +1058,7 @@ export default class Table extends EventEmitter {
                 }
             });
 
-            fullLogReader.on("close", async () => {
+            fullLogReader.on("end", async () => {
                 for (const file of Object.keys(mainObj)) {
                     await writeFile(
                         `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
@@ -1087,14 +1087,12 @@ export default class Table extends EventEmitter {
             const stats = statSync(
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
             );
-            const writer = createWriteStream(
-                `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
-            );
+
 
             return {
                 name: file,
                 size: stats.size,
-                writer,
+                isInWriteMode: false,
             };
         });
 
