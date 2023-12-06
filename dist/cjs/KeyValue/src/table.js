@@ -241,6 +241,8 @@ class Table extends events_1.EventEmitter {
             return;
         if (this.locked)
             return;
+        if (this.repairMode)
+            return;
         if (this.#queued.set)
             return;
         this.#queued.set = true;

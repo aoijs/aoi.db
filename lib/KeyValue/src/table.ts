@@ -350,6 +350,7 @@ export default class Table extends EventEmitter {
     async #set() {
         if (!this.#queue.set.length) return;
         if (this.locked) return;
+        if(this.repairMode) return;
         if (this.#queued.set) return;
         this.#queued.set = true;
 
