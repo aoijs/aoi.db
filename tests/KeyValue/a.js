@@ -10,7 +10,8 @@ const db = new KeyValue({
 });
 
 db.on(DatabaseEvents.Connect, async () => {
-  console.log(await db.fullRepair("main"));
+  await db.set("main", "key", { value: 2 });
+    console.log(await db.get("main", "key"));
 });
 
 db.connect();

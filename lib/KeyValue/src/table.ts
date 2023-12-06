@@ -500,6 +500,7 @@ export default class Table extends EventEmitter {
             this.referencer.setReference(data.key, data.file);
         }
         this.#queue.set.push(data);
+        this.#cache.set(data);
         await this.#wal(data, DatabaseMethod.Set);
 
         return data;

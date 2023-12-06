@@ -356,6 +356,7 @@ class Table extends events_1.EventEmitter {
             this.referencer.setReference(data.key, data.file);
         }
         this.#queue.set.push(data);
+        this.#cache.set(data);
         await this.#wal(data, enum_js_1.DatabaseMethod.Set);
         return data;
     }
