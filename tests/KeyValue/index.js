@@ -3,7 +3,7 @@ const { setTimeout : st } = require("timers/promises");
 const db = new KeyValue({
     dataConfig: { path: "./database", },
     encryptionConfig: {
-        encriptData: true,
+        encriptData: false,
         securityKey: "a-32-characters-long-string-here"
     },
     debug:true,
@@ -14,6 +14,7 @@ const wait = async ms => await st(ms);
 
 db.on(DatabaseEvents.Connect, async () => {
     console.log("ready");
+    await wait(2000);
     console.time("add");
     await Add10k();
     console.timeEnd("add");

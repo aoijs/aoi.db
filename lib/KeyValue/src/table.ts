@@ -2,6 +2,7 @@ import {
     WriteStream,
     createReadStream,
     createWriteStream,
+    existsSync,
     readFileSync,
     readdirSync,
     statSync,
@@ -143,6 +144,9 @@ export default class Table extends EventEmitter {
         };
         this.#checkIntegrity();
         await this.#syncWithLogs();
+        this.#intervals.set = setInterval(async () => {
+            await this.#set();
+        }, 500);
         this.readyAt = Date.now();
         this.db.emit(DatabaseEvents.TableReady, this);
     }
@@ -170,7 +174,7 @@ export default class Table extends EventEmitter {
                     );
                     // latest backup
                     this.locked = true;
-                    return ;
+                    return;
                 } else {
                     console.warn(
                         `Attempting self fix on file ${file} in table ${this.options.name}.`,
@@ -340,101 +344,54 @@ export default class Table extends EventEmitter {
      */
 
     async #set() {
+        if (!this.#queue.set.length) return;
+        if (this.locked) return;
         if (this.#queued.set) return;
         this.#queued.set = true;
-        if (!this.#queue.set.length) {
-            this.#queued.set = false;
-            clearInterval(this.#intervals.set as NodeJS.Timeout);
-            this.#intervals.set = null;
-            return;
-        }
-        if (this.#cache.size !== -1) {
-            for (const files of this.files) {
-                const Jdata = JSON.parse(
-                    (
-                        await readFile(
-                            `${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`,
-                        )
-                    )
-                        .toString()
-                        .trim(),
-                );
 
-                if (this.db.options.encryptionConfig.encriptData) {
-                    const decrypted = decrypt(
-                        Jdata as Hash,
-                        this.db.options.encryptionConfig.securityKey,
-                    );
-                    const json = JSON.parse(decrypted);
-                    this.#cache.replace(files.name, json);
-                } else {
-                    this.#cache.replace(files.name, Jdata);
-                }
-            }
-
-            setTimeout(() => {
-                this.#cache.clearAll();
-                this.#cache.size = -1;
-            }, 60000);
-        }
-
-        const fileSetToWrite = new Set(
-            this.#queue.set.map((data) => {
-                return this.files.find((file) => file.name === data.file);
-            }),
-        ) as Set<{ name: string; size: number; writer: WriteStream }>;
+        const filesToWrite = new Set<string>();
 
         for (const data of this.#queue.set) {
-            const file = this.files.find((file) => file.name === data.file);
-
-            if (!file) {
-                throw new Error("File not found");
-            }
-
-            this.#cache.set(data.key, data.toJSON(), file.name);
+            filesToWrite.add(data.file);
         }
 
-        for (const file of fileSetToWrite) {
-            const json = this.#cache.toJSON(file.name);
+        for (const file of filesToWrite) {
+            const fileData = await this.#fetchFile(file);
+            const dataToAdd = this.#queue.set.filter((x) => x.file === file);
+            for (const data of dataToAdd) {
+                fileData[data.key] = {
+                    key: data.key,
+                    value: data.value,
+                    type: data.type,
+                };
+                delete this.#queue.set[
+                    this.#queue.set.findIndex((x) => x?.key === data.key)
+                ];
+            }
+            this.#queue.set = this.#queue.set.filter((x) => x.key !== "" || !x);
+            let dataToWrite;
             if (this.db.options.encryptionConfig.encriptData) {
-                const encrypted = encrypt(
-                    JSON.stringify(json),
+                const encryptedData = encrypt(
+                    JSON.stringify(fileData),
                     this.db.options.encryptionConfig.securityKey,
                 );
-
-                // file.writer.write(JSON.stringify(encrypted),async() =>{
-                //     await rename(
-                //         `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
-                //         `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
-                //     );
-                // });
-
-                await writeFile(
-                    `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
-                    JSON.stringify(encrypted),
-                );
+                dataToWrite = JSON.stringify(encryptedData);
             } else {
-                // file.writer.write(JSON.stringify(json), async () => {
-                //     await rename(
-                //         `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
-                //         `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
-                //     );
-                // });
-
-                await writeFile(
-                    `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
-                    JSON.stringify(json),
-                );
+                dataToWrite = JSON.stringify(fileData);
             }
-            try {
-                await rename(
-                    `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
-                    `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
-                );
-            } catch {}
+
+            await writeFile(
+                `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
+                dataToWrite,
+            );
+
+            await rename(
+                `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
+                `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+            );
         }
-        this.#queue.set = [];
         await this.#wal(Data.emptyData(), DatabaseMethod.Flush);
+
         this.#queued.set = false;
     }
 
@@ -504,7 +461,10 @@ export default class Table extends EventEmitter {
      */
 
     async set(key: string, value: Partial<KeyValueDataInterface>) {
-        if(this.locked) throw new Error("Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.")
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const reference = await this.referencer.getReference();
         let data: Data;
         if (reference.hasOwnProperty(key)) {
@@ -538,15 +498,6 @@ export default class Table extends EventEmitter {
         this.#queue.set.push(data);
         await this.#wal(data, DatabaseMethod.Set);
 
-        if (!this.#queued.set) {
-            if (this.#intervals.set) {
-                clearInterval(this.#intervals.set);
-            }
-            this.#intervals.set = setInterval(async () => {
-                await this.#set();
-            }, 100);
-        }
-
         return data;
     }
 
@@ -574,10 +525,10 @@ export default class Table extends EventEmitter {
      * ```
      */
     async getLogs() {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const logs = await readFile(this.paths.log);
         const arr = logs.toString().trim().split("\n").slice(2);
         const block = [] as {
@@ -631,10 +582,10 @@ export default class Table extends EventEmitter {
      */
 
     async get(key: string) {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const reference = await this.referencer.getReference();
         if (!reference[key]) return null;
 
@@ -703,10 +654,10 @@ export default class Table extends EventEmitter {
      */
 
     async delete(key: string) {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const reference = await this.referencer.getReference();
         if (!reference[key]) return null;
         const file = reference[key].file;
@@ -779,7 +730,7 @@ export default class Table extends EventEmitter {
 
             this.#intervals.delete = setInterval(async () => {
                 await this.#deleteFlush();
-            }, 100);
+            }, 500);
         }
 
         return data;
@@ -806,7 +757,7 @@ export default class Table extends EventEmitter {
                 delete this.#queue.delete[file];
                 continue;
             }
-            
+
             if (this.db.options.encryptionConfig.encriptData) {
                 const encrypted = encrypt(
                     JSON.stringify(json),
@@ -817,19 +768,38 @@ export default class Table extends EventEmitter {
                     `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
                     JSON.stringify(encrypted),
                 );
+                if (
+                    !existsSync(
+                        `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
+                    )
+                ) {
+                    console.log("not exists")
+                } else {
+                    await rename(
+                        `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
+                        `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+                    );
+                }
             } else {
                 await writeFile(
                     `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
                     JSON.stringify(json),
                 );
+                if (
+                    !existsSync(
+                        `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
+                    )
+                ) {
+                    console.log("not exists")
+                } else {
+                    await rename(
+                        `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
+                        `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+                    );
+                }
             }
 
             delete this.#queue.delete[file];
-            
-            await rename(
-                `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
-                `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
-            );
         }
     }
 
@@ -844,10 +814,10 @@ export default class Table extends EventEmitter {
      */
 
     async clear() {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         this.#cache.clearAll();
         await truncate(this.paths.log, 33);
         for (const file of this.files) {
@@ -887,10 +857,10 @@ export default class Table extends EventEmitter {
      */
 
     async has(key: string) {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const reference = await this.referencer.getReference();
         if (!reference[key]) return false;
         return true;
@@ -904,10 +874,10 @@ export default class Table extends EventEmitter {
      */
 
     async #fetchFile(file: string) {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const data = (
             await readFile(
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
@@ -940,10 +910,10 @@ export default class Table extends EventEmitter {
      */
 
     async findOne(query: (value: Data, index: number) => boolean) {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const files = this.files.map((file) => file.name);
 
         for (const file of files) {
@@ -996,10 +966,10 @@ export default class Table extends EventEmitter {
      */
 
     async findMany(query: (value: Data, index: number) => boolean) {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const files = this.files.map((file) => file.name);
         const data = [] as Data[];
         for (const file of files) {
@@ -1053,10 +1023,10 @@ export default class Table extends EventEmitter {
      */
 
     async all(query?: (value: Data, index: number) => boolean, limit?: number) {
-                if (this.locked)
-                    throw new Error(
-                        "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
-                    );
+        if (this.locked)
+            throw new Error(
+                "Table is locked. Please use the <KeyValue>.fullRepair() to restore the data.",
+            );
         const allData = await this.findMany(query ?? (() => true));
         if (limit) return allData.slice(0, limit);
         return allData;

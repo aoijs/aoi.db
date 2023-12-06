@@ -89,6 +89,9 @@ class Table extends events_1.EventEmitter {
         };
         this.#checkIntegrity();
         await this.#syncWithLogs();
+        this.#intervals.set = setInterval(async () => {
+            await this.#set();
+        }, 500);
         this.readyAt = Date.now();
         this.db.emit(enum_js_1.DatabaseEvents.TableReady, this);
     }
@@ -230,71 +233,40 @@ class Table extends events_1.EventEmitter {
      * @returns
      */
     async #set() {
+        if (!this.#queue.set.length)
+            return;
+        if (this.locked)
+            return;
         if (this.#queued.set)
             return;
         this.#queued.set = true;
-        if (!this.#queue.set.length) {
-            this.#queued.set = false;
-            clearInterval(this.#intervals.set);
-            this.#intervals.set = null;
-            return;
-        }
-        if (this.#cache.size !== -1) {
-            for (const files of this.files) {
-                const Jdata = JSON.parse((await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${files.name}`))
-                    .toString()
-                    .trim());
-                if (this.db.options.encryptionConfig.encriptData) {
-                    const decrypted = (0, utils_js_1.decrypt)(Jdata, this.db.options.encryptionConfig.securityKey);
-                    const json = JSON.parse(decrypted);
-                    this.#cache.replace(files.name, json);
-                }
-                else {
-                    this.#cache.replace(files.name, Jdata);
-                }
-            }
-            setTimeout(() => {
-                this.#cache.clearAll();
-                this.#cache.size = -1;
-            }, 60000);
-        }
-        const fileSetToWrite = new Set(this.#queue.set.map((data) => {
-            return this.files.find((file) => file.name === data.file);
-        }));
+        const filesToWrite = new Set();
         for (const data of this.#queue.set) {
-            const file = this.files.find((file) => file.name === data.file);
-            if (!file) {
-                throw new Error("File not found");
-            }
-            this.#cache.set(data.key, data.toJSON(), file.name);
+            filesToWrite.add(data.file);
         }
-        for (const file of fileSetToWrite) {
-            const json = this.#cache.toJSON(file.name);
+        for (const file of filesToWrite) {
+            const fileData = await this.#fetchFile(file);
+            const dataToAdd = this.#queue.set.filter((x) => x.file === file);
+            for (const data of dataToAdd) {
+                fileData[data.key] = {
+                    key: data.key,
+                    value: data.value,
+                    type: data.type,
+                };
+                delete this.#queue.set[this.#queue.set.findIndex((x) => x?.key === data.key)];
+            }
+            this.#queue.set = this.#queue.set.filter((x) => x.key !== "" || !x);
+            let dataToWrite;
             if (this.db.options.encryptionConfig.encriptData) {
-                const encrypted = (0, utils_js_1.encrypt)(JSON.stringify(json), this.db.options.encryptionConfig.securityKey);
-                // file.writer.write(JSON.stringify(encrypted),async() =>{
-                //     await rename(
-                //         `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
-                //         `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
-                //     );
-                // });
-                await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`, JSON.stringify(encrypted));
+                const encryptedData = (0, utils_js_1.encrypt)(JSON.stringify(fileData), this.db.options.encryptionConfig.securityKey);
+                dataToWrite = JSON.stringify(encryptedData);
             }
             else {
-                // file.writer.write(JSON.stringify(json), async () => {
-                //     await rename(
-                //         `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`,
-                //         `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`,
-                //     );
-                // });
-                await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`, JSON.stringify(json));
+                dataToWrite = JSON.stringify(fileData);
             }
-            try {
-                await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file.name}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`);
-            }
-            catch { }
+            await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, dataToWrite);
+            await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
         }
-        this.#queue.set = [];
         await this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
         this.#queued.set = false;
     }
@@ -376,14 +348,6 @@ class Table extends events_1.EventEmitter {
         }
         this.#queue.set.push(data);
         await this.#wal(data, enum_js_1.DatabaseMethod.Set);
-        if (!this.#queued.set) {
-            if (this.#intervals.set) {
-                clearInterval(this.#intervals.set);
-            }
-            this.#intervals.set = setInterval(async () => {
-                await this.#set();
-            }, 100);
-        }
         return data;
     }
     /**
@@ -567,7 +531,7 @@ class Table extends events_1.EventEmitter {
             }
             this.#intervals.delete = setInterval(async () => {
                 await this.#deleteFlush();
-            }, 100);
+            }, 500);
         }
         return data;
     }
@@ -593,12 +557,23 @@ class Table extends events_1.EventEmitter {
             if (this.db.options.encryptionConfig.encriptData) {
                 const encrypted = (0, utils_js_1.encrypt)(JSON.stringify(json), this.db.options.encryptionConfig.securityKey);
                 await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, JSON.stringify(encrypted));
+                if (!(0, fs_1.existsSync)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`)) {
+                    console.log("not exists");
+                }
+                else {
+                    await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
+                }
             }
             else {
                 await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, JSON.stringify(json));
+                if (!(0, fs_1.existsSync)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`)) {
+                    console.log("not exists");
+                }
+                else {
+                    await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
+                }
             }
             delete this.#queue.delete[file];
-            await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
         }
     }
     /**
