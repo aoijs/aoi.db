@@ -2,12 +2,7 @@ import {
     KeyValueDataInterface,
     KeyValueOptions,
 } from "../typings/interface.js";
-import {
-    createWriteStream,
-    existsSync,
-    mkdirSync,
-    writeFileSync,
-} from "fs";
+import { createWriteStream, existsSync, mkdirSync, writeFileSync } from "fs";
 import { randomBytes } from "crypto";
 import {
     CacheType,
@@ -170,7 +165,7 @@ export default class KeyValue extends EventEmitter {
         const isReady = (table: Table) => {
             this.tables[table.options.name].ready = true;
 
-            for (const t of this.options.dataConfig.tables) {
+            for (const t of this.#options.dataConfig.tables) {
                 if (!this.tables[t]?.ready) return;
             }
             this.readyAt = Date.now();
@@ -180,31 +175,8 @@ export default class KeyValue extends EventEmitter {
         this.on(DatabaseEvents.TableReady, isReady);
         if (!existsSync(this.#options.dataConfig.path)) {
             mkdirSync(this.#options.dataConfig.path);
-            for (const table of this.#options.dataConfig.tables) {
-                mkdirSync(`${this.#options.dataConfig.path}/${table}`, {
-                    recursive: true,
-                });
-                writeFileSync(
-                    `${
-                        this.#options.dataConfig.path
-                    }/${table}/${table}_scheme_1${
-                        this.#options.fileConfig.extension
-                    }`,
-                    JSON.stringify(
-                        this.#options.encryptionConfig.encriptData
-                            ? encrypt(
-                                  `{}`,
-                                  this.#options.encryptionConfig.securityKey,
-                              )
-                            : {},
-                    ),
-                );
-            }
-
-            if (!existsSync(`${this.#options.dataConfig.path}/.backup`)) {
-                mkdirSync(`${this.#options.dataConfig.path}/.backup`);
-            }
         }
+
         for (const table of this.#options.dataConfig.tables) {
             if (!existsSync(`${this.#options.dataConfig.path}/${table}`)) {
                 mkdirSync(`${this.#options.dataConfig.path}/${table}`);
@@ -227,7 +199,13 @@ export default class KeyValue extends EventEmitter {
         }
         if (!existsSync(this.#options.dataConfig.referencePath)) {
             mkdirSync(this.#options.dataConfig.referencePath);
-            for (const table of this.#options.dataConfig.tables) {
+        }
+        for (const table of this.#options.dataConfig.tables) {
+            if (
+                !existsSync(
+                    `${this.#options.dataConfig.referencePath}/${table}`,
+                )
+            ) {
                 mkdirSync(
                     `${this.#options.dataConfig.referencePath}/${table}`,
                     {
@@ -242,10 +220,16 @@ export default class KeyValue extends EventEmitter {
                 );
             }
         }
+
         if (!existsSync(this.#options.fileConfig.transactionLogPath)) {
             mkdirSync(this.#options.fileConfig.transactionLogPath);
-
-            for (const table of this.#options.dataConfig.tables) {
+        }
+        for (const table of this.#options.dataConfig.tables) {
+            if (
+                !existsSync(
+                    `${this.#options.fileConfig.transactionLogPath}/${table}`,
+                )
+            ) {
                 mkdirSync(
                     `${this.#options.fileConfig.transactionLogPath}/${table}`,
                     {
@@ -266,6 +250,12 @@ export default class KeyValue extends EventEmitter {
                     ``,
                 );
             }
+        }
+
+        if(!existsSync(`${this.#options.dataConfig.path}/.backup`)){    
+            mkdirSync(`${this.#options.dataConfig.path}/.backup`,{
+                recursive:true
+            })
         }
 
         for (const table of this.#options.dataConfig.tables) {
@@ -494,7 +484,7 @@ export default class KeyValue extends EventEmitter {
             .replaceAll(" ", "_")
             .replaceAll(",", "_")
             .replaceAll(":", "_")}.tar.gz`;
-        writeFileSync(backupName,"");
+        writeFileSync(backupName, "");
         const writer = createWriteStream(backupName);
         tar.c(
             {

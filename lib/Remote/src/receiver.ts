@@ -293,7 +293,7 @@ export default class Receiver extends EventEmitter {
                                                 : ReceiverOpCodes.AckOperation,
                                             method: data.m,
                                             seq: seq,
-                                            data: d?.value ?? null,
+                                            data: (<any>d)?.value ?? null,
                                             cost: cost,
                                             hash: data.h,
                                         });

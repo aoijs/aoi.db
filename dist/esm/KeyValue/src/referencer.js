@@ -245,6 +245,50 @@ class Referencer {
      * <Referencer>.restart()
      * ```
      */
+    async bulkDeleteReference(keys) {
+        let referenceFile;
+        const referenceFileObj = {};
+        const set = new Set();
+        for (const key of keys) {
+            if (this.cacheSize !== -1) {
+                referenceFile = this.cache[key].referenceFile;
+                set.add(referenceFile);
+                if (!referenceFileObj[referenceFile])
+                    referenceFileObj[referenceFile] = [];
+                referenceFileObj[referenceFile].push(key);
+                delete this.cache[key];
+                this.cacheSize--;
+            }
+            else {
+                const reference = await this.getReference();
+                this.cache = reference;
+                this.cacheSize = Object.keys(this.cache).length;
+                referenceFile = reference[key].referenceFile;
+                set.add(referenceFile);
+                if (!referenceFileObj[referenceFile])
+                    referenceFileObj[referenceFile] = [];
+                referenceFileObj[referenceFile].push(key);
+                delete this.cache[key];
+                this.cacheSize--;
+            }
+            for (const file of set) {
+                await this.#bulkDeleteReference(referenceFileObj[file], file);
+            }
+        }
+    }
+    async #bulkDeleteReference(keys, file) {
+        const reference = await this.#getFileReference(file);
+        for (const key of keys) {
+            delete reference[key];
+        }
+        const string = Object.entries(reference).map(([key, value]) => {
+            return `${key}${utils_js_1.ReferenceConstantSpace}${value}\n`;
+        });
+        await (0, promises_1.truncate)(this.#path + "/" + file, 0);
+        this.files
+            .find((fil) => fil.name === file)
+            .writer.write(string.join(""));
+    }
     restart() {
         for (const file of this.files) {
             if (!file.writer.closed)

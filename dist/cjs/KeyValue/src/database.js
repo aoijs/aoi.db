@@ -128,7 +128,7 @@ class KeyValue extends events_1.EventEmitter {
     async connect() {
         const isReady = (table) => {
             this.tables[table.options.name].ready = true;
-            for (const t of this.options.dataConfig.tables) {
+            for (const t of this.#options.dataConfig.tables) {
                 if (!this.tables[t]?.ready)
                     return;
             }
@@ -139,17 +139,6 @@ class KeyValue extends events_1.EventEmitter {
         this.on(enum_js_1.DatabaseEvents.TableReady, isReady);
         if (!(0, fs_1.existsSync)(this.#options.dataConfig.path)) {
             (0, fs_1.mkdirSync)(this.#options.dataConfig.path);
-            for (const table of this.#options.dataConfig.tables) {
-                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/${table}`, {
-                    recursive: true,
-                });
-                (0, fs_1.writeFileSync)(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
-                    ? (0, utils_js_1.encrypt)(`{}`, this.#options.encryptionConfig.securityKey)
-                    : {}));
-            }
-            if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/.backup`)) {
-                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/.backup`);
-            }
         }
         for (const table of this.#options.dataConfig.tables) {
             if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/${table}`)) {
@@ -161,7 +150,9 @@ class KeyValue extends events_1.EventEmitter {
         }
         if (!(0, fs_1.existsSync)(this.#options.dataConfig.referencePath)) {
             (0, fs_1.mkdirSync)(this.#options.dataConfig.referencePath);
-            for (const table of this.#options.dataConfig.tables) {
+        }
+        for (const table of this.#options.dataConfig.tables) {
+            if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.referencePath}/${table}`)) {
                 (0, fs_1.mkdirSync)(`${this.#options.dataConfig.referencePath}/${table}`, {
                     recursive: true,
                 });
@@ -170,13 +161,20 @@ class KeyValue extends events_1.EventEmitter {
         }
         if (!(0, fs_1.existsSync)(this.#options.fileConfig.transactionLogPath)) {
             (0, fs_1.mkdirSync)(this.#options.fileConfig.transactionLogPath);
-            for (const table of this.#options.dataConfig.tables) {
+        }
+        for (const table of this.#options.dataConfig.tables) {
+            if (!(0, fs_1.existsSync)(`${this.#options.fileConfig.transactionLogPath}/${table}`)) {
                 (0, fs_1.mkdirSync)(`${this.#options.fileConfig.transactionLogPath}/${table}`, {
                     recursive: true,
                 });
                 (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/transaction.log`, `${(0, crypto_1.randomBytes)(16).toString("hex")}\n`);
                 (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/fullWriter.log`, ``);
             }
+        }
+        if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/.backup`)) {
+            (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/.backup`, {
+                recursive: true
+            });
         }
         for (const table of this.#options.dataConfig.tables) {
             const t = new table_js_1.default({

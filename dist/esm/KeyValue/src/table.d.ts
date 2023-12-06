@@ -18,7 +18,7 @@ export default class Table extends EventEmitter {
     files: {
         name: string;
         size: number;
-        writer?: WriteStream;
+        isInWriteMode?: boolean;
     }[];
     logHash: string;
     referencer: Referencer;
@@ -91,7 +91,7 @@ export default class Table extends EventEmitter {
      */
     get queue(): {
         set: Data[];
-        delete: Record<string, Record<string, any>>;
+        delete: Record<string, string[]>;
     };
     /**
      * @description Get the value for the key
@@ -114,7 +114,7 @@ export default class Table extends EventEmitter {
      * <KeyValueTable>.delete("key")
      * ```
      */
-    delete(key: string): Promise<Data | null>;
+    delete(key: string): Promise<void | null>;
     /**
      * @description Clears the table
      * @returns

@@ -82,6 +82,7 @@ export default class Referencer {
      * <Referencer>.restart()
      * ```
      */
+    bulkDeleteReference(keys: string[]): Promise<void>;
     restart(): void;
 }
 //# sourceMappingURL=referencer.d.ts.map

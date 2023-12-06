@@ -72,6 +72,7 @@ class Table extends events_1.EventEmitter {
             return {
                 name: file,
                 size: stats.size,
+                isInWriteMode: false,
                 // writer,
             };
         });
@@ -91,6 +92,9 @@ class Table extends events_1.EventEmitter {
         await this.#syncWithLogs();
         this.#intervals.set = setInterval(async () => {
             await this.#set();
+        }, 500);
+        this.#intervals.delete = setInterval(async () => {
+            await this.#deleteFlush();
         }, 500);
         this.readyAt = Date.now();
         this.db.emit(enum_js_1.DatabaseEvents.TableReady, this);
@@ -245,6 +249,9 @@ class Table extends events_1.EventEmitter {
             filesToWrite.add(data.file);
         }
         for (const file of filesToWrite) {
+            if (this.files.find(x => x.name === file)?.isInWriteMode)
+                continue;
+            this.files.find(x => x.name === file).isInWriteMode = true;
             const fileData = await this.#fetchFile(file);
             const dataToAdd = this.#queue.set.filter((x) => x.file === file);
             for (const data of dataToAdd) {
@@ -266,6 +273,7 @@ class Table extends events_1.EventEmitter {
             }
             await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, dataToWrite);
             await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
+            this.files.find(x => x.name === file).isInWriteMode = false;
         }
         await this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
         this.#queued.set = false;
@@ -286,11 +294,10 @@ class Table extends events_1.EventEmitter {
         const newFile = `${this.options.name}_scheme_${this.files.length}${this.db.options.fileConfig.extension}`;
         const newFilePath = `${this.db.options.dataConfig.path}/${this.options.name}/${newFile}`;
         await (0, promises_1.writeFile)(newFilePath, JSON.stringify((0, utils_js_1.encrypt)(`{}`, this.db.options.encryptionConfig.securityKey)));
-        const writer = (0, fs_1.createWriteStream)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${newFile}`);
         this.files.push({
             name: newFile,
             size: await this.#fileSize(newFile),
-            writer,
+            isInWriteMode: false,
         });
         await this.#wal(new data_js_1.default({
             file: newFile,
@@ -441,20 +448,15 @@ class Table extends events_1.EventEmitter {
      * @returns
      */
     async #get(key, file) {
-        const data = (await (0, promises_1.readFile)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`, "utf-8")).trim();
-        if (this.db.options.encryptionConfig.encriptData) {
-            const decrypted = (0, utils_js_1.decrypt)(JSON.parse(data), this.db.options.encryptionConfig.securityKey);
-            const json = JSON.parse(decrypted);
-            this.#cache.replace(file, json);
-        }
-        else {
-            const json = JSON.parse(data);
-            this.#cache.replace(file, json);
-        }
-        setTimeout(() => {
-            delete this.#cache.data[file];
-        }, 60000);
-        return this.#cache.get(key, file);
+        const fileData = await this.#fetchFile(file);
+        const data = new data_js_1.default({
+            file,
+            key,
+            value: fileData[key]?.value,
+            type: fileData[key]?.type,
+        });
+        this.#cache.set(data);
+        return data;
     }
     /**
      * @description Deletes the data
@@ -483,57 +485,16 @@ class Table extends events_1.EventEmitter {
      */
     async #delete(key, file) {
         const path = `${this.db.options.dataConfig.path}/${this.options.name}/${file}`;
-        let data = undefined;
-        if (this.#cache.data[file]?.size) {
-            const c = this.#cache.get(key, file);
-            data = new data_js_1.default({
-                file,
-                key,
-                value: c?.value,
-                type: c?.type,
-            });
-            this.#cache.delete(key, file);
-        }
-        if (!data) {
-            const p = (await (0, promises_1.readFile)(path, "utf-8")).trim();
-            const json = JSON.parse(p);
-            if (this.db.options.encryptionConfig.encriptData) {
-                const decrypted = (0, utils_js_1.decrypt)(json, this.db.options.encryptionConfig.securityKey);
-                const parsed = JSON.parse(decrypted);
-                this.#cache.replace(file, parsed);
-            }
-            else {
-                this.#cache.replace(file, json);
-            }
-            const c = this.#cache.get(key, file);
-            data = new data_js_1.default({
-                file,
-                key,
-                value: c?.value,
-                type: c?.type,
-            });
-        }
-        this.#cache.delete(key, file);
-        await this.#wal(data, enum_js_1.DatabaseMethod.Delete);
-        await this.referencer.deleteReference(key);
-        if (!this.queue.delete[file]) {
-            this.#queue.delete[file] = {};
-            this.#queue.delete[file] = await this.#fetchFile(file);
-            delete this.#queue.delete[file][key];
-        }
-        else {
-            delete this.#queue.delete[file][key];
-        }
-        if (!this.#queued.delete) {
-            this.#queued.delete = true;
-            if (this.#intervals.delete) {
-                clearInterval(this.#intervals.delete);
-            }
-            this.#intervals.delete = setInterval(async () => {
-                await this.#deleteFlush();
-            }, 500);
-        }
-        return data;
+        if (!this.#queue.delete[file])
+            this.#queue.delete[file] = [];
+        this.#queue.delete[file].push(key);
+        await this.#wal(new data_js_1.default({
+            file,
+            key,
+            value: null,
+            type: "",
+        }), enum_js_1.DatabaseMethod.Delete);
+        return;
     }
     /**
      * @private
@@ -542,39 +503,45 @@ class Table extends events_1.EventEmitter {
      * @returns
      */
     async #deleteFlush() {
-        if (!this.#queued.delete || !Object.keys(this.#queue.delete).length) {
-            this.#queued.delete = false;
-            clearInterval(this.#intervals.delete);
-            this.#intervals.delete = null;
+        if (this.locked)
             return;
-        }
+        if (this.#queued.delete)
+            return;
+        if (!Object.keys(this.#queue.delete).length)
+            return;
         for (const file of Object.keys(this.#queue.delete)) {
-            const json = this.#queue.delete[file];
-            if (Object.keys(json).length === 0) {
-                delete this.#queue.delete[file];
+            if (this.files.find(x => x.name === file)?.isInWriteMode)
                 continue;
+            this.files.find(x => x.name === file).isInWriteMode = true;
+            const json = this.#queue.delete[file];
+            await this.referencer.bulkDeleteReference(json);
+            const data = await this.#fetchFile(file);
+            for (let i = 0; i < json.length; i++) {
+                delete data[json[i]];
+                delete this.#queue.delete[file][i];
             }
+            this.#queue.delete[file] = this.#queue.delete[file].filter(x => x);
+            let dataToWrite;
             if (this.db.options.encryptionConfig.encriptData) {
-                const encrypted = (0, utils_js_1.encrypt)(JSON.stringify(json), this.db.options.encryptionConfig.securityKey);
-                await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, JSON.stringify(encrypted));
-                if (!(0, fs_1.existsSync)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`)) {
-                    console.log("not exists");
-                }
-                else {
-                    await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
-                }
+                const encryptedData = (0, utils_js_1.encrypt)(JSON.stringify(data), this.db.options.encryptionConfig.securityKey);
+                dataToWrite = JSON.stringify(encryptedData);
             }
             else {
-                await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, JSON.stringify(json));
-                if (!(0, fs_1.existsSync)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`)) {
-                    console.log("not exists");
-                }
-                else {
-                    await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
-                }
+                dataToWrite = JSON.stringify(data);
             }
-            delete this.#queue.delete[file];
+            await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, dataToWrite);
+            await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
+            this.files.find(x => x.name === file).isInWriteMode = false;
+            if (!this.#queue.delete[file].length) {
+                delete this.#queue.delete[file];
+            }
         }
+        await this.#wal(new data_js_1.default({
+            file: this.#getCurrentFile(),
+            key: "",
+            value: null,
+            type: "",
+        }), enum_js_1.DatabaseMethod.Flush);
     }
     /**
      * @description Clears the table
@@ -592,7 +559,6 @@ class Table extends events_1.EventEmitter {
         await (0, promises_1.truncate)(this.paths.log, 33);
         for (const file of this.files) {
             if (file.name !== this.files[0].name) {
-                file.writer?.close();
                 await (0, promises_1.unlink)(`${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`);
             }
             else {
@@ -672,10 +638,23 @@ class Table extends events_1.EventEmitter {
                         return data;
                     }
                 }
+                json = await this.#fetchFile(file);
+                index = 0;
+                for (const values of Object.values(json)) {
+                    const data = new data_js_1.default({
+                        file,
+                        key: values.key,
+                        value: values.value,
+                        type: values.type,
+                    });
+                    if (query(data, index++)) {
+                        this.#cache.set(data);
+                        return data;
+                    }
+                }
             }
             else {
                 json = await this.#fetchFile(file);
-                this.#cache.replace(file, json);
                 let index = 0;
                 for (const values of Object.values(json)) {
                     const data = new data_js_1.default({
@@ -685,6 +664,7 @@ class Table extends events_1.EventEmitter {
                         type: values.type,
                     });
                     if (query(data, index++)) {
+                        this.#cache.set(data);
                         return data;
                     }
                 }
@@ -774,7 +754,6 @@ class Table extends events_1.EventEmitter {
         this.repairMode = true;
         this.locked = false;
         for (const file of this.files) {
-            file.writer?.close();
             if (file.name !==
                 `${this.options.name}_scheme_1${this.db.options.fileConfig.extension}`) {
                 await (0, promises_1.unlink)(`${this.db.options.dataConfig.path}/${this.options.name}/${file.name}`);
@@ -895,19 +874,10 @@ class Table extends events_1.EventEmitter {
             const data = await this.findMany(query);
             for (const d of data) {
                 if (!this.#queue.delete[d.file])
-                    this.#queue.delete[d.file] = await this.#fetchFile(d.file);
-                delete this.#queue.delete[d.file][d.key];
+                    this.#queue.delete[d.file] = [];
+                this.#queue.delete[d.file].push(d.key);
             }
             this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.DeleteMany);
-            if (!this.#queued.delete) {
-                this.#queued.delete = true;
-                if (this.#intervals.delete) {
-                    clearInterval(this.#intervals.delete);
-                }
-                this.#intervals.delete = setInterval(async () => {
-                    await this.#deleteFlush();
-                }, 100);
-            }
             return data;
         }
     }

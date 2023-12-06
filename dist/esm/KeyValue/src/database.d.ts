@@ -84,7 +84,7 @@ export default class KeyValue extends EventEmitter {
      * <KeyValue>.delete("main","key");
      * ```
      */
-    delete(table: string, key: string): Promise<Data | null | undefined>;
+    delete(table: string, key: string): Promise<void | null>;
     /**
      * @description clear table
      * @param table table to clear

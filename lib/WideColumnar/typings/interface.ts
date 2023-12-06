@@ -6,3 +6,7 @@ export interface WideColumnarColumnOptions {
     default: any;
     type: ColumnType;
 }
+
+export interface MemMapOptions {
+    limit: number;
+}

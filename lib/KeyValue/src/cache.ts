@@ -1,46 +1,59 @@
 import { CacherOptions, KeyValueJSONOption } from "../typings/interface.js";
+import {Group} from "@akarui/structures";
+import Data from "./data.js";
+
 
 export default class Cacher {
     options: CacherOptions;
-    data: Record<string, Map<string,KeyValueJSONOption>>;
-    size: number;
+    #data: Record<string,Group<string,Data>>;
     constructor(options: CacherOptions) {
         this.options = options;
-        this.data = {};
-        this.size = -1;
+        this.#data = {}
     }
-    set(key: string, value: KeyValueJSONOption,file:string) {
-        if (!this.data[file]) this.data[file] = new Map();
-        this.data[file].set(key, value);
+      set(data:Data) {
+        if(!this.#data[data.file]) this.#data[data.file] = new Group(this.options.limit);
+        this.#data[data.file].set(data.key,data);
     }
-    get(key: string,file:string) {
-        if (!this.data[file]) return undefined;
-        return this.data[file].get(key);
+    get(key:string ,file:string) {
+        if(!this.#data[file]) return;
+        return this.#data[file].get(key);
     }
-    delete(key: string,file:string) {
-        if (!this.data[file]) return undefined;
-        return this.data[file].delete(key);
+    delete(key: string , file:string) {
+        if(!this.#data[file]) return false;
+        return this.#data[file].delete(key);
+        
     }
     clear(file:string) {
-        if (!this.data[file]) return undefined;
-        return this.data[file].clear();
+        if(!this.#data[file]) return;
+        return this.#data[file].clear();
     }
-    has(key: string,file:string) {
-        if (!this.data[file]) return undefined;
-        return this.data[file].has(key);
+    has(key: string , file:string) {
+        if(!this.#data[file]) return false;
+        return this.#data[file].has(key);
+    }
+    get size() {
+        return this.#data.size;
+    }
+    get data() {
+        return this.#data;
     }
     clearAll() {
-        this.data = {};
+        this.#data = {};
     }
-    replace(file:string,data:Record<string,KeyValueJSONOption>){
-        this.data[file] = new Map(Object.entries(data));
+    getFileCache(file:string) {
+        return this.#data[file];
     }
-    toJSON(file:string) {
-        if (!this.data[file]) return {};
-        return Object.fromEntries(this.data[file]);
+    replace(file:string,json:Record<string,KeyValueJSONOption>) {
+        if(!this.#data[file]) this.#data[file] = new Group(this.options.limit);
+        this.#data[file].clear();
+        for(const key in json) {
+            const data = new Data({
+                key,
+                file,
+                value: json[key].value,
+                type: json[key].type,
+            });
+            this.#data[file].set(key,data);
+        }
     }
-    getFileCache(file:string){
-        return this.data[file];
-    }
-    
 }

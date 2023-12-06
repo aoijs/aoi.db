@@ -1,19 +1,19 @@
 import { CacherOptions, KeyValueJSONOption } from "../typings/interface.js";
+import { Group } from "@akarui/structures";
+import Data from "./data.js";
 export default class Cacher {
+    #private;
     options: CacherOptions;
-    data: Record<string, Map<string, KeyValueJSONOption>>;
-    size: number;
     constructor(options: CacherOptions);
-    set(key: string, value: KeyValueJSONOption, file: string): void;
-    get(key: string, file: string): KeyValueJSONOption | undefined;
-    delete(key: string, file: string): boolean | undefined;
+    set(data: Data): void;
+    get(key: string, file: string): Data | undefined;
+    delete(key: string, file: string): boolean;
     clear(file: string): void;
-    has(key: string, file: string): boolean | undefined;
+    has(key: string, file: string): boolean;
+    get size(): Group<string, Data>;
+    get data(): Record<string, Group<string, Data>>;
     clearAll(): void;
-    replace(file: string, data: Record<string, KeyValueJSONOption>): void;
-    toJSON(file: string): {
-        [k: string]: KeyValueJSONOption;
-    };
-    getFileCache(file: string): Map<string, KeyValueJSONOption>;
+    getFileCache(file: string): Group<string, Data>;
+    replace(file: string, json: Record<string, KeyValueJSONOption>): void;
 }
 //# sourceMappingURL=cache.d.ts.map

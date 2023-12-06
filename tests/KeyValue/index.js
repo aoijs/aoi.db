@@ -1,104 +1,64 @@
 const { KeyValue, DatabaseEvents } = require("../../dist/cjs/index.js");
-const { setTimeout : st } = require("timers/promises");
+const { setTimeout: st } = require("timers/promises");
 const db = new KeyValue({
-    dataConfig: { path: "./database", },
+    dataConfig: { path: "./database" },
     encryptionConfig: {
         encriptData: false,
-        securityKey: "a-32-characters-long-string-here"
+        securityKey: "a-32-characters-long-string-here",
     },
-    debug:true,
+    debug: true,
 });
 
+const wait = async (ms) => await st(ms);
 
-const wait = async ms => await st(ms);
-
+const methods = ["set", "get", "delete", "has", "all", "findOne", "findMany"];
+const keys = [];
+let i = 0;
+const key = "key";
 db.on(DatabaseEvents.Connect, async () => {
     console.log("ready");
     await wait(2000);
-    console.time("add");
-    await Add10k();
-    console.timeEnd("add");
-
-    await wait(2000);
-
-    db.backup();
-
-
-
-     console.time("get");
-     await get10k();
-     console.timeEnd("get");
-
-     await wait(2000);
-
-     console.time("all");
-     await all10k();
-     console.timeEnd("all");
-
-     await wait(2000);
-
-    console.time("findOne");
-    await findOne10k();
-    console.timeEnd("findOne");
-
-    await wait(2000);
-
-    console.time("findMany");
-    await FindMany10k();
-    console.timeEnd("findMany");
-
-    await wait(2000);
-
-    console.time("delete");
-    await delete10k();
-    console.timeEnd("delete");
-
-})
+    while (i < 100) {
+        if (!keys.length) {
+            const newKey = key + i++;
+            keys.push(newKey);
+                            console.log(
+                                "method: ",
+                                "set",
+                                "value: ",
+                                await db.set("main", newKey, { value: 1 }),
+                            );
+        } else {
+            const method = methods[Math.floor(Math.random() * methods.length)];
+            if(method === "set") {
+                const newKey = key + i++;
+                keys.push(newKey);
+                console.log("method: ",method, "value: ",await db.set("main", newKey, { value: 1 }));
+            } else if(method === "get") {
+                const key = keys[Math.floor(Math.random() * keys.length)];
+                console.log("method: ",method, "value: ",await db.get("main", key));
+            }
+            else if(method === "delete") {
+                const key = keys[Math.floor(Math.random() * keys.length)];
+                keys.splice(keys.indexOf(key), 1);
+                console.log("method: ",method, "value: ",await db.delete("main", key),"key: ",key);
+            }
+            else if(method === "has") {
+                const key = keys[Math.floor(Math.random() * keys.length)];
+                console.log("method: ",method, "value: ",await db.has("main", key));
+            }
+            else if(method === "all") {
+                console.log("method: ",method, "value: ",await db.all("main"));
+            }
+            else if(method === "findOne") {
+                console.log("method: ",method, "value: ",await db.findOne("main", () => true));
+            }
+            else if(method === "findMany") {
+                console.log("method: ",method, "value: ",await db.findMany("main", () => true));
+            }
+        }
+        await wait(100);
+    }
+});
 
 db.connect();
-
-async function Add10k() {
-    for (let i = 0; i < 10000; i++) {
-        await db.tables.main.table.set(`key${i}`, {
-            value: i,
-        });
-    }
-}
-
-async function get10k() {
-    for (let i = 0; i < 10000; i++) {
-        await db.tables.main.table.get(
-            `key${Math.floor(Math.random() * 10000)}`,
-        );
-    }
-}
-
-async function delete10k() {
-    for (let i = 0; i < 10000; i++) {
-        await db.tables.main.table.delete(`key${i}`);
-    }
-}
-
-async function all10k() {
-    for (let i = 0; i < 10000; i++) {
-        await db.tables.main.table.all();
-    }
-}
-
-async function findOne10k() {
-    for (let i = 0; i < 10000; i++) {
-        await db.tables.main.table.findOne(
-            (v) => v.value >= Math.floor(Math.random() * 10000),
-        );
-    }
-}
-
-async function FindMany10k() {
-    for (let i = 0; i < 10000; i++) {
-        await db.tables.main.table.findMany(
-            (v) => v.value > Math.floor(Math.random() * 10000),
-        );
-    }
-}
-
- 
