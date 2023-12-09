@@ -653,6 +653,7 @@ export default class Table extends EventEmitter {
         const reference = await this.referencer.getReference();
         if (!reference[key]) return null;
         const file = reference[key].file;
+        await this.referencer.deleteReference(key);
         this.#cache.delete(key, file);
         return await this.#delete(key, file);
     }
