@@ -1,33 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const structures_1 = require("@akarui/structures");
 const v8_1 = require("v8");
 class MemMap {
     heap;
     #options;
     #column;
     constructor(options, Column) {
-        this.heap = [];
+        this.heap = new structures_1.Group(Infinity);
         this.#options = options;
         this.#column = Column;
     }
     async set(data) {
-        if (this.heap.length >= this.#options.limit) {
+        if (this.getSize() >= this.#options.limit) {
             await this.flush();
         }
-        this.heap.push(data);
-        this.heap.sort(this.#options.sortFunction);
+        this.heap.set(data.primary.value, data);
     }
-    get(column, primary) {
-        return this.heap.find(x => x.primary.value === primary && x.column.name === column);
+    get(primary) {
+        return this.heap.get(primary);
     }
-    has(column, primary) {
-        return this.heap.some(x => x.primary.value === primary && x.column.name === column);
+    has(primary) {
+        return this.heap.has(primary);
     }
-    delete(column, primary) {
-        const index = this.heap.findIndex(x => x.primary.value === primary && x.column.name === column);
-        if (index !== -1) {
-            this.heap.splice(index, 1);
-        }
+    delete(primary) {
+        return this.heap.delete(primary);
     }
     getHeap() {
         return this.heap;
@@ -40,8 +37,14 @@ class MemMap {
         return serialized.byteLength;
     }
     async flush() {
-        // await this.#column.flush(this.heap);
-        this.heap = [];
+        await this.#column.flush(this.heap.V());
+        this.heap.clear();
+    }
+    findOne(query) {
+        return this.heap.find(query);
+    }
+    findMany(query) {
+        return this.heap.filter(query);
     }
 }
 exports.default = MemMap;

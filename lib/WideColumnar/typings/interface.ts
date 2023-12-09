@@ -1,3 +1,4 @@
+import { ReferenceType } from "../../index.js";
 import WideColumnarColumn from "../src/Column.js";
 import WideColumnarData from "../src/Data.js";
 import WideColumnar from "../src/Database.js";
@@ -26,7 +27,7 @@ export interface WideColumnarOptions {
     dataConfig?: WideColumnarDataConfig;
     fileConfig?: WideColumnarFileConfig;
     encryptionConfig: WideColumnarEncryptionConfig;
-    cacheConfig?: MemMapOptions;
+    cacheConfig?: WideColumnarCacheConfig;
     debug?: boolean;
 }
 
@@ -51,4 +52,8 @@ export interface WideColumnarTableOptions {
     name: string;
     columns: WideColumnarColumnOptions[] | WideColumnarColumn[];
     db: WideColumnar;
+}
+
+export interface WideColumnarCacheConfig extends MemMapOptions {
+    referenceType: ReferenceType;
 }

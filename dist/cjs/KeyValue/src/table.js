@@ -8,7 +8,7 @@ const utils_js_1 = require("../../utils.js");
 const enum_js_1 = require("../../typings/enum.js");
 const data_js_1 = __importDefault(require("./data.js"));
 const promises_1 = require("fs/promises");
-const referencer_js_1 = __importDefault(require("./referencer.js"));
+const referencer_js_1 = __importDefault(require("../../global/referencer.js"));
 const events_1 = require("events");
 const cache_js_1 = __importDefault(require("./cache.js"));
 class Table extends events_1.EventEmitter {
@@ -251,9 +251,9 @@ class Table extends events_1.EventEmitter {
             filesToWrite.add(data.file);
         }
         for (const file of filesToWrite) {
-            if (this.files.find(x => x.name === file)?.isInWriteMode)
+            if (this.files.find((x) => x.name === file)?.isInWriteMode)
                 continue;
-            this.files.find(x => x.name === file).isInWriteMode = true;
+            this.files.find((x) => x.name === file).isInWriteMode = true;
             const fileData = await this.#fetchFile(file);
             const dataToAdd = this.#queue.set.filter((x) => x.file === file);
             for (const data of dataToAdd) {
@@ -275,7 +275,7 @@ class Table extends events_1.EventEmitter {
             }
             await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, dataToWrite);
             await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
-            this.files.find(x => x.name === file).isInWriteMode = false;
+            this.files.find((x) => x.name === file).isInWriteMode = false;
         }
         await this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
         this.#queued.set = false;
@@ -513,9 +513,9 @@ class Table extends events_1.EventEmitter {
         if (!Object.keys(this.#queue.delete).length)
             return;
         for (const file of Object.keys(this.#queue.delete)) {
-            if (this.files.find(x => x.name === file)?.isInWriteMode)
+            if (this.files.find((x) => x.name === file)?.isInWriteMode)
                 continue;
-            this.files.find(x => x.name === file).isInWriteMode = true;
+            this.files.find((x) => x.name === file).isInWriteMode = true;
             const json = this.#queue.delete[file];
             await this.referencer.bulkDeleteReference(json);
             const data = await this.#fetchFile(file);
@@ -523,7 +523,7 @@ class Table extends events_1.EventEmitter {
                 delete data[json[i]];
                 delete this.#queue.delete[file][i];
             }
-            this.#queue.delete[file] = this.#queue.delete[file].filter(x => x);
+            this.#queue.delete[file] = this.#queue.delete[file].filter((x) => x);
             let dataToWrite;
             if (this.db.options.encryptionConfig.encriptData) {
                 const encryptedData = (0, utils_js_1.encrypt)(JSON.stringify(data), this.db.options.encryptionConfig.securityKey);
@@ -534,7 +534,7 @@ class Table extends events_1.EventEmitter {
             }
             await (0, promises_1.writeFile)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, dataToWrite);
             await (0, promises_1.rename)(`${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`, `${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
-            this.files.find(x => x.name === file).isInWriteMode = false;
+            this.files.find((x) => x.name === file).isInWriteMode = false;
             if (!this.#queue.delete[file].length) {
                 delete this.#queue.delete[file];
             }
@@ -833,7 +833,8 @@ class Table extends events_1.EventEmitter {
                 let currentPart = 0;
                 let currentSize = 0;
                 for (const kf of keyFileList) {
-                    if (currentSize + kf.size > this.db.options.fileConfig.maxSize) {
+                    if (currentSize + kf.size >
+                        this.db.options.fileConfig.maxSize) {
                         currentPart += 1;
                         currentSize = 0;
                         keyFileParts[currentPart] = [kf];

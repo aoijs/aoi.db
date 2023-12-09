@@ -1,84 +1,56 @@
-import {
-    WriteStream,
-    createWriteStream,
-    readdirSync,
-    statSync,
-} from "fs";
-import { ReferenceConstantSpace } from "../../utils.js";
-import { readFile, truncate, unlink } from "fs/promises";
-import { ReferenceType } from "../../typings/enum.js";
-
-export default class Referencer {
-    cache: Record<
-        string,
-        {
-            file: string;
-            referenceFile: string;
-        }
-    > = {};
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
+const utils_js_1 = require("../utils.js");
+const promises_1 = require("fs/promises");
+const enum_js_1 = require("../typings/enum.js");
+class Referencer {
+    cache = {};
     cacheSize = -1;
-    #path: string;
-    files!: {
-        name: string;
-        size: number;
-        writer: WriteStream;
-    }[];
-    maxSize: number;
-    type: ReferenceType;
-    constructor(path: string, maxSize: number, type: ReferenceType) {
+    #path;
+    files;
+    maxSize;
+    type;
+    constructor(path, maxSize, type) {
         this.type = type;
         this.#path = path;
         this.maxSize = maxSize;
     }
-
-
     /**
      * Description initialize the Referencer
-     * @returns 
+     * @returns
      */
     async initialize() {
-        this.files = readdirSync(this.#path).map((file) => {
+        this.files = (0, fs_1.readdirSync)(this.#path).map((file) => {
             return {
                 name: file,
-                size: statSync(this.#path + "/" + file).size,
-                writer: createWriteStream(this.#path + "/" + file, {
+                size: (0, fs_1.statSync)(this.#path + "/" + file).size,
+                writer: (0, fs_1.createWriteStream)(this.#path + "/" + file, {
                     flags: "a",
                     encoding: "utf-8",
                 }),
             };
         });
-        if (this.type === ReferenceType.Cache)
+        if (this.type === enum_js_1.ReferenceType.Cache)
             this.cache = await this.#getReference();
     }
-
+    get path() {
+        return this.#path;
+    }
     /**
      * @private
      * @description get reference from files
      * @returns
      */
-
-    async #getReference(): Promise<
-        Record<
-            string,
-            {
-                file: string;
-                referenceFile: string;
-            }
-        >
-    > {
-        const reference = {} as Record<
-            string,
-            {
-                file: string;
-                referenceFile: string;
-            }
-        >;
+    async #getReference() {
+        const reference = {};
         for (const file of this.files) {
-            const data = await readFile(this.#path + "/" + file.name, "utf-8");
-            if (data.trim() === "") return reference;
+            const data = await (0, promises_1.readFile)(this.#path + "/" + file.name, "utf-8");
+            if (data.trim() === "")
+                return reference;
             const lines = data.split("\n");
             for (const line of lines) {
-                const [key, value] = line.split(ReferenceConstantSpace);
+                const [key, value] = line.split(utils_js_1.ReferenceConstantSpace);
                 reference[key] = {
                     file: value,
                     referenceFile: file.name,
@@ -87,7 +59,6 @@ export default class Referencer {
         }
         return reference;
     }
-
     /**
      * @description get references
      * @returns
@@ -97,12 +68,11 @@ export default class Referencer {
      * <Referencer>.getReference() // {key:{file:"file",referenceFile:"referenceFile"}}
      * ```
      */
-
     async getReference() {
         if (this.cacheSize === -1) {
             this.cache = await this.#getReference();
             this.cacheSize = Object.keys(this.cache).length;
-            if (this.type === ReferenceType.File)
+            if (this.type === enum_js_1.ReferenceType.File)
                 setTimeout(() => {
                     this.cache = {};
                     this.cacheSize = -1;
@@ -110,16 +80,14 @@ export default class Referencer {
         }
         return this.cache;
     }
-
     /**
      * @private
      * @description save reference to file
      * @param key key to save
      * @param file file to save
      */
-
-    #saveReference(key: string, file: string) {
-        const string = `${key}${ReferenceConstantSpace}${file}\n`;
+    #saveReference(key, file) {
+        const string = `${key}${utils_js_1.ReferenceConstantSpace}${file}\n`;
         let currentFile = this.#currentFile();
         if (currentFile.size + string.length > this.maxSize) {
             this.#createFile();
@@ -129,42 +97,32 @@ export default class Referencer {
             currentFile = this.#currentFile();
         }
         currentFile.writer.write(string);
-        this.files.at(-1)!.size += string.length;
+        this.files.at(-1).size += string.length;
     }
-
     /**
      * @description get current file
      * @private
      * @returns  current file
      */
-
     #currentFile() {
-        return this.files.at(-1) as {
-            name: string;
-            size: number;
-            writer: WriteStream;
-        };
+        return this.files.at(-1);
     }
-
     /**
      * @description create file
      * @private
      * @returns
      */
-
     #createFile() {
-        const file =
-            this.#path + "/reference_" + (this.files.length + 1) + ".log";
+        const file = this.#path + "/reference_" + (this.files.length + 1) + ".log";
         this.files.push({
             name: "reference_" + (this.files.length + 1) + ".log",
             size: 0,
-            writer: createWriteStream(file, {
+            writer: (0, fs_1.createWriteStream)(file, {
                 flags: "a",
                 encoding: "utf-8",
             }),
         });
     }
-
     /**
      * @description set reference
      * @param key key to set
@@ -176,7 +134,7 @@ export default class Referencer {
      * <Referencer>.setReference("key","file")
      * ```
      */
-    setReference(key: string, file: string) {
+    setReference(key, file) {
         if (this.cacheSize !== -1) {
             this.cache[key] = {
                 file,
@@ -186,7 +144,6 @@ export default class Referencer {
         }
         this.#saveReference(key, file);
     }
-
     /**
      * @description delete reference
      * @param key key to delete
@@ -196,60 +153,52 @@ export default class Referencer {
      * <Referencer>.deleteReference("key")
      * ```
      */
-
-    async deleteReference(key: string) {
-        let referenceFile: string;
+    async deleteReference(key) {
+        let referenceFile;
         if (this.cacheSize !== -1) {
             referenceFile = this.cache[key].referenceFile;
             delete this.cache[key];
             this.cacheSize--;
-        } else {
+        }
+        else {
             const reference = await this.getReference();
             referenceFile = reference[key].referenceFile;
         }
-
         await this.#deleteReference(key, referenceFile);
     }
-
     /**
      * @description delete reference
      * @private
      * @param key key to delete
      * @param file file to delete
      */
-
-    async #deleteReference(key: string, file: string) {
+    async #deleteReference(key, file) {
         const reference = await this.#getFileReference(file);
         delete reference[key];
         const string = Object.entries(reference).map(([key, value]) => {
-            return `${key}${ReferenceConstantSpace}${value}\n`;
+            return `${key}${utils_js_1.ReferenceConstantSpace}${value}\n`;
         });
-
-        await truncate(this.#path + "/" + file, 0);
+        await (0, promises_1.truncate)(this.#path + "/" + file, 0);
         this.files
-            .find((fil) => fil.name === file)!
+            .find((fil) => fil.name === file)
             .writer.write(string.join(""));
     }
-
     /**
      * @description get all references from file
      * @param file file to get reference
      * @returns
      */
-
-    async #getFileReference(file: string) {
+    async #getFileReference(file) {
         const path = this.#path + "/" + file;
-        const reference = {} as Record<string, string>;
-        const data = await readFile(this.#path + "/" + file, "utf-8");
+        const reference = {};
+        const data = await (0, promises_1.readFile)(this.#path + "/" + file, "utf-8");
         const lines = data.split("\n");
         for (const line of lines) {
-            const [key, value] = line.split(ReferenceConstantSpace);
+            const [key, value] = line.split(utils_js_1.ReferenceConstantSpace);
             reference[key] = value;
         }
-
         return reference;
     }
-
     /**
      * @description clear the Referencer
      *
@@ -258,26 +207,23 @@ export default class Referencer {
      * <Referencer>.clear()
      * ```
      */
-
     async clear() {
         for (const file of this.files) {
             file.size = 0;
             file.writer.close();
-
             if (file.name !== "reference_1.log") {
-                await unlink(this.#path + "/" + file.name);
-            } else {
-                await truncate(this.#path + "/" + file.name, 0);
+                await (0, promises_1.unlink)(this.#path + "/" + file.name);
+            }
+            else {
+                await (0, promises_1.truncate)(this.#path + "/" + file.name, 0);
             }
         }
         this.files = this.files.slice(0, 1);
         this.cache = {};
-
         if (this.cacheSize !== -1) {
             this.cacheSize = -1;
         }
     }
-
     /**
      * @description open the Referencer
      *
@@ -288,13 +234,12 @@ export default class Referencer {
      */
     open() {
         for (const file of this.files) {
-            file.writer = createWriteStream(this.#path + "/" + file.name, {
+            file.writer = (0, fs_1.createWriteStream)(this.#path + "/" + file.name, {
                 flags: "a",
                 encoding: "utf-8",
             });
         }
     }
-
     /**
      * @description restart the Referencer
      *
@@ -303,65 +248,76 @@ export default class Referencer {
      * <Referencer>.restart()
      * ```
      */
-
-    async bulkDeleteReference(keys: string[]) {
-        let referenceFile: string;
-        const referenceFileObj: Record<string,string[]> = {};
-        const set = new Set() as Set<string>;
-        for(const key of keys){
+    async bulkDeleteReference(keys) {
+        let referenceFile;
+        const referenceFileObj = {};
+        const set = new Set();
+        for (const key of keys) {
             if (this.cacheSize !== -1) {
                 referenceFile = this.cache[key].referenceFile;
                 set.add(referenceFile);
-                if(!referenceFileObj[referenceFile]) referenceFileObj[referenceFile] = [];
+                if (!referenceFileObj[referenceFile])
+                    referenceFileObj[referenceFile] = [];
                 referenceFileObj[referenceFile].push(key);
                 delete this.cache[key];
                 this.cacheSize--;
-            } else {
+            }
+            else {
                 const reference = await this.getReference();
                 this.cache = reference;
                 this.cacheSize = Object.keys(this.cache).length;
                 referenceFile = reference[key].referenceFile;
                 set.add(referenceFile);
-                if(!referenceFileObj[referenceFile]) referenceFileObj[referenceFile] = [];
+                if (!referenceFileObj[referenceFile])
+                    referenceFileObj[referenceFile] = [];
                 referenceFileObj[referenceFile].push(key);
                 delete this.cache[key];
                 this.cacheSize--;
             }
-            
-            for(const file of set){
-                await this.#bulkDeleteReference(referenceFileObj[file],file);
+            for (const file of set) {
+                await this.#bulkDeleteReference(referenceFileObj[file], file);
             }
         }
     }
-
-    async #bulkDeleteReference(keys: string[], file: string) {
+    async #bulkDeleteReference(keys, file) {
         const reference = await this.#getFileReference(file);
-        for(const key of keys){
+        for (const key of keys) {
             delete reference[key];
         }
         const string = Object.entries(reference).map(([key, value]) => {
-            return `${key}${ReferenceConstantSpace}${value}\n`;
+            return `${key}${utils_js_1.ReferenceConstantSpace}${value}\n`;
         });
-
-        await truncate(this.#path + "/" + file, 0);
+        await (0, promises_1.truncate)(this.#path + "/" + file, 0);
         this.files
-            .find((fil) => fil.name === file)!
+            .find((fil) => fil.name === file)
             .writer.write(string.join(""));
     }
-
     restart() {
         for (const file of this.files) {
-            if (!file.writer.closed) file.writer.close();
+            if (!file.writer.closed)
+                file.writer.close();
         }
-        this.files = readdirSync(this.#path).map((file) => {
+        this.files = (0, fs_1.readdirSync)(this.#path).map((file) => {
             return {
                 name: file,
-                size: statSync(this.#path + "/" + file).size,
-                writer: createWriteStream(this.#path + "/" + file, {
+                size: (0, fs_1.statSync)(this.#path + "/" + file).size,
+                writer: (0, fs_1.createWriteStream)(this.#path + "/" + file, {
                     flags: "a",
                     encoding: "utf-8",
                 }),
             };
         });
     }
+    async bulkSetReference(reference) {
+        const set = new Set();
+        for (const key in reference) {
+            if (this.cacheSize !== -1) {
+                set.add(this.cache[key].referenceFile);
+                this.cache[key].file = reference[key];
+            }
+            this.#saveReference(key, reference[key]);
+        }
+    }
 }
+exports.default = Referencer;
+//# sourceMappingURL=referencer.js.map

@@ -34,7 +34,7 @@ import {
     unlink,
     writeFile,
 } from "fs/promises";
-import Referencer from "./referencer.js";
+import Referencer from "../../global/referencer.js";
 import { Hash } from "../../typings/interface.js";
 import { EventEmitter } from "events";
 import Cacher from "./cache.js";
@@ -150,7 +150,7 @@ export default class Table extends EventEmitter {
         }, 500);
         this.#intervals.delete = setInterval(async () => {
             await this.#deleteFlush();
-        },500);
+        }, 500);
         this.readyAt = Date.now();
         this.db.emit(DatabaseEvents.TableReady, this);
     }
@@ -350,7 +350,7 @@ export default class Table extends EventEmitter {
     async #set() {
         if (!this.#queue.set.length) return;
         if (this.locked) return;
-        if(this.repairMode) return;
+        if (this.repairMode) return;
         if (this.#queued.set) return;
         this.#queued.set = true;
 
@@ -361,8 +361,9 @@ export default class Table extends EventEmitter {
         }
 
         for (const file of filesToWrite) {
-            if(this.files.find(x => x.name === file)?.isInWriteMode) continue;
-            this.files.find(x => x.name === file)!.isInWriteMode = true;
+            if (this.files.find((x) => x.name === file)?.isInWriteMode)
+                continue;
+            this.files.find((x) => x.name === file)!.isInWriteMode = true;
             const fileData = await this.#fetchFile(file);
             const dataToAdd = this.#queue.set.filter((x) => x.file === file);
             for (const data of dataToAdd) {
@@ -396,7 +397,7 @@ export default class Table extends EventEmitter {
                 `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
             );
-            this.files.find(x => x.name === file)!.isInWriteMode = false;
+            this.files.find((x) => x.name === file)!.isInWriteMode = false;
         }
         await this.#wal(Data.emptyData(), DatabaseMethod.Flush);
 
@@ -595,7 +596,7 @@ export default class Table extends EventEmitter {
         if (!reference[key]) return null;
 
         const file = reference[key].file;
-        const data = this.#cache.get(key, file);    
+        const data = this.#cache.get(key, file);
         if (data) {
             return new Data({
                 file,
@@ -652,7 +653,7 @@ export default class Table extends EventEmitter {
         const reference = await this.referencer.getReference();
         if (!reference[key]) return null;
         const file = reference[key].file;
-  
+        this.#cache.delete(key, file);
         return await this.#delete(key, file);
     }
 
@@ -665,7 +666,7 @@ export default class Table extends EventEmitter {
 
     async #delete(key: string, file: string) {
         const path = `${this.db.options.dataConfig.path}/${this.options.name}/${file}`;
-        if(!this.#queue.delete[file]) this.#queue.delete[file] = [];
+        if (!this.#queue.delete[file]) this.#queue.delete[file] = [];
         this.#queue.delete[file].push(key);
         await this.#wal(
             new Data({
@@ -676,7 +677,7 @@ export default class Table extends EventEmitter {
             }),
             DatabaseMethod.Delete,
         );
-        return ;
+        return;
     }
 
     /**
@@ -687,22 +688,24 @@ export default class Table extends EventEmitter {
      */
 
     async #deleteFlush() {
-        if(this.locked) return;
-        if(this.#queued.delete) return;
-        if(!Object.keys(this.#queue.delete).length) return;
+        if (this.locked) return;
+        if (this.#queued.delete) return;
+        if (!Object.keys(this.#queue.delete).length) return;
 
         for (const file of Object.keys(this.#queue.delete)) {
-            if(this.files.find(x => x.name === file)?.isInWriteMode) continue;
-            this.files.find(x => x.name === file)!.isInWriteMode = true;
+            if (this.files.find((x) => x.name === file)?.isInWriteMode)
+                continue;
+            this.files.find((x) => x.name === file)!.isInWriteMode = true;
             const json = this.#queue.delete[file];
             await this.referencer.bulkDeleteReference(json);
             const data = await this.#fetchFile(file);
-            for(let i = 0;i < json.length;i++){
+            for (let i = 0; i < json.length; i++) {
                 delete data[json[i]];
                 delete this.#queue.delete[file][i];
-                 
             }
-            this.#queue.delete[file] = this.#queue.delete[file].filter(x => x);
+            this.#queue.delete[file] = this.#queue.delete[file].filter(
+                (x) => x,
+            );
 
             let dataToWrite;
             if (this.db.options.encryptionConfig.encriptData) {
@@ -724,9 +727,9 @@ export default class Table extends EventEmitter {
                 `${this.db.options.dataConfig.path}/${this.options.name}/$temp_${file}`,
                 `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
             );
-            this.files.find(x => x.name === file)!.isInWriteMode = false;
+            this.files.find((x) => x.name === file)!.isInWriteMode = false;
 
-            if(!this.#queue.delete[file].length){
+            if (!this.#queue.delete[file].length) {
                 delete this.#queue.delete[file];
             }
         }
@@ -997,7 +1000,6 @@ export default class Table extends EventEmitter {
         this.repairMode = true;
         this.locked = false;
         for (const file of this.files) {
-
             if (
                 file.name !==
                 `${this.options.name}_scheme_1${this.db.options.fileConfig.extension}`
@@ -1039,7 +1041,7 @@ export default class Table extends EventEmitter {
                     let [key, value, type, ttl, method] = line.split(
                         ReferenceConstantSpace,
                     );
-                        if(!method) method = ttl;
+                    if (!method) method = ttl;
                     if (method === DatabaseMethod.Set.toString()) {
                         const data = {
                             key,
@@ -1076,72 +1078,79 @@ export default class Table extends EventEmitter {
                     );
                 }
 
-                
-        this.files = readdirSync(
-            `${this.db.options.dataConfig.path}/${this.options.name}`,
-        ).map((file) => {
-            const stats = statSync(
-                `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
-            );
+                this.files = readdirSync(
+                    `${this.db.options.dataConfig.path}/${this.options.name}`,
+                ).map((file) => {
+                    const stats = statSync(
+                        `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+                    );
 
-            return {
-                name: file,
-                size: stats.size,
-                isInWriteMode: false,
-            };
-        });
+                    return {
+                        name: file,
+                        size: stats.size,
+                        isInWriteMode: false,
+                    };
+                });
 
-        this.logData.writer = createWriteStream(this.paths.log, {
-            flags: "a",
-        });
+                this.logData.writer = createWriteStream(this.paths.log, {
+                    flags: "a",
+                });
 
-        this.logData.size = statSync(this.paths.log).size;
+                this.logData.size = statSync(this.paths.log).size;
 
-        const keyFileList = Object.entries(mainObj).map(([file, data]) => {
-            return {
-                string: `${data.key}${ReferenceConstantSpace}${file}`,
-                size: Buffer.byteLength(
-                    `${data.key}${ReferenceConstantSpace}${file}`,
-                ),
-            };
-        });
+                const keyFileList = Object.entries(mainObj).map(
+                    ([file, data]) => {
+                        return {
+                            string: `${data.key}${ReferenceConstantSpace}${file}`,
+                            size: Buffer.byteLength(
+                                `${data.key}${ReferenceConstantSpace}${file}`,
+                            ),
+                        };
+                    },
+                );
 
-        // split the keyFiles according to the max size
+                // split the keyFiles according to the max size
 
-        const keyFileParts = [[]] as { string: string; size: number }[][];
+                const keyFileParts = [[]] as {
+                    string: string;
+                    size: number;
+                }[][];
 
-        let currentPart = 0;
-        let currentSize = 0;
+                let currentPart = 0;
+                let currentSize = 0;
 
-        for (const kf of keyFileList) {
-            if (currentSize + kf.size > this.db.options.fileConfig.maxSize) {
-                currentPart += 1;
-                currentSize = 0;
+                for (const kf of keyFileList) {
+                    if (
+                        currentSize + kf.size >
+                        this.db.options.fileConfig.maxSize
+                    ) {
+                        currentPart += 1;
+                        currentSize = 0;
 
-                keyFileParts[currentPart] = [kf];
-            } else {
-                keyFileParts[currentPart].push(kf);
-            }
-        }
+                        keyFileParts[currentPart] = [kf];
+                    } else {
+                        keyFileParts[currentPart].push(kf);
+                    }
+                }
 
-        let currentRefFile = "reference_1.log";
-        let refFileNum = 1;
+                let currentRefFile = "reference_1.log";
+                let refFileNum = 1;
 
-        for (const part of keyFileParts) {
-            const data = part.map((x) => x.string).join("\n");
+                for (const part of keyFileParts) {
+                    const data = part.map((x) => x.string).join("\n");
 
-            await writeFile(
-                `${this.db.options.dataConfig.referencePath}/${this.options.name}/${currentRefFile}`,
-                data,
-            );
+                    await writeFile(
+                        `${this.db.options.dataConfig.referencePath}/${this.options.name}/${currentRefFile}`,
+                        data,
+                    );
 
-            refFileNum += 1;
-            currentRefFile = `reference_${refFileNum}.log`;
-        }
+                    refFileNum += 1;
+                    currentRefFile = `reference_${refFileNum}.log`;
+                }
 
-        this.referencer.restart();
-        this.repairMode = false;
-        this.locked = false;
+                this.referencer.restart();
+                this.repairMode = false;
+                this.locked = false;
 
                 resolve(true);
             });
@@ -1149,7 +1158,6 @@ export default class Table extends EventEmitter {
                 reject(false);
             });
         });
-
     }
 
     /**

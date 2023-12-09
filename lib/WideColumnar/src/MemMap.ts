@@ -1,3 +1,4 @@
+import { Group } from "@akarui/structures";
 import { MemMapOptions } from "../typings/interface.js";
 import { WideColumnarDataType } from "../typings/types.js";
 import WideColumnarColumn from "./Column.js";
@@ -5,33 +6,29 @@ import WideColumnarData from "./Data.js";
 import { serialize } from "v8";
 
 export default class MemMap {
-    heap : WideColumnarData[];
+    heap : Group<WideColumnarData['primary']['value'],WideColumnarData>;
     #options: MemMapOptions;
     #column: WideColumnarColumn;    
     constructor(options: MemMapOptions,Column:WideColumnarColumn) {
-        this.heap = [];
+        this.heap = new Group(Infinity);
         this.#options = options;
         this.#column = Column;
     }
     async set(data: WideColumnarData) {
-        if(this.heap.length >= this.#options.limit) {
+        if(this.getSize()>= this.#options.limit) {
             await this.flush();
         }
-        this.heap.push(data);
-        this.heap.sort(this.#options.sortFunction);
+        this.heap.set(data.primary.value, data);
     }
 
-    get(column:string,primary:WideColumnarDataType) {
-        return this.heap.find(x => x.primary.value === primary && x.column.name === column);
+    get(primary:WideColumnarDataType) {
+        return this.heap.get(primary);
     }
-    has(column:string,primary:WideColumnarDataType) {
-        return this.heap.some(x => x.primary.value === primary && x.column.name === column);
+    has(primary:WideColumnarDataType) {
+        return this.heap.has(primary);
     }
-    delete(column:string,primary:WideColumnarDataType) {
-        const index = this.heap.findIndex(x => x.primary.value === primary && x.column.name === column);
-        if (index !== -1) {
-            this.heap.splice(index, 1);
-        }
+    delete(primary:WideColumnarDataType) {
+        return this.heap.delete(primary);
     }
     getHeap() {
         return this.heap;
@@ -47,7 +44,15 @@ export default class MemMap {
     }
 
     async flush() {
-        // await this.#column.flush(this.heap);
-        this.heap = [];
+        await this.#column.flush(this.heap.V());
+        this.heap.clear();
+    }
+
+    findOne(query: (data:WideColumnarData) => boolean) {
+        return this.heap.find(query);
+    }
+
+    findMany(query: (data:WideColumnarData) => boolean) {
+        return this.heap.filter(query);
     }
 }

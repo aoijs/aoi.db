@@ -1,12 +1,15 @@
 /// <reference types="node" />
 import { WriteStream } from "fs";
-import { ReferenceType } from "../../typings/enum.js";
+import { ReferenceType } from "../typings/enum.js";
 export default class Referencer {
     #private;
-    cache: Record<string, {
-        file: string;
-        referenceFile: string;
-    }>;
+    cache: Record<
+        string,
+        {
+            file: string;
+            referenceFile: string;
+        }
+    >;
     cacheSize: number;
     files: {
         name: string;
@@ -30,10 +33,15 @@ export default class Referencer {
      * <Referencer>.getReference() // {key:{file:"file",referenceFile:"referenceFile"}}
      * ```
      */
-    getReference(): Promise<Record<string, {
-        file: string;
-        referenceFile: string;
-    }>>;
+    getReference(): Promise<
+        Record<
+            string,
+            {
+                file: string;
+                referenceFile: string;
+            }
+        >
+    >;
     /**
      * @description set reference
      * @param key key to set

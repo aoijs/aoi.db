@@ -5,7 +5,7 @@ import { DatabaseMethod } from "../../typings/enum.js";
 import { KeyValueDataInterface, KeyValueTableOptions } from "../typings/interface.js";
 import Data from "./data.js";
 import KeyValue from "./database.js";
-import Referencer from "./referencer.js";
+import Referencer from "../../global/referencer.js";
 import { EventEmitter } from "events";
 export default class Table extends EventEmitter {
     #private;
