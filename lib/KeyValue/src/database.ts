@@ -541,4 +541,19 @@ export default class KeyValue extends EventEmitter {
 
         return await t.table.deleteMany(query);
     }
+
+    async ping(table:string) {
+        const t = this.tables[table];
+        if (!t) return 0;
+
+        return await t.table.ping();
+    }
+
+    async avgPing() {
+        let total = 0;
+        for(const table of Object.keys(this.tables)) {
+            total += await this.ping(table);
+        }
+        return total/Object.keys(this.tables).length;
+    }
 }

@@ -1201,4 +1201,9 @@ export default class Table extends EventEmitter {
             );
         }
     }
+    async ping() {
+        const start = performance.now();
+        await this.findOne(() => true);
+        return performance.now() - start;
+    }
 }

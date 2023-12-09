@@ -414,6 +414,19 @@ class KeyValue extends events_1.EventEmitter {
             return undefined;
         return await t.table.deleteMany(query);
     }
+    async ping(table) {
+        const t = this.tables[table];
+        if (!t)
+            return 0;
+        return await t.table.ping();
+    }
+    async avgPing() {
+        let total = 0;
+        for (const table of Object.keys(this.tables)) {
+            total += await this.ping(table);
+        }
+        return total / Object.keys(this.tables).length;
+    }
 }
 exports.default = KeyValue;
 //# sourceMappingURL=database.js.map

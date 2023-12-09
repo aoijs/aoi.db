@@ -198,5 +198,7 @@ export default class KeyValue extends EventEmitter {
      * ```
      */
     deleteMany(table: string, query?: (value: Data, index: number) => boolean): Promise<true | Data[] | undefined>;
+    ping(table: string): Promise<number>;
+    avgPing(): Promise<number>;
 }
 //# sourceMappingURL=database.d.ts.map

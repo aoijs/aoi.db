@@ -899,6 +899,11 @@ class Table extends events_1.EventEmitter {
             console.log(`Synced table ${this.options.name} with the transaction log`);
         }
     }
+    async ping() {
+        const start = performance.now();
+        await this.findOne(() => true);
+        return performance.now() - start;
+    }
 }
 exports.default = Table;
 //# sourceMappingURL=table.js.map
