@@ -665,6 +665,10 @@ export default class Table extends EventEmitter {
      * @returns
      */
 
+    get cache() {
+        return this.#cache;
+    }
+
     async #delete(key: string, file: string) {
         const path = `${this.db.options.dataConfig.path}/${this.options.name}/${file}`;
         if (!this.#queue.delete[file]) this.#queue.delete[file] = [];

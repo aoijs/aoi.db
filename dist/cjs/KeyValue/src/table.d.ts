@@ -7,6 +7,7 @@ import Data from "./data.js";
 import KeyValue from "./database.js";
 import Referencer from "../../global/referencer.js";
 import { EventEmitter } from "events";
+import Cacher from "./cache.js";
 export default class Table extends EventEmitter {
     #private;
     options: KeyValueTableOptions;
@@ -115,6 +116,13 @@ export default class Table extends EventEmitter {
      * ```
      */
     delete(key: string): Promise<void | null>;
+    /**
+     * @private
+     * @param key The key of the data
+     * @param file The file where the data is stored
+     * @returns
+     */
+    get cache(): Cacher;
     /**
      * @description Clears the table
      * @returns

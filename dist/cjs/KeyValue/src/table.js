@@ -488,6 +488,9 @@ class Table extends events_1.EventEmitter {
      * @param file The file where the data is stored
      * @returns
      */
+    get cache() {
+        return this.#cache;
+    }
     async #delete(key, file) {
         const path = `${this.db.options.dataConfig.path}/${this.options.name}/${file}`;
         if (!this.#queue.delete[file])
