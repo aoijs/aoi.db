@@ -478,7 +478,6 @@ class Table extends events_1.EventEmitter {
         if (!reference[key])
             return null;
         const file = reference[key].file;
-        await this.referencer.deleteReference(key);
         this.#cache.delete(key, file);
         return await this.#delete(key, file);
     }
