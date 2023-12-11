@@ -9,7 +9,7 @@ const db = new KeyValue({
     },
     debug: true,
 });
-
+const keys = [];
 const wait = async (ms) => await st(ms);
 
 const methods = ["set", "get", "delete", "has", "all", "findOne", "findMany"];
@@ -27,13 +27,17 @@ async function measureOPS(fn, times) {
     }
     const end = performance.now();
     const time = end - start;
-    const ops = times / (time / 1000);
-    return { time, ops };
+    const ops = (1000*times) / (time);
+    return { time, ops,tpo: time / times };
 }
 
 async function set10k() {
-    const fn = async () =>
-        await db.set("main", `key-${Math.random()}`, { value: Math.random() });
+    const fn = async () => {
+        const key = `key-${Math.random()}`;
+        keys.push(key);
+        await db.set("main", key, { value: Math.random() });
+    };
+
     return await measureOPS(fn, 10000);
 }
 
@@ -43,7 +47,10 @@ async function get10k() {
 }
 
 async function delete10k() {
-    const fn = async () => await db.delete("main", `key-${Math.random()}`);
+    const fn = async () => {
+        const key = keys[Math.floor(Math.random() * keys.length)];
+        await db.delete("main", key);
+    };
     return await measureOPS(fn, 10000);
 }
 
@@ -69,7 +76,7 @@ async function findMany10k() {
 
 async function run() {
     const results = [];
-    const cycles = 10;
+    const cycles = 5;
     console.log("Running Suite...");
 
     for (let i = 0; i < cycles; i++) {
@@ -102,6 +109,7 @@ async function run() {
         ops: Number(ops(results.map((a) => a.set.ops)).toFixed(0)),
         max: Number(max(results.map((a) => a.set.ops)).toFixed(0)),
         min: Number(min(results.map((a) => a.set.ops)).toFixed(0)),
+        tpo: Number(avg(results.map((a) => a.set.tpo))),
     };
 
     const get = {
@@ -109,6 +117,7 @@ async function run() {
         ops: Number(ops(results.map((a) => a.get.ops)).toFixed(0)),
         max: Number(max(results.map((a) => a.get.ops)).toFixed(0)),
         min: Number(min(results.map((a) => a.get.ops)).toFixed(0)),
+        tpo: Number(avg(results.map((a) => a.get.tpo))),
     };
 
     const del = {
@@ -116,6 +125,7 @@ async function run() {
         ops: Number(ops(results.map((a) => a.del.ops)).toFixed(0)),
         max: Number(max(results.map((a) => a.del.ops)).toFixed(0)),
         min: Number(min(results.map((a) => a.del.ops)).toFixed(0)),
+        tpo: Number(avg(results.map((a) => a.del.tpo))),
     };
 
     const has = {
@@ -123,6 +133,7 @@ async function run() {
         ops: Number(ops(results.map((a) => a.has.ops)).toFixed(0)),
         max: Number(max(results.map((a) => a.has.ops)).toFixed(0)),
         min: Number(min(results.map((a) => a.has.ops)).toFixed(0)),
+        tpo: Number(avg(results.map((a) => a.has.tpo))),
     };
 
     const all = {
@@ -130,6 +141,7 @@ async function run() {
         ops: Number(ops(results.map((a) => a.all.ops)).toFixed(0)),
         max: Number(max(results.map((a) => a.all.ops)).toFixed(0)),
         min: Number(min(results.map((a) => a.all.ops)).toFixed(0)),
+        tpo: Number(avg(results.map((a) => a.all.tpo))),
     };
 
     const findOne = {
@@ -137,6 +149,7 @@ async function run() {
         ops: Number(ops(results.map((a) => a.findOne.ops)).toFixed(0)),
         max: Number(max(results.map((a) => a.findOne.ops)).toFixed(0)),
         min: Number(min(results.map((a) => a.findOne.ops)).toFixed(0)),
+        tpo: Number(avg(results.map((a) => a.findOne.tpo))),
     };
 
     const findMany = {
@@ -144,9 +157,9 @@ async function run() {
         ops: Number(ops(results.map((a) => a.findMany.ops)).toFixed(0)),
         max: Number(max(results.map((a) => a.findMany.ops)).toFixed(0)),
         min: Number(min(results.map((a) => a.findMany.ops)).toFixed(0)),
+        tpo: Number(avg(results.map((a) => a.findMany.tpo))),
     };
 
-   
     const arr = {
         set,
         get,
@@ -155,6 +168,6 @@ async function run() {
         all,
         findOne,
         findMany,
-    }
+    };
     console.table(arr);
 }

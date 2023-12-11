@@ -11,7 +11,7 @@ import {
 } from "../../typings/enum.js";
 import { DeepRequired } from "../typings/type.js";
 import { encrypt } from "../../utils.js";
-import Table from "./table.js";
+import Table from "./newtable.js";
 import { EventEmitter } from "events";
 //zipping and unzipping
 import tar from "tar";
@@ -240,7 +240,7 @@ export default class KeyValue extends EventEmitter {
                     `${
                         this.#options.fileConfig.transactionLogPath
                     }/${table}/transaction.log`,
-                    `${randomBytes(16).toString("hex")}\n`,
+                    `${randomBytes(16).toString("hex")}\n\n`,
                 );
 
                 writeFileSync(
@@ -408,7 +408,7 @@ export default class KeyValue extends EventEmitter {
      */
     async findOne(
         table: string,
-        query: (value: Data, index: number) => boolean,
+        query: (value: Data,) => boolean,
     ) {
         const t = this.tables[table];
         if (!t) return undefined;
@@ -432,7 +432,7 @@ export default class KeyValue extends EventEmitter {
 
     async findMany(
         table: string,
-        query: (value: Data, index: number) => boolean,
+        query: (value: Data,) => boolean,
     ) {
         const t = this.tables[table];
         if (!t) return undefined;
@@ -457,13 +457,14 @@ export default class KeyValue extends EventEmitter {
 
     async all(
         table: string,
-        query?: (value: Data, index: number) => boolean,
+        query?: (value: Data,) => boolean,
         limit?: number,
+        order: 'firstN' | 'asc' | 'desc' = 'firstN'
     ) {
         const t = this.tables[table];
         if (!t) return undefined;
 
-        return await t.table.all(query, limit);
+        return await t.table.all(query ?? (() => true), limit ?? 100,order);
     }
 
     /**
@@ -534,12 +535,12 @@ export default class KeyValue extends EventEmitter {
 
     async deleteMany(
         table: string,
-        query?: (value: Data, index: number) => boolean,
+        query?: (value: Data,) => boolean,
     ) {
         const t = this.tables[table];
         if (!t) return undefined;
 
-        return await t.table.deleteMany(query);
+        return await t.table.deleteMany(query?? (() => true));
     }
 
     async ping(table:string) {

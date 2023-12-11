@@ -114,7 +114,7 @@ export default class WideColumnarReferencer extends Referencer {
         this.files.at(-1)!.size += string.length;
     }
 
-    setReference(key: string, file: string) {
+    async setReference(key: string, file: string) {
         if (this.cacheSize !== -1) {
             this.cache[key] = {
                 file,

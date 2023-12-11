@@ -18,7 +18,7 @@ export default class WideColumnarReferencer extends Referencer {
     }[];
     constructor(path: string, maxSize: number, type: ReferenceType, column: WideColumnarColumn);
     initialize(): Promise<void>;
-    setReference(key: string, file: string): void;
+    setReference(key: string, file: string): Promise<void>;
     getReference(): Promise<Record<string, {
         file: string;
         referenceFile: string;

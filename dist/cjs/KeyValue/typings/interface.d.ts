@@ -1,5 +1,5 @@
-import { KeyValueDataValueType } from "./type.js";
-import { CacheType, ReferenceType } from "../../typings/enum.js";
+import { KeyValueDataValueType, KeyValueTypeList } from "./type.js";
+import { CacheType, DatabaseMethod, ReferenceType } from "../../typings/enum.js";
 export interface KeyValueOptions {
     dataConfig?: KeyValueDataConfig;
     fileConfig?: KeyValueFileConfig;
@@ -35,12 +35,18 @@ export interface KeyValueDataInterface {
     file: string;
     value: KeyValueDataValueType;
     key: string;
-    type: string;
+    type: KeyValueTypeList;
+}
+export interface LogBlock {
+    key: string;
+    value: string | null;
+    type: KeyValueTypeList;
+    method: DatabaseMethod;
 }
 export interface KeyValueJSONOption {
     value: KeyValueDataValueType;
     key: string;
-    type: string;
+    type: KeyValueTypeList;
 }
 export interface CacherOptions {
     cache: CacheType;

@@ -2,6 +2,8 @@ import { WriteStream, createWriteStream, readdirSync, statSync } from "fs";
 import { ReferenceConstantSpace } from "../utils.js";
 import { readFile, truncate, unlink } from "fs/promises";
 import { ReferenceType } from "../typings/enum.js";
+import { KeyValueTable } from "../index.js";
+import Table from "../KeyValue/src/newtable.js";
 
 export default class Referencer {
     cache: Record<
@@ -44,11 +46,10 @@ export default class Referencer {
         if (this.type === ReferenceType.Cache)
             this.cache = await this.#getReference();
     }
-    
+
     get path() {
         return this.#path;
     }
-    
 
     /**
      * @private
@@ -117,18 +118,25 @@ export default class Referencer {
      * @param file file to save
      */
 
-    #saveReference(key: string, file: string) {
-        const string = `${key}${ReferenceConstantSpace}${file}\n`;
-        let currentFile = this.#currentFile();
-        if (currentFile.size + string.length > this.maxSize) {
-            this.#createFile();
-            if (this.cacheSize !== -1) {
-                this.cache[key].referenceFile = this.#currentFile().name;
+    async #saveReference(key: string, file: string) {
+        return new Promise((resolve, reject) => {
+            const string = `${key}${ReferenceConstantSpace}${file}\n`;
+            let currentFile = this.#currentFile();
+            if (currentFile.size + string.length > this.maxSize) {
+                this.#createFile();
+                if (this.cacheSize !== -1) {
+                    this.cache[key].referenceFile = this.#currentFile().name;
+                }
+                currentFile = this.#currentFile();
             }
-            currentFile = this.#currentFile();
-        }
-        currentFile.writer.write(string);
-        this.files.at(-1)!.size += string.length;
+            currentFile.writer.write(string, (err) => {
+                if (err) reject(err);
+                else {
+                    this.files.at(-1)!.size += string.length;
+                    resolve(undefined);
+                }
+            });
+        });
     }
 
     /**
@@ -175,7 +183,7 @@ export default class Referencer {
      * <Referencer>.setReference("key","file")
      * ```
      */
-    setReference(key: string, file: string) {
+    async setReference(key: string, file: string) {
         if (this.cacheSize !== -1) {
             this.cache[key] = {
                 file,
@@ -183,7 +191,7 @@ export default class Referencer {
             };
             this.cacheSize++;
         }
-        this.#saveReference(key, file);
+        await this.#saveReference(key, file);
     }
 
     /**
@@ -270,6 +278,10 @@ export default class Referencer {
             }
         }
         this.files = this.files.slice(0, 1);
+        this.files[0].writer = createWriteStream(this.#path + "/reference_1.log", {
+            flags: "a",
+            encoding: "utf-8",
+        });
         this.cache = {};
 
         if (this.cacheSize !== -1) {
@@ -366,7 +378,7 @@ export default class Referencer {
         });
     }
 
-    async bulkSetReference(reference: Record<string, string>) {   
+    async bulkSetReference(reference: Record<string, string>) {
         const set = new Set() as Set<string>;
         for (const key in reference) {
             if (this.cacheSize !== -1) {
@@ -376,6 +388,16 @@ export default class Referencer {
             this.#saveReference(key, reference[key]);
         }
     }
-    
-   
+
+    async sync(files: string[], table: Table) {
+        await this.clear();
+
+        for (const file of files) {
+            const data = await table.fetchFile(`${table.paths.table}/${file}`);
+            if (!data) continue;
+            for (const key in data) {
+                this.#saveReference(key, file);
+            }
+        }
+    }
 }

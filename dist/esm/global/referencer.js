@@ -86,18 +86,26 @@ class Referencer {
      * @param key key to save
      * @param file file to save
      */
-    #saveReference(key, file) {
-        const string = `${key}${utils_js_1.ReferenceConstantSpace}${file}\n`;
-        let currentFile = this.#currentFile();
-        if (currentFile.size + string.length > this.maxSize) {
-            this.#createFile();
-            if (this.cacheSize !== -1) {
-                this.cache[key].referenceFile = this.#currentFile().name;
+    async #saveReference(key, file) {
+        return new Promise((resolve, reject) => {
+            const string = `${key}${utils_js_1.ReferenceConstantSpace}${file}\n`;
+            let currentFile = this.#currentFile();
+            if (currentFile.size + string.length > this.maxSize) {
+                this.#createFile();
+                if (this.cacheSize !== -1) {
+                    this.cache[key].referenceFile = this.#currentFile().name;
+                }
+                currentFile = this.#currentFile();
             }
-            currentFile = this.#currentFile();
-        }
-        currentFile.writer.write(string);
-        this.files.at(-1).size += string.length;
+            currentFile.writer.write(string, (err) => {
+                if (err)
+                    reject(err);
+                else {
+                    this.files.at(-1).size += string.length;
+                    resolve(undefined);
+                }
+            });
+        });
     }
     /**
      * @description get current file
@@ -134,7 +142,7 @@ class Referencer {
      * <Referencer>.setReference("key","file")
      * ```
      */
-    setReference(key, file) {
+    async setReference(key, file) {
         if (this.cacheSize !== -1) {
             this.cache[key] = {
                 file,
@@ -142,7 +150,7 @@ class Referencer {
             };
             this.cacheSize++;
         }
-        this.#saveReference(key, file);
+        await this.#saveReference(key, file);
     }
     /**
      * @description delete reference
@@ -219,6 +227,10 @@ class Referencer {
             }
         }
         this.files = this.files.slice(0, 1);
+        this.files[0].writer = (0, fs_1.createWriteStream)(this.#path + "/reference_1.log", {
+            flags: "a",
+            encoding: "utf-8",
+        });
         this.cache = {};
         if (this.cacheSize !== -1) {
             this.cacheSize = -1;
@@ -316,6 +328,17 @@ class Referencer {
                 this.cache[key].file = reference[key];
             }
             this.#saveReference(key, reference[key]);
+        }
+    }
+    async sync(files, table) {
+        await this.clear();
+        for (const file of files) {
+            const data = await table.fetchFile(`${table.paths.table}/${file}`);
+            if (!data)
+                continue;
+            for (const key in data) {
+                this.#saveReference(key, file);
+            }
         }
     }
 }

@@ -1,5 +1,17 @@
-export type DeepRequired<T> = { [K in keyof T]: DeepRequired<T[K]> } & Required<T>;
-
+export type DeepRequired<T> = {
+    [K in keyof T]: DeepRequired<T[K]>;
+} & Required<T>;
+export type KeyValueTypeList =
+    | "string"
+    | "bigint"
+    | "number"
+    | "null"
+    | "boolean"
+    | "object"
+    | "date"
+    | "symbol"
+    | "undefined"
+    | "function";
 export type KeyValueDataValueType =
     | string
     | bigint

@@ -1,4 +1,5 @@
 import { Optional } from "../../typings/type.js";
+import { KeyValueTypeList } from "../index.js";
 import { KeyValueDataInterface, KeyValueJSONOption } from "../typings/interface.js";
 export default class Data {
     #private;
@@ -6,7 +7,7 @@ export default class Data {
     key: string;
     value: any;
     ttl?: number;
-    type: string;
+    type: KeyValueTypeList;
     /**
      * @description create data
      * @param data data to create

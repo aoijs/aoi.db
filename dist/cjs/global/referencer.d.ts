@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { WriteStream } from "fs";
 import { ReferenceType } from "../typings/enum.js";
+import Table from "../KeyValue/src/newtable.js";
 export default class Referencer {
     #private;
     cache: Record<string, {
@@ -46,7 +47,7 @@ export default class Referencer {
      * <Referencer>.setReference("key","file")
      * ```
      */
-    setReference(key: string, file: string): void;
+    setReference(key: string, file: string): Promise<void>;
     /**
      * @description delete reference
      * @param key key to delete
@@ -86,5 +87,6 @@ export default class Referencer {
     bulkDeleteReference(keys: string[]): Promise<void>;
     restart(): void;
     bulkSetReference(reference: Record<string, string>): Promise<void>;
+    sync(files: string[], table: Table): Promise<void>;
 }
 //# sourceMappingURL=referencer.d.ts.map

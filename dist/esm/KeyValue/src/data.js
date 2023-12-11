@@ -92,7 +92,7 @@ class Data {
             file: "",
             key: "",
             value: "",
-            type: "",
+            type: "undefined",
         });
     }
 }

@@ -1,4 +1,5 @@
 import { Optional } from "../../typings/type.js";
+import { KeyValueTypeList } from "../index.js";
 import { KeyValueDataInterface, KeyValueJSONOption } from "../typings/interface.js";
 import { types } from "util";
 export default class Data {
@@ -6,7 +7,7 @@ export default class Data {
     key: string;
     value: any;
     ttl?: number;
-    type: string;
+    type: KeyValueTypeList;
 
     /**
      * @description create data
@@ -37,7 +38,7 @@ export default class Data {
      * @param value value to get type
      * @returns
      */
-    #getType(value: any) {
+    #getType(value: any): KeyValueTypeList {
         return value instanceof Date ? "date" : typeof value;
     }
     /**
@@ -95,7 +96,7 @@ export default class Data {
             file: "",
             key: "",
             value: "",
-            type: "",
+            type: "undefined",
         });
     }
 }

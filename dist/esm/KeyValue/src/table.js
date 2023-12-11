@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//@ts-nocheck
 const fs_1 = require("fs");
 const utils_js_1 = require("../../utils.js");
 const enum_js_1 = require("../../typings/enum.js");

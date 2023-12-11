@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { KeyValueDataInterface, KeyValueOptions } from "../typings/interface.js";
 import { DeepRequired } from "../typings/type.js";
-import Table from "./table.js";
+import Table from "./newtable.js";
 import { EventEmitter } from "events";
 import Data from "./data.js";
 export default class KeyValue extends EventEmitter {
@@ -60,7 +60,7 @@ export default class KeyValue extends EventEmitter {
      * });
      * ```
      */
-    set(table: string, key: string, value: Partial<KeyValueDataInterface>): Promise<Data | undefined>;
+    set(table: string, key: string, value: Partial<KeyValueDataInterface>): Promise<void>;
     /**
      * @description get data from database
      * @param table table where data is saved
@@ -84,7 +84,7 @@ export default class KeyValue extends EventEmitter {
      * <KeyValue>.delete("main","key");
      * ```
      */
-    delete(table: string, key: string): Promise<void | null>;
+    delete(table: string, key: string): Promise<void>;
     /**
      * @description clear table
      * @param table table to clear
@@ -131,7 +131,7 @@ export default class KeyValue extends EventEmitter {
      * })
      * ```
      */
-    findOne(table: string, query: (value: Data, index: number) => boolean): Promise<Data | null | undefined>;
+    findOne(table: string, query: (value: Data) => boolean): Promise<Data | null | undefined>;
     /**
      * @description find all data that matches the query
      * @param table table to find
@@ -145,7 +145,7 @@ export default class KeyValue extends EventEmitter {
      * })
      * ```
      */
-    findMany(table: string, query: (value: Data, index: number) => boolean): Promise<Data[] | undefined>;
+    findMany(table: string, query: (value: Data) => boolean): Promise<Data[] | undefined>;
     /**
      * @description get all data from table
      * @param table table to get
@@ -160,7 +160,7 @@ export default class KeyValue extends EventEmitter {
      * },10)
      * ```
      */
-    all(table: string, query?: (value: Data, index: number) => boolean, limit?: number): Promise<Data[] | undefined>;
+    all(table: string, query?: (value: Data) => boolean, limit?: number, order?: 'firstN' | 'asc' | 'desc'): Promise<Data[] | undefined>;
     /**
      * @description perform a backup of database
      * @returns
@@ -184,7 +184,7 @@ export default class KeyValue extends EventEmitter {
      * ```
      *
      */
-    fullRepair(table: string): Promise<boolean | undefined>;
+    fullRepair(table: string): Promise<void>;
     /**
      * @description deletes all data that matches the query
      * @param table table to delete
@@ -197,7 +197,7 @@ export default class KeyValue extends EventEmitter {
      * })
      * ```
      */
-    deleteMany(table: string, query?: (value: Data, index: number) => boolean): Promise<true | Data[] | undefined>;
+    deleteMany(table: string, query?: (value: Data) => boolean): Promise<void>;
     ping(table: string): Promise<number>;
     avgPing(): Promise<number>;
 }

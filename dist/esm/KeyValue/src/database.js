@@ -7,7 +7,7 @@ const fs_1 = require("fs");
 const crypto_1 = require("crypto");
 const enum_js_1 = require("../../typings/enum.js");
 const utils_js_1 = require("../../utils.js");
-const table_js_1 = __importDefault(require("./table.js"));
+const newtable_js_1 = __importDefault(require("./newtable.js"));
 const events_1 = require("events");
 //zipping and unzipping
 const tar_1 = __importDefault(require("tar"));
@@ -167,7 +167,7 @@ class KeyValue extends events_1.EventEmitter {
                 (0, fs_1.mkdirSync)(`${this.#options.fileConfig.transactionLogPath}/${table}`, {
                     recursive: true,
                 });
-                (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/transaction.log`, `${(0, crypto_1.randomBytes)(16).toString("hex")}\n`);
+                (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/transaction.log`, `${(0, crypto_1.randomBytes)(16).toString("hex")}\n\n`);
                 (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/fullWriter.log`, ``);
             }
         }
@@ -177,7 +177,7 @@ class KeyValue extends events_1.EventEmitter {
             });
         }
         for (const table of this.#options.dataConfig.tables) {
-            const t = new table_js_1.default({
+            const t = new newtable_js_1.default({
                 name: table,
             }, this);
             this.tables[table] = {
@@ -343,11 +343,11 @@ class KeyValue extends events_1.EventEmitter {
      * },10)
      * ```
      */
-    async all(table, query, limit) {
+    async all(table, query, limit, order = 'firstN') {
         const t = this.tables[table];
         if (!t)
             return undefined;
-        return await t.table.all(query, limit);
+        return await t.table.all(query ?? (() => true), limit ?? 100, order);
     }
     /**
      * @description perform a backup of database
@@ -412,7 +412,7 @@ class KeyValue extends events_1.EventEmitter {
         const t = this.tables[table];
         if (!t)
             return undefined;
-        return await t.table.deleteMany(query);
+        return await t.table.deleteMany(query ?? (() => true));
     }
     async ping(table) {
         const t = this.tables[table];

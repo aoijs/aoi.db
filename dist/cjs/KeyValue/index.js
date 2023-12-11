@@ -17,13 +17,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.KeyValue = exports.KeyValueTable = exports.KeyValueReferencer = exports.KeyValueData = exports.KeyValueCacher = void 0;
+exports.KeyValue = exports.KeyValueTable = exports.KeyValueData = exports.KeyValueCacher = void 0;
 const cache_js_1 = __importDefault(require("./src/cache.js"));
 exports.KeyValueCacher = cache_js_1.default;
 const data_js_1 = __importDefault(require("./src/data.js"));
 exports.KeyValueData = data_js_1.default;
-const referencer_js_1 = __importDefault(require("../global/referencer.js"));
-exports.KeyValueReferencer = referencer_js_1.default;
 const database_js_1 = __importDefault(require("./src/database.js"));
 exports.KeyValue = database_js_1.default;
 const table_js_1 = __importDefault(require("./src/table.js"));

@@ -76,7 +76,7 @@ class WideColumnarReferencer extends referencer_js_1.default {
         currentFile.writer.write(string);
         this.files.at(-1).size += string.length;
     }
-    setReference(key, file) {
+    async setReference(key, file) {
         if (this.cacheSize !== -1) {
             this.cache[key] = {
                 file,
