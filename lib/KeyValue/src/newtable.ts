@@ -19,7 +19,6 @@ import {
     unlinkSync,
     writeFileSync,
 } from "fs";
-import { resolve } from "path";
 import {
     JSONParser,
     ReferenceConstantSpace,
@@ -278,7 +277,8 @@ Attempting to repair file ${fileObj.name} in table ${
         path: string,
     ): Promise<Record<string, KeyValueJSONOption> | undefined> {
         const { securityKey, encriptData } = this.#db.options.encryptionConfig;
-        const fileObj = this.files.find((fileObj) => fileObj.name === path);
+        const fileName = path.split("/").at(-1) as string;
+        const fileObj = this.files.find((fileObj) => fileObj.name === fileName);
         if (!fileObj) return undefined;
         if (fileObj.size <= 2) return {};
         if (fileObj.isInWriteMode) {

@@ -186,7 +186,8 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
     }
     async fetchFile(path) {
         const { securityKey, encriptData } = this.#db.options.encryptionConfig;
-        const fileObj = this.files.find((fileObj) => fileObj.name === path);
+        const fileName = path.split("/").at(-1);
+        const fileObj = this.files.find((fileObj) => fileObj.name === fileName);
         if (!fileObj)
             return undefined;
         if (fileObj.size <= 2)
