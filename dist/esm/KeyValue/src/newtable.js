@@ -405,19 +405,19 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                     resolve();
                     return;
                 }
-                fileObj.isInWriteMode = true;
                 let fileData = await this.fetchFile(`${this.paths.table}/${file}`);
+                fileObj.isInWriteMode = true;
                 if (!fileData) {
                     fileData = {};
                 }
                 for (const data of QueueData) {
-                    this.#queue.remove('set', data.key);
+                    this.#queue.remove("set", data.key);
                     if (data.file !== file)
                         continue;
                     fileData[data.key] = data.toJSON();
                 }
                 for (const { key } of DeleteQueue) {
-                    this.#queue.remove('delete', key);
+                    this.#queue.remove("delete", key);
                     if (!fileData[key])
                         continue;
                     delete fileData[key];
