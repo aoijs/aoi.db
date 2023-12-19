@@ -10,8 +10,12 @@ const db = new KeyValue({
 });
 
 db.on(DatabaseEvents.Connect, async () => {
-  await db.set("main", "key", { value: 2 });
-    console.log(await db.get("main", "key"));
+    console.log("ready");
+    await st(2000);
+  console.log((await db.all("main",data => data.key.startsWith("collection"))).length);
+  await st(2000);
+  console.log(await db.get("main", "collection_641161618729992203"));
+    console.log((await db.all("main",data => data.key.startsWith("collection"))).length);
 });
 
 db.connect();

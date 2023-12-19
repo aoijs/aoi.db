@@ -240,7 +240,7 @@ export default class KeyValue extends EventEmitter {
                     `${
                         this.#options.fileConfig.transactionLogPath
                     }/${table}/transaction.log`,
-                    `${randomBytes(16).toString("hex")}\n\n`,
+                    `${randomBytes(16).toString("hex")}\n`,
                 );
 
                 writeFileSync(

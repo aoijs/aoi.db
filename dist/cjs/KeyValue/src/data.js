@@ -5,7 +5,6 @@ class Data {
     file;
     key;
     value;
-    ttl;
     type;
     /**
      * @description create data

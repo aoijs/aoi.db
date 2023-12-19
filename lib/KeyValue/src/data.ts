@@ -6,7 +6,6 @@ export default class Data {
     file: string;
     key: string;
     value: any;
-    ttl?: number;
     type: KeyValueTypeList;
 
     /**
