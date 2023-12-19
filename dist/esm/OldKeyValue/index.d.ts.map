@@ -1,0 +1,1 @@
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../lib/OldKeyValue/index.ts"],"names":[],"mappings":"AAAA,OAAO,cAAc,MAAM,gBAAgB,CAAC;AAC5C,OAAO,YAAY,MAAM,eAAe,CAAC;AAEzC,OAAO,QAAQ,MAAM,mBAAmB,CAAC;AACzC,OAAO,aAAa,MAAM,gBAAgB,CAAC;AAC3C,cAAc,wBAAwB,CAAC;AACvC,cAAc,mBAAmB,CAAC;AAElC,OAAO,EACH,cAAc,EACd,YAAY,EACZ,aAAa,EACb,QAAQ,GACX,CAAC"}
