@@ -1,5 +1,5 @@
 import { Optional } from "../../typings/type.js";
-import { KeyValueTypeList } from "../index.js";
+import { KeyValueTypeList } from "../typings/type.js";
 import { KeyValueDataInterface, KeyValueJSONOption } from "../typings/interface.js";
 export default class Data {
     #private;

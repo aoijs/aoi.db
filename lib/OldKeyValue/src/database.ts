@@ -18,7 +18,7 @@ import tar from "tar";
 import path from "path";
 import Data from "./data.js";
 
-export default class KeyValue extends EventEmitter {
+export default class OldKeyValue extends EventEmitter {
     #options: DeepRequired<KeyValueOptions>;
     tables: Record<
         string,
@@ -93,7 +93,7 @@ export default class KeyValue extends EventEmitter {
      */
 
     #finalizeOptions(options: KeyValueOptions): DeepRequired<KeyValueOptions> {
-        const defaultOptions = KeyValue.defaultOptions();
+        const defaultOptions = OldKeyValue.defaultOptions();
         const finalOptions: DeepRequired<KeyValueOptions> = {
             dataConfig: {
                 path:

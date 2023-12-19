@@ -1,8 +1,6 @@
-import KeyValueCacher from "./src/cache.js";
-import KeyValueData from "./src/data.js";
-import KeyValue from "./src/database.js";
-import KeyValueTable from "./src/table.js";
-export * from "./typings/interface.js";
-export * from "./typings/type.js";
-export { KeyValueCacher, KeyValueData, KeyValueTable, KeyValue, };
+import OldKeyValueCacher from "./src/cache.js";
+import OldKeyValueData from "./src/data.js";
+import OldKeyValue from "./src/database.js";
+import OldKeyValueTable from "./src/table.js";
+export { OldKeyValueCacher, OldKeyValueData, OldKeyValue, OldKeyValueTable, };
 //# sourceMappingURL=index.d.ts.map

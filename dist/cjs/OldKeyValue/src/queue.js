@@ -1,6 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const index_js_1 = require("../index.js");
+const data_js_1 = __importDefault(require("./data.js"));
 class QueueManager {
     // @ts-ignore
     #set = {
@@ -12,7 +15,7 @@ class QueueManager {
         size: 0,
     };
     add(data) {
-        if (data instanceof index_js_1.KeyValueData) {
+        if (data instanceof data_js_1.default) {
             this.#set.data.push(data);
             this.#set.size += data.size;
             this.#set[data.file] = (this.#set[data.file] || 0) + data.size;

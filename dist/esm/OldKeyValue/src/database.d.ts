@@ -4,7 +4,7 @@ import { DeepRequired } from "../typings/type.js";
 import Table from "./table.js";
 import { EventEmitter } from "events";
 import Data from "./data.js";
-export default class KeyValue extends EventEmitter {
+export default class OldKeyValue extends EventEmitter {
     #private;
     tables: Record<string, {
         table: Table;

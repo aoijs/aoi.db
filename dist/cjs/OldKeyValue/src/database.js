@@ -12,7 +12,7 @@ const events_1 = require("events");
 //zipping and unzipping
 const tar_1 = __importDefault(require("tar"));
 const path_1 = __importDefault(require("path"));
-class KeyValue extends events_1.EventEmitter {
+class OldKeyValue extends events_1.EventEmitter {
     #options;
     tables = {};
     readyAt;
@@ -77,7 +77,7 @@ class KeyValue extends events_1.EventEmitter {
      * @returns
      */
     #finalizeOptions(options) {
-        const defaultOptions = KeyValue.defaultOptions();
+        const defaultOptions = OldKeyValue.defaultOptions();
         const finalOptions = {
             dataConfig: {
                 path: options?.dataConfig?.path ?? defaultOptions.dataConfig.path,
@@ -428,5 +428,5 @@ class KeyValue extends events_1.EventEmitter {
         return total / Object.keys(this.tables).length;
     }
 }
-exports.default = KeyValue;
+exports.default = OldKeyValue;
 //# sourceMappingURL=database.js.map

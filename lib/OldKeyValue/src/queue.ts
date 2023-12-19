@@ -1,4 +1,4 @@
-import { KeyValueData } from "../index.js";
+import  KeyValueData  from "./data.js";
 
 interface setQueue {
     //@ts-ignore
