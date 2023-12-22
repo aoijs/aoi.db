@@ -14,8 +14,9 @@ db.on(DatabaseEvents.Connect, async () => {
     await st(2000);
   console.log((await db.all("main",data => data.key.startsWith("collection"))).length);
   await st(2000);
+  await db.set("main", "collection_641161618729992203", { value: "test" });
   console.log(await db.get("main", "collection_641161618729992203"));
-    console.log((await db.all("main",data => data.key.startsWith("collection"))).length);
+    console.log((await db.all("main",data => data.key.startsWith("collection") && data.key.split("_").length == 2)).length);
 });
 
 db.connect();
