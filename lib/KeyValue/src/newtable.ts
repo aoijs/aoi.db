@@ -33,7 +33,6 @@ import {
     DatabaseEvents,
     DatabaseMethod,
     Hash,
-    WideColumnarData,
 } from "../../index.js";
 import { readFile, rename, truncate, writeFile } from "fs/promises";
 import Referencer from "../../global/referencer.js";
@@ -740,12 +739,12 @@ Attempting to repair file ${fileObj.name} in table ${
     }
 
     async findMany(query: (d: Data) => boolean) {
-        const matchedCacheData = this.#cache.filter((data) => query(data)).V();
-        await this.#findMany(query, matchedCacheData);
-        return matchedCacheData;
+        const matchedCacheData = this.#cache.filter((data) => query(data));
+        const res = await this.#findMany(query, matchedCacheData);
+        return res;
     }
-    async #findMany(query: (d: Data) => boolean, array: Data[]) {
-        if (this.locked)
+    async #findMany(query: (d: Data) => boolean, grp: Group<string, Data>) {
+        if (this.locked)  
             throw new Error(
                 "Table is locked. please use the <KeyValue>.fullRepair() to restore the data.",
             );
@@ -763,10 +762,11 @@ Attempting to repair file ${fileObj.name} in table ${
                     value: data[key].value,
                     type: data[key].type,
                 });
-                if (query(dataObj)) array.push(dataObj);
+                if (query(dataObj) && !grp.has(dataObj.key))
+                    grp.set(dataObj.key, dataObj)
             }
         }
-
+        const array = grp.V();
         return array;
     }
 

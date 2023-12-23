@@ -564,11 +564,11 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         return null;
     }
     async findMany(query) {
-        const matchedCacheData = this.#cache.filter((data) => query(data)).V();
-        await this.#findMany(query, matchedCacheData);
-        return matchedCacheData;
+        const matchedCacheData = this.#cache.filter((data) => query(data));
+        const res = await this.#findMany(query, matchedCacheData);
+        return res;
     }
-    async #findMany(query, array) {
+    async #findMany(query, grp) {
         if (this.locked)
             throw new Error("Table is locked. please use the <KeyValue>.fullRepair() to restore the data.");
         for (const file of this.files) {
@@ -582,10 +582,11 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                     value: data[key].value,
                     type: data[key].type,
                 });
-                if (query(dataObj))
-                    array.push(dataObj);
+                if (query(dataObj) && !grp.has(dataObj.key))
+                    grp.set(dataObj.key, dataObj);
             }
         }
+        const array = grp.V();
         return array;
     }
     async getFirstN(query, limit) {
