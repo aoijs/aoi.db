@@ -242,7 +242,11 @@ Attempting to repair file ${fileObj.name} in table ${
         for (let index = startIndex; index < logBlocks.length; index++) {
             const { key, value, type, method } = logBlocks[index];
             if (method === DatabaseMethod.Set) {
-                let file = reference[key].file;
+  
+                let file;
+                if(reference[key])
+                  file = reference[key].file;
+                else file = await this.#fileToPlace(new Data({key, value, type,file:""})); 
                 const data = new Data({
                     file,
                     key,
@@ -613,6 +617,7 @@ Attempting to repair file ${fileObj.name} in table ${
             const data = await this.fetchFile(`${this.paths.table}/${file}`);
             if (!data) return null;
             this.#cache.bulkFileSet(data, file);
+            if(!data[key]) return null;
             const getData = new Data({
                 file,
                 key,

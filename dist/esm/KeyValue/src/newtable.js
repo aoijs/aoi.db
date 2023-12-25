@@ -159,7 +159,11 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         for (let index = startIndex; index < logBlocks.length; index++) {
             const { key, value, type, method } = logBlocks[index];
             if (method === index_js_1.DatabaseMethod.Set) {
-                let file = reference[key].file;
+                let file;
+                if (reference[key])
+                    file = reference[key].file;
+                else
+                    file = await this.#fileToPlace(new data_js_1.default({ key, value, type, file: "" }));
                 const data = new data_js_1.default({
                     file,
                     key,
@@ -455,6 +459,8 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             if (!data)
                 return null;
             this.#cache.bulkFileSet(data, file);
+            if (!data[key])
+                return null;
             const getData = new data_js_1.default({
                 file,
                 key,
