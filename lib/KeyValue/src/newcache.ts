@@ -17,4 +17,11 @@ export default class Cacher<K = string, V = Data> extends Group<K, V> {
             this.set(key as K, d as V);
         }
     }
+    removeDuplicates() {
+        const arr = this.V() as unknown as Data[];
+        this.clear();
+        for(const data of arr) {
+            this.set(data.key as K, data as V);
+        }
+    }
 }

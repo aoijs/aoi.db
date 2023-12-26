@@ -622,7 +622,7 @@ Attempting to repair file ${fileObj.name} in table ${
             if (!reference[key]) return null;
             const file = reference[key].file;
             const data = await this.fetchFile(`${this.paths.table}/${file}`);
-            if (!data) return null;
+            if (!data || !Object.keys(data).length) return null;
             this.#cache.bulkFileSet(data, file);
             if(!data[key]) return null;
             const getData = new Data({
