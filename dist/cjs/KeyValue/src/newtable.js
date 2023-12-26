@@ -177,6 +177,13 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 this.#cache.set(data.key, data);
             }
             if (method === index_js_1.DatabaseMethod.Delete) {
+                if (!reference[key]) {
+                    if (this.#cache.has(key)) {
+                        this.#queue.add({ key, file: this.#cache.get(key)?.file || "" });
+                        this.#cache.delete(key);
+                        continue;
+                    }
+                }
                 this.#queue.add({ key, file: reference[key].file });
                 this.#cache.delete(key);
             }
