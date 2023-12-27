@@ -1019,4 +1019,7 @@ Attempting to repair file ${fileObj.name} in table ${
         this.repairMode = false;
         this.locked = false;
     }
+  get cache() {
+    return this.#cache;
+  }
 }

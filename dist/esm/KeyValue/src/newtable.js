@@ -463,7 +463,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 return null;
             const file = reference[key].file;
             const data = await this.fetchFile(`${this.paths.table}/${file}`);
-            if (!data)
+            if (!data || !Object.keys(data).length)
                 return null;
             this.#cache.bulkFileSet(data, file);
             if (!data[key])
@@ -801,6 +801,9 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         await Promise.all(promises);
         this.repairMode = false;
         this.locked = false;
+    }
+    get cache() {
+        return this.#cache;
     }
 }
 exports.default = Table;

@@ -2,6 +2,7 @@
 /// <reference types="node" />
 import EventEmitter from "events";
 import { KeyValue, KeyValueDataInterface, KeyValueJSONOption, KeyValueTableOptions, LogBlock } from "../index.js";
+import Cacher from "./newcache.js";
 import { WriteStream } from "fs";
 import Referencer from "../../global/referencer.js";
 import Data from "./data.js";
@@ -47,5 +48,6 @@ export default class Table extends EventEmitter {
     subtract(key: string, value: Partial<KeyValueDataInterface>): Promise<void>;
     ping(): Promise<number>;
     fullRepair(): Promise<void>;
+    get cache(): Cacher<string, Data>;
 }
 //# sourceMappingURL=newtable.d.ts.map

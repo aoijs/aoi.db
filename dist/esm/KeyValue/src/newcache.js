@@ -20,6 +20,13 @@ class Cacher extends structures_1.Group {
             this.set(key, d);
         }
     }
+    removeDuplicates() {
+        const arr = this.V();
+        this.clear();
+        for (const data of arr) {
+            this.set(data.key, data);
+        }
+    }
 }
 exports.default = Cacher;
 //# sourceMappingURL=newcache.js.map
