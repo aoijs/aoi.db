@@ -933,7 +933,7 @@ Attempting to repair file ${fileObj.name} in table ${
             crlfDelay: Infinity,
         });
 
-        const dataToAdd: Group<string, Data> = new Group(Infinity);
+         const dataToAdd: Group<string, Data> = new Group(Infinity);
 
         for await (const logLine of rl) {
             const [
