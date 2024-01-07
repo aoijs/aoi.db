@@ -1,6 +1,10 @@
-<h1 align="center">@akarui/aoi.db</h1>
+<p align="center">
+  <a href="https://aoi.js.org">
+    <img width="100" src="https://github.com/aoijs/website/blob/master/assets/images/aoidb.png?raw=true" alt="aoi.music">
+  </a>
+</p>
 
-<div align="center">
+<h1 align="center">@akarui/aoi.db</h1>
 
 [![Discord Server](https://img.shields.io/discord/773352845738115102?color=5865F2&logo=discord&logoColor=white)](https://discord.com/invite/HMUfMXDQsV)
 [![NPM Downloads](https://img.shields.io/npm/dt/aoi.db.svg?maxAge=3600)](https://www.npmjs.com/package/aoi.db)
