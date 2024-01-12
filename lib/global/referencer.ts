@@ -207,12 +207,14 @@ export default class Referencer {
     async deleteReference(key: string) {
         let referenceFile: string;
         if (this.cacheSize !== -1) {
-            referenceFile = this.cache[key].referenceFile;
+            referenceFile = this.cache[key]?.referenceFile;
+            if(!referenceFile) return;
             delete this.cache[key];
             this.cacheSize--;
         } else {
             const reference = await this.getReference();
-            referenceFile = reference[key].referenceFile;
+            referenceFile = reference[key]?.referenceFile;
+            if(!referenceFile) return;
         }
 
         await this.#deleteReference(key, referenceFile);

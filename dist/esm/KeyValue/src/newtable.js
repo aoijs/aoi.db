@@ -179,11 +179,16 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             if (method === index_js_1.DatabaseMethod.Delete) {
                 if (!reference[key]) {
                     if (this.#cache.has(key)) {
-                        this.#queue.add({ key, file: this.#cache.get(key)?.file || "" });
+                        this.#queue.add({
+                            key,
+                            file: this.#cache.get(key)?.file || "",
+                        });
                         this.#cache.delete(key);
                         continue;
                     }
                 }
+                if (!reference[key].file)
+                    continue;
                 this.#queue.add({ key, file: reference[key].file });
                 this.#cache.delete(key);
             }
@@ -445,6 +450,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 await (0, promises_1.writeFile)(path, dataToWrite);
                 await (0, promises_1.rename)(path, `${this.paths.table}/${file}`);
                 fileObj.isInWriteMode = false;
+                await this.#wal(data_js_1.default.emptyData(), index_js_1.DatabaseMethod.Flush);
                 resolve();
             });
             promises.push(promise);

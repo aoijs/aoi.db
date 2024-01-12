@@ -29,11 +29,7 @@ import {
     encrypt,
     stringify,
 } from "../../utils.js";
-import {
-    DatabaseEvents,
-    DatabaseMethod,
-    Hash,
-} from "../../index.js";
+import { DatabaseEvents, DatabaseMethod, Hash } from "../../index.js";
 import { readFile, rename, truncate, writeFile } from "fs/promises";
 import Referencer from "../../global/referencer.js";
 import QueueManager from "./queue.js";
@@ -242,11 +238,12 @@ Attempting to repair file ${fileObj.name} in table ${
         for (let index = startIndex; index < logBlocks.length; index++) {
             const { key, value, type, method } = logBlocks[index];
             if (method === DatabaseMethod.Set) {
-  
                 let file;
-                if(reference[key])
-                  file = reference[key].file;
-                else file = await this.#fileToPlace(new Data({key, value, type,file:""})); 
+                if (reference[key]) file = reference[key].file;
+                else
+                    file = await this.#fileToPlace(
+                        new Data({ key, value, type, file: "" }),
+                    );
                 const data = new Data({
                     file,
                     key,
@@ -259,13 +256,17 @@ Attempting to repair file ${fileObj.name} in table ${
                 this.#cache.set(data.key, data);
             }
             if (method === DatabaseMethod.Delete) {
-            if(!reference[key]) {
-                if(this.#cache.has(key)) {
-                    this.#queue.add({ key, file: this.#cache.get(key)?.file || "" });
-                    this.#cache.delete(key);
-                    continue;
+                if (!reference[key]) {
+                    if (this.#cache.has(key)) {
+                        this.#queue.add({
+                            key,
+                            file: this.#cache.get(key)?.file || "",
+                        });
+                        this.#cache.delete(key);
+                        continue;
+                    }
                 }
-            }
+                if (!reference[key].file) continue;
                 this.#queue.add({ key, file: reference[key].file });
                 this.#cache.delete(key);
             }
@@ -601,6 +602,7 @@ Attempting to repair file ${fileObj.name} in table ${
                 await writeFile(path, dataToWrite);
                 await rename(path, `${this.paths.table}/${file}`);
                 fileObj.isInWriteMode = false;
+                await this.#wal(Data.emptyData(), DatabaseMethod.Flush);
                 resolve();
             });
 
@@ -624,7 +626,7 @@ Attempting to repair file ${fileObj.name} in table ${
             const data = await this.fetchFile(`${this.paths.table}/${file}`);
             if (!data || !Object.keys(data).length) return null;
             this.#cache.bulkFileSet(data, file);
-            if(!data[key]) return null;
+            if (!data[key]) return null;
             const getData = new Data({
                 file,
                 key,
@@ -756,7 +758,7 @@ Attempting to repair file ${fileObj.name} in table ${
         return res;
     }
     async #findMany(query: (d: Data) => boolean, grp: Group<string, Data>) {
-        if (this.locked)  
+        if (this.locked)
             throw new Error(
                 "Table is locked. please use the <KeyValue>.fullRepair() to restore the data.",
             );
@@ -775,7 +777,7 @@ Attempting to repair file ${fileObj.name} in table ${
                     type: data[key].type,
                 });
                 if (query(dataObj) && !grp.has(dataObj.key))
-                    grp.set(dataObj.key, dataObj)
+                    grp.set(dataObj.key, dataObj);
             }
         }
         const array = grp.V();
@@ -933,7 +935,7 @@ Attempting to repair file ${fileObj.name} in table ${
             crlfDelay: Infinity,
         });
 
-         const dataToAdd: Group<string, Data> = new Group(Infinity);
+        const dataToAdd: Group<string, Data> = new Group(Infinity);
 
         for await (const logLine of rl) {
             const [
@@ -1019,7 +1021,7 @@ Attempting to repair file ${fileObj.name} in table ${
         this.repairMode = false;
         this.locked = false;
     }
-  get cache() {
-    return this.#cache;
-  }
+    get cache() {
+        return this.#cache;
+    }
 }
