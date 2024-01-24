@@ -43,9 +43,8 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@akarui/structures": "^2.0.1",
-    "build": "^0.1.4",
-    "jsonrepair": "^3.4.1",
+    "@akarui/structures": "^2.1.0",
+    "jsonrepair": "^3.5.1",
     "tar": "^6.1.15",
     "ws": "^8.13.0"
   },
