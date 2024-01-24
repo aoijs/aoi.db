@@ -239,7 +239,7 @@ Attempting to repair file ${fileObj.name} in table ${
             const { key, value, type, method } = logBlocks[index];
             if (method === DatabaseMethod.Set) {
                 let file;
-                if (reference[key]) file = reference[key].file;
+                if (reference[key]) file = reference[key]?.file;
                 else
                     file = await this.#fileToPlace(
                         new Data({ key, value, type, file: "" }),
