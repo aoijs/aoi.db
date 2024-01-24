@@ -160,7 +160,7 @@ class Table extends events_1.EventEmitter {
             const dataToAdd = logs.slice(lastFlush + 1);
             for (const data of dataToAdd) {
                 if (data.method === enum_js_1.DatabaseMethod.Set) {
-                    let file = reference[data.key].file;
+                    let file = reference[data.key]?.file;
                     if (!file)
                         return;
                     else {

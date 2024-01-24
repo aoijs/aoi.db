@@ -255,7 +255,7 @@ export default class Table extends EventEmitter {
             const dataToAdd = logs.slice(lastFlush + 1);
             for (const data of dataToAdd) {
                 if (data.method === DatabaseMethod.Set) {
-                    let file = reference[data.key].file;
+                    let file = reference[data.key]?.file;
                     if (!file) return;
                     else {
                         this.#queue.set.push(
