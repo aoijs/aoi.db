@@ -31,9 +31,13 @@ const tr = Transmitter.createConnection({
 })
 
 
+
+
 tr.on(DatabaseEvents.Connect, () => console.log("Connected"));
 
 tr.on(DatabaseEvents.Debug, (data) => console.log(data));
+
+tr.on(DatabaseEvents.Disconnect, () => console.log("Disconnected"));
 
 tr.connect();
 setInterval(() => {

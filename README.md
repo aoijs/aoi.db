@@ -29,12 +29,13 @@
 - [Links](#links)
 
 ## About
+
 Aoi.db is a collection of various database types to handle various types of data requirements!
 
 ## Installation
 
 ```bash
-#npm 
+#npm
 npm i @akarui/aoi.db
 
 #yarn
@@ -43,88 +44,87 @@ yarn add @akarui/aoi.db
 
 ## Types
 
-> * KeyValue - A simple database that stores key value pairs
->   * Usage:  general purpose 
+> - KeyValue - A simple database that stores key value pairs
+>   - Usage: general purpose
 
->
-> * WideColumn - A database that stores data in a column 
->   * Usage:  good for getting separate columns related to a primary column 
->
+> - WideColumn - A database that stores data in a column
+>   - Usage: good for getting separate columns related to a primary column
 
->
-> * Remote - A database that stores data in a remote server
->   * Usage:  good for separating database extensive usage from main project/process
->
+> - Remote - A database that stores data in a remote server
+>   - Usage: good for separating database extensive usage from main project/process
 
 ## Setups
 
 ### KeyValue
 
 ```ts
-  const { KeyValue } = require("@akarui/aoi.db") //commonjs
-  // or
-  import { KeyValue } from "@akarui/aoi.db" //esm
+const { KeyValue } = require("@akarui/aoi.db"); //commonjs
+// or
+import { KeyValue } from "@akarui/aoi.db"; //esm
 
-  // Basic Setup
-  const db = new KeyValue({
-    path: "./path/",
-    tables: ["table"],
-  });
+// Basic Setup
+const db = new KeyValue({
+  dataConfig: { path: "./database" },
+  encryptionConfig: {
+    encriptData: false,
+    securityKey: "a-32-characters-long-string-here",
+  },
+  debug: true,
+});
 
-  db.on("ready", () => {
-    console.log("Database is ready!");
-  });
+db.on("ready", () => {
+  console.log("Database is ready!");
+});
 
-  db.connect();
-
+db.connect();
 ```
+
 Reference: [KeyValue](https://akaruidevelopment.github.io/aoi.db/classes/KeyValue.html)
 
 ### WideColumn
 
 ```ts
-  const { WideColumn, Column } = require("@akarui/aoi.db") //commonjs
-  // or
-  import { WideColumn, Column } from "@akarui/aoi.db" //esm
+const { WideColumn, Column } = require("@akarui/aoi.db"); //commonjs
+// or
+import { WideColumn, Column } from "@akarui/aoi.db"; //esm
 
-  // Basic Setup
+// Basic Setup
 
-  const prime = new Column({
-    name: "id",
-    primary: true,
-    type: "bigint",
-    default:0n,
-  });
-  const xp = new Column({
-    name: "xp",
-    type: "number",
-    primary: false,
-    sortOrder: "DESC",
-    default : 0,
-  });
+const prime = new Column({
+  name: "id",
+  primary: true,
+  type: "bigint",
+  default: 0n,
+});
+const xp = new Column({
+  name: "xp",
+  type: "number",
+  primary: false,
+  sortOrder: "DESC",
+  default: 0,
+});
 
-  const db = new WideColumn({
-    path: "./path/",
-    encryptOption: {
-      securitykey: "a-32-characters-long-string-here",
+const db = new WideColumn({
+  path: "./path/",
+  encryptionConfig: {
+    securityKey: "a-32-characters-long-string-here",
+  },
+  tables: [
+    {
+      name: "main",
+      columns: [prime, xp],
     },
-    tables: [
-      {
-        name: "main",
-        columns: [prime, xp ],
-      },
-    ],
-  });
+  ],
+});
 
-  db.on("ready", () => {
-    console.log("Database is ready!");
-  });
+db.on("ready", () => {
+  console.log("Database is ready!");
+});
 
-  db.connect();
-
+db.connect();
 ```
-Reference: [WideColumn](https://akaruidevelopment.github.io/aoi.db/classes/WideColumn.html)
 
+Reference: [WideColumn](https://akaruidevelopment.github.io/aoi.db/classes/WideColumn.html)
 
 ### Remote
 
@@ -150,45 +150,58 @@ rec.on("connect", () => {
 });
 
 rec.connect();
-
 ```
+
 Reference: [Receiver](https://akaruidevelopment.github.io/aoi.db/classes/Receiver.html)
 
 #### Setting up the client
 
 ```js
-
 const { Transmitter, TransmitterFlags } = require("@akarui/aoi.db"); //commonjs
 // or
-import { Transmitter, TransmitterFlags } from "@akarui/aoi.db"; //esm
+import { Transmitter, DatabaseEvents } from "@akarui/aoi.db"; //esm
+
+cconst db = Transmitter.createConnection({
+    path: `aoidb://usersatoshi:123456@localhost:8080`,
+    dbOptions: {
+        type: "KeyValue",
+        options: {
+            dataConfig: {
+                path: "./database",
+            },
+            encryptionConfig: {
+                securityKey: "a-32-characters-long-string-here"
+            }
+        }
+    }
+})
+
+//or 
 
 const db = new Transmitter({
-  path: "websocket path",
-  //path : "ws://localhost:80",
-  databaseType: "KeyValue or WideColumn",
-  dbOptions: {
-    path: "./databasePath in remote server/",
-    encryptOption: {
-      securitykey: "a-32-characters-long-string-here",
-      enabled: true,
+    dbOptions: {
+        type: "KeyValue",
+        options: {
+            dataConfig: {
+                path: "database",
+            },
+            encryptionConfig: {
+                securityKey: "a-32-characters-long-string-here"
+            }
+        }
     },
-  },
-  name: "username",
-  pass: "password",
-  flags: TransmitterFlags.READ_WRITE, //READ_WRITE, READ_ONLY, WRITE_ONLY
-  tables: ["table"],
-});
+    username: "username",
+    password: "password",
+})
 
-db.on("ready", () => {
-  console.log("ready");
-});
-db.on("close", (code, reason) => {
-  console.log("[TRANSMITTER] => " + code + " " + reason);
-});
+
+
+db.on(DatabaseEvents.Connect, () => console.log("Connected"));
+db.on(DatabaseEvents.Disconnect, () => console.log("Disconnected"));
 db.connect();
 ```
-Reference: [Transmitter](https://akaruidevelopment.github.io/aoi.db/classes/Transmitter.html)
 
+Reference: [Transmitter](https://akaruidevelopment.github.io/aoi.db/classes/Transmitter.html)
 
 ## Links
 
