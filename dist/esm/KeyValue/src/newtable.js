@@ -21,6 +21,7 @@ class Table extends events_1.default {
     #db;
     #cache;
     locked = false;
+    isFlushing = false;
     repairMode = false;
     files;
     paths;
@@ -55,6 +56,10 @@ class Table extends events_1.default {
         if (this.locked)
             return;
         this.#flushInterval = setInterval(async () => {
+            // console.log({ isf: this.isFlushing });
+            if (this.isFlushing)
+                return;
+            this.isFlushing = true;
             await this.#flush();
         }, 500);
     }
@@ -352,8 +357,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                         return;
                     }
                     if (method === index_js_1.DatabaseMethod.Flush) {
-                        if (this.logData.size >
-                            this.#db.options.fileConfig.maxSize) {
+                        if (this.logData.size > this.#db.options.fileConfig.maxSize) {
                             await (0, promises_1.truncate)(this.paths.log, 33);
                         }
                     }
@@ -393,16 +397,27 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         this.#queue.add(data);
     }
     async #flush() {
+        // console.log({ isFlushing: this.isFlushing });
         if (this.locked)
             return;
+        // if (this.isFlushing) return;
         if (this.repairMode)
             return;
         if (!this.#queue.getQueueSize("set") &&
-            !this.#queue.getQueueSize("delete"))
+            !this.#queue.getQueueSize("delete")) {
+            this.isFlushing = false;
             return;
+        }
+        // this.isFlushing = true;
         const filesToWrite = new Set();
-        const QueueData = this.#queue.get("set").data;
-        const DeleteQueue = this.#queue.get("delete").data;
+        const QueueData = [];
+        for (const data of this.#queue.get("set").data) {
+            QueueData.push(data);
+        }
+        const DeleteQueue = [];
+        for (const data of this.#queue.get("delete").data) {
+            DeleteQueue.push(data);
+        }
         for (const data of QueueData) {
             filesToWrite.add(data.file);
         }
@@ -413,21 +428,25 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         for (const file of filesToWrite) {
             const promise = new Promise(async (resolve, reject) => {
                 const fileObj = this.files.find((fileObj) => fileObj.name === file);
+                // console.log({ fileObj });
                 if (!fileObj) {
-                    resolve();
+                    reject(0);
                     return;
                 }
                 if (fileObj.isInWriteMode) {
-                    resolve();
+                    reject(1);
                     return;
                 }
-                let fileData = await this.fetchFile(`${this.paths.table}/${file}`);
                 fileObj.isInWriteMode = true;
+                let fileData = await this.fetchFile(`${this.paths.table}/${file}`);
                 if (!fileData) {
                     fileData = {};
                 }
+                // console.log(fileData);
+                // console.log({ QueueData, DeleteQueue });
                 for (const data of QueueData) {
                     this.#queue.remove("set", data.key);
+                    // console.log({ data, file });
                     if (data.file !== file)
                         continue;
                     fileData[data.key] = data.toJSON();
@@ -446,16 +465,32 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 else {
                     dataToWrite = JSON.stringify(fileData);
                 }
+                // console.log(dataToWrite);
                 const path = `${this.paths.table}/$temp_${file}`;
-                await (0, promises_1.writeFile)(path, dataToWrite);
-                await (0, promises_1.rename)(path, `${this.paths.table}/${file}`);
-                fileObj.isInWriteMode = false;
-                await this.#wal(data_js_1.default.emptyData(), index_js_1.DatabaseMethod.Flush);
-                resolve();
+                (0, promises_1.writeFile)(path, dataToWrite).then(() => {
+                    // console.log(existsSync(path));
+                    (0, promises_1.rename)(path, `${this.paths.table}/${file}`).then(() => {
+                        // console.log(existsSync(path));
+                        this.#wal(data_js_1.default.emptyData(), index_js_1.DatabaseMethod.Flush).then(() => {
+                            fileObj.size = (0, fs_1.statSync)(`${this.paths.table}/${file}`).size;
+                            fileObj.isInWriteMode = false;
+                            resolve();
+                        });
+                    });
+                });
+                // resolve();
             });
             promises.push(promise);
         }
-        await Promise.all(promises);
+        await Promise.all(promises)
+            .then(() => {
+            this.isFlushing = false;
+        })
+            .catch((e) => {
+            // console.log(e);
+            if (e === 0)
+                this.isFlushing = false;
+        });
     }
     async get(key) {
         if (this.locked)

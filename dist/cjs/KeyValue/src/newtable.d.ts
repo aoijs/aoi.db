@@ -9,6 +9,7 @@ import Data from "./data.js";
 export default class Table extends EventEmitter {
     #private;
     locked: boolean;
+    isFlushing: boolean;
     repairMode: boolean;
     files: {
         name: string;

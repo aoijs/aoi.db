@@ -11,12 +11,12 @@ const db = new KeyValue({
 
 db.on(DatabaseEvents.Connect, async () => {
     console.log("ready");
-    await st(2000);
-  console.log((await db.all("main",data => data.key.startsWith("collection"))).length);
-  await st(2000);
-  await db.set("main", "collection_641161618729992203", { value: "test" });
-  console.log(await db.get("main", "collection_641161618729992203"));
-    console.log((await db.all("main",data => data.key.startsWith("collection") && data.key.split("_").length == 2)).length);
+    await st(1000);
+  db.set("main","hello"+Math.random(),{value: Math.random()})
+  db.set("main","hello"+Math.random(),{value: Math.random()})
+  db.set("main","hello"+Math.random(),{value: Math.random()})
+  db.set("main","hello"+Math.random(),{value: Math.random()})
+  db.set("main","hello"+Math.random(),{value: Math.random()})
 });
 
 db.connect();
