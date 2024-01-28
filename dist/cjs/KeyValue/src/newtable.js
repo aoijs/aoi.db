@@ -192,7 +192,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                         continue;
                     }
                 }
-                if (!reference[key].file)
+                if (!reference[key]?.file)
                     continue;
                 this.#queue.add({ key, file: reference[key].file });
                 this.#cache.delete(key);
