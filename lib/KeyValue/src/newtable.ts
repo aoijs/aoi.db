@@ -266,7 +266,7 @@ Attempting to repair file ${fileObj.name} in table ${
             continue;
           }
         }
-        if (!reference[key].file) continue;
+        if (!reference[key]?.file) continue;
         this.#queue.add({ key, file: reference[key].file });
         this.#cache.delete(key);
       }
