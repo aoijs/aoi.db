@@ -568,9 +568,8 @@ Attempting to repair file ${fileObj.name} in table ${
           return;
         }
 
-        fileObj.isInWriteMode = true;
-
         let fileData = await this.fetchFile(`${this.paths.table}/${file}`);
+        fileObj.isInWriteMode = true;
 
         if (!fileData) {
           fileData = {};

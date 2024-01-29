@@ -12,11 +12,12 @@ const db = new KeyValue({
 db.on(DatabaseEvents.Connect, async () => {
     console.log("ready");
     await st(1000);
-  db.set("main","hello"+Math.random(),{value: Math.random()})
-  db.set("main","hello"+Math.random(),{value: Math.random()})
-  db.set("main","hello"+Math.random(),{value: Math.random()})
-  db.set("main","hello"+Math.random(),{value: Math.random()})
-  db.set("main","hello"+Math.random(),{value: Math.random()})
+    for(let i =0;i < 100000;i++) {
+        await db.set("main", "key" + i, { value: 1 });
+    }
+console.log("done")
+    console.log(await db.get("main","key50000"))
+    console.log(await db.findOne("main",dt => dt.key.startsWith("key50000")))
 });
 
 db.connect();

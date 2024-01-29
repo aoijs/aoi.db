@@ -437,8 +437,8 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                     reject(1);
                     return;
                 }
-                fileObj.isInWriteMode = true;
                 let fileData = await this.fetchFile(`${this.paths.table}/${file}`);
+                fileObj.isInWriteMode = true;
                 if (!fileData) {
                     fileData = {};
                 }
