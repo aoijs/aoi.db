@@ -584,15 +584,15 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             throw new Error("Table is locked. please use the <KeyValue>.fullRepair() to restore the data.");
         if (order === "firstN")
             return this.getFirstN(query, limit);
-        const matchedData = await this.findMany(query);
-        if (order === "asc")
-            return matchedData
-                .sort(this.#db.options.cacheConfig.sortFunction)
-                .slice(0, limit);
-        else
-            return matchedData
-                .sort(this.#db.options.cacheConfig.sortFunction)
-                .slice(-limit);
+        let matchedData = await this.findMany(query);
+        if (order === "asc") {
+            matchedData = matchedData.sort((a, b) => this.#db.options.cacheConfig.sortFunction(a, b));
+            return matchedData.slice(0, limit);
+        }
+        else {
+            matchedData = matchedData.sort((a, b) => this.#db.options.cacheConfig.sortFunction(b, a));
+            return matchedData.slice(0, limit);
+        }
     }
     async findOne(query) {
         if (this.locked)
