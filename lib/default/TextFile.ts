@@ -1,18 +1,22 @@
 import fsPromises from "node:fs/promises";
 import fs from "node:fs";
 import { join, dirname, basename } from "node:path";
+import { Group } from "@akarui/structures";
+import { DataType } from "./typings.js";
 
 export default class TextFile {
   #file: string;
   #tempFile: string;
   #locked = false;
+  #type : DataType = 'str:1024';
   #fd: fsPromises.FileHandle | null = null;
   #tfd: fsPromises.FileHandle | null = null;
   #lineoffsets : number[] = [];
   #queue: { fn: () => void }[] = [];
   #retries = 0;
-  constructor(path: string) {
+  constructor(path: string,type: DataType ) {
     this.#file = path;
+    this.#type = type;
     this.#tempFile = join(dirname(path), `.${basename(path)}.tmp`);
     fsPromises
       .open(this.#file, fs.constants.O_CREAT | fs.constants.O_RDWR)
@@ -74,7 +78,7 @@ export default class TextFile {
         async () => {
             await fsPromises.rename(this.#tempFile, this.#file);
             this.#fd = await fsPromises.open(this.#file, fs.constants.O_CREAT | fs.constants.O_RDWR);
-            this.#tfd = 
+            this.#tfd = await fsPromises.open(this.#tempFile, fs.constants.O_CREAT | fs.constants.O_RDWR);
         }
 
       );
@@ -133,6 +137,15 @@ export default class TextFile {
   }
 
   async getOffsets() {
-    this.#fd 
+      this.#lineoffsets = [0];
+      const grp = new Group(Infinity);
+      for await (const line of this.#fd!.readLines()) {
+        const newoffset = this.#lineoffsets.at(-1) as number + line.length + 2; 
+        this.#lineoffsets.push(newoffset);
+        
+        if(this.#type === 'bool' ) {
+          
+        }
+      }
   }
 }
