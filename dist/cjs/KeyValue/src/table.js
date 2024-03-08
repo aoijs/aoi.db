@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 //@ts-nocheck
 const fs_1 = require("fs");
+const JSONStream_1 = __importDefault(require("JSONStream"));
 const utils_js_1 = require("../../utils.js");
 const enum_js_1 = require("../../typings/enum.js");
 const data_js_1 = __importDefault(require("./data.js"));
@@ -437,7 +438,7 @@ class Table extends events_1.EventEmitter {
                 type: data.type,
             });
         }
-        const d = (await this.#get(key, file));
+        data = await this.#get(key, file);
         return new data_js_1.default({
             file,
             key,
@@ -452,8 +453,27 @@ class Table extends events_1.EventEmitter {
      * @returns
      */
     async #get(key, file) {
-        const fileData = await this.#fetchFile(file);
-        const data = new data_js_1.default({
+        // const fileData = await this.#fetchFile(file);
+        const fileStream = (0, fs_1.createReadStream)(`${this.db.options.dataConfig.path}/${this.options.name}/${file}`);
+        let data = null;
+        const jsonStream = JSONStream_1.default.parse("key");
+        fileStream.pipe(jsonStream);
+        jsonStream.on("data", (d) => {
+            if (d.key === key) {
+                data = d;
+                jsonStream.destroy();
+            }
+            else {
+                const da = new data_js_1.default({
+                    file,
+                    key: d.key,
+                    value: d.value,
+                    type: d.type,
+                });
+                this.#cache.set(da);
+            }
+        });
+        data = new data_js_1.default({
             file,
             key,
             value: fileData[key]?.value,

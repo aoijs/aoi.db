@@ -10,6 +10,9 @@ import {
     unlinkSync,
     writeFileSync,
 } from "fs";
+
+import JSONStream from "JSONStream";
+
 import {
     JSONParser,
     ReferenceConstantSpace,
@@ -606,8 +609,8 @@ export default class Table extends EventEmitter {
                 type: data.type,
             });
         }
-
-        const d = (await this.#get(key, file)) as KeyValueJSONOption;
+        data = await this.#get(key, file);
+        
         return new Data({
             file,
             key,
@@ -624,8 +627,29 @@ export default class Table extends EventEmitter {
      */
 
     async #get(key: string, file: string) {
-        const fileData = await this.#fetchFile(file);
-        const data = new Data({
+        // const fileData = await this.#fetchFile(file);
+        const fileStream = createReadStream(
+            `${this.db.options.dataConfig.path}/${this.options.name}/${file}`,
+        );
+        let data = null;
+        const jsonStream = JSONStream.parse("key") as JSONStream.Parser;
+        fileStream.pipe(jsonStream);
+
+        jsonStream.on("data", (d) => {
+            if (d.key === key) {
+                data = d;
+                jsonStream.destroy();
+            } else {
+                const da = new Data({
+                    file,
+                    key: d.key,
+                    value: d.value,
+                    type: d.type,
+                });
+                this.#cache.set(da);
+            }
+        });
+        data = new Data({
             file,
             key,
             value: fileData[key]?.value,
