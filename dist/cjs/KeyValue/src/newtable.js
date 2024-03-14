@@ -3,19 +3,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 const events_1 = __importDefault(require("events"));
 const newcache_js_1 = __importDefault(require("./newcache.js"));
 const fs_1 = require("fs");
 const utils_js_1 = require("../../utils.js");
 const index_js_1 = require("../../index.js");
 const promises_1 = require("fs/promises");
-const referencer_js_1 = __importDefault(require("../../global/referencer.js"));
 const queue_js_1 = __importDefault(require("./queue.js"));
 const data_js_1 = __importDefault(require("./data.js"));
 const promises_2 = require("timers/promises");
 const crypto_1 = require("crypto");
 const promises_3 = require("readline/promises");
 const structures_1 = require("@akarui/structures");
+const FileManager_js_1 = __importDefault(require("./FileManager.js"));
 class Table extends events_1.default {
     #options;
     #db;
@@ -26,10 +27,11 @@ class Table extends events_1.default {
     files;
     paths;
     logData;
-    referencer;
     #queue;
     #flushInterval;
     readyAt = -1;
+    hashManager;
+    referencer;
     constructor(options, db) {
         super();
         this.#options = options;
@@ -40,14 +42,17 @@ class Table extends events_1.default {
     get options() {
         return this.#options;
     }
+    get db() {
+        return this.#db;
+    }
     async initialize() {
         this.#getPaths();
-        await this.#setReference();
         this.#getFiles();
         await this.#getLogData();
         await this.#checkIntegrity();
         await this.#syncWithLog();
-        await this.#syncReferencer();
+        this.hashManager = new FileManager_js_1.default(10000, 20, this);
+        // await this.#syncReferencer();
         this.#enableIntervals();
         this.readyAt = Date.now();
         this.#db.emit(index_js_1.DatabaseEvents.TableReady, this);
@@ -62,10 +67,6 @@ class Table extends events_1.default {
             this.isFlushing = true;
             await this.#flush();
         }, 500);
-    }
-    async #setReference() {
-        this.referencer = new referencer_js_1.default(this.paths.reference, this.#db.options.fileConfig.maxSize, this.#db.options.cacheConfig.reference);
-        await this.referencer.initialize();
     }
     #getPaths() {
         const { path, referencePath } = this.#db.options.dataConfig;
@@ -158,17 +159,12 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         if (this.locked)
             return;
         const logBlocks = await this.getLogs();
-        const reference = await this.referencer.getReference();
         const lastFlushIndex = logBlocks.findLastIndex((block) => block.method === index_js_1.DatabaseMethod.Flush);
         const startIndex = lastFlushIndex === -1 ? 0 : lastFlushIndex + 1;
         for (let index = startIndex; index < logBlocks.length; index++) {
             const { key, value, type, method } = logBlocks[index];
             if (method === index_js_1.DatabaseMethod.Set) {
                 let file;
-                if (reference[key])
-                    file = reference[key]?.file;
-                else
-                    file = await this.#fileToPlace(new data_js_1.default({ key, value, type, file: "" }));
                 const data = new data_js_1.default({
                     file,
                     key,
@@ -535,19 +531,14 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 return;
             this.#cache.delete(key);
             await this.#wal(data, index_js_1.DatabaseMethod.Delete);
-            await this.referencer.deleteReference(key);
             this.#queue.add({ key, file: data.file });
         }
         else {
-            const reference = await this.referencer.getReference();
-            if (!reference[key])
-                return;
-            const file = reference[key].file;
+            const file = '';
             const emptyData = data_js_1.default.emptyData();
             emptyData.key = key;
             emptyData.file = file;
             await this.#wal(emptyData, index_js_1.DatabaseMethod.Delete);
-            await this.referencer.deleteReference(key);
             this.#queue.add({ key, file });
         }
     }
@@ -559,7 +550,6 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         this.#queue.clear("delete");
         this.files = [];
         await this.#createFile(false);
-        await this.referencer.clear();
         await this.#reset();
     }
     async #reset() {

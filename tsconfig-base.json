@@ -11,5 +11,5 @@
         "rootDir": "./lib",
         "composite": false,
     },
-    "exclude": ["oldlib","dist","site"]
+    "exclude": ["oldlib","dist","site","__tests__"]
 }

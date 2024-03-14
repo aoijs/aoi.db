@@ -1,3 +1,4 @@
+// @ts-nocheck
 import EventEmitter from "events";
 import {
   KeyValue,
@@ -39,6 +40,7 @@ import { setTimeout as wait } from "timers/promises";
 import { randomBytes } from "crypto";
 import { createInterface } from "readline/promises";
 import { Group } from "@akarui/structures";
+import HashManager from "./FileManager.js";
 
 export default class Table extends EventEmitter {
   #options: KeyValueTableOptions;
@@ -64,10 +66,11 @@ export default class Table extends EventEmitter {
     fullWriter: WriteStream;
     logIV: string;
   };
-  referencer!: Referencer;
   #queue: QueueManager;
   #flushInterval!: NodeJS.Timeout;
   readyAt: number = -1;
+  hashManager!: HashManager;
+  referencer: any;
 
   constructor(options: KeyValueTableOptions, db: KeyValue) {
     super();
@@ -81,14 +84,18 @@ export default class Table extends EventEmitter {
     return this.#options;
   }
 
+  get db() {
+    return this.#db;
+  }
+
   async initialize() {
     this.#getPaths();
-    await this.#setReference();
     this.#getFiles();
     await this.#getLogData();
     await this.#checkIntegrity();
     await this.#syncWithLog();
-    await this.#syncReferencer();
+    this.hashManager = new HashManager(10000,20,this);
+    // await this.#syncReferencer();
     this.#enableIntervals();
     this.readyAt = Date.now();
     this.#db.emit(DatabaseEvents.TableReady, this);
@@ -102,14 +109,6 @@ export default class Table extends EventEmitter {
       this.isFlushing = true;
       await this.#flush();
     }, 500);
-  }
-  async #setReference() {
-    this.referencer = new Referencer(
-      this.paths.reference,
-      this.#db.options.fileConfig.maxSize,
-      this.#db.options.cacheConfig.reference
-    );
-    await this.referencer.initialize();
   }
   #getPaths() {
     const { path, referencePath } = this.#db.options.dataConfig;
@@ -131,7 +130,7 @@ export default class Table extends EventEmitter {
         isInWriteMode: false,
       };
     });
-  }
+  } 
   async #getLogData() {
     this.logData = {
       writer: createWriteStream(this.paths.log, {
@@ -229,7 +228,6 @@ Attempting to repair file ${fileObj.name} in table ${
   async #syncWithLog() {
     if (this.locked) return;
     const logBlocks = await this.getLogs();
-    const reference = await this.referencer.getReference();
 
     const lastFlushIndex = logBlocks.findLastIndex(
       (block) => block.method === DatabaseMethod.Flush
@@ -239,11 +237,6 @@ Attempting to repair file ${fileObj.name} in table ${
       const { key, value, type, method } = logBlocks[index];
       if (method === DatabaseMethod.Set) {
         let file;
-        if (reference[key]) file = reference[key]?.file;
-        else
-          file = await this.#fileToPlace(
-            new Data({ key, value, type, file: "" })
-          );
         const data = new Data({
           file,
           key,
@@ -673,18 +666,13 @@ Attempting to repair file ${fileObj.name} in table ${
 
       this.#cache.delete(key);
       await this.#wal(data, DatabaseMethod.Delete);
-      await this.referencer.deleteReference(key);
       this.#queue.add({ key, file: data.file });
     } else {
-      const reference = await this.referencer.getReference();
-      if (!reference[key]) return;
-
-      const file = reference[key].file;
+      const file = ''
       const emptyData = Data.emptyData();
       emptyData.key = key;
       emptyData.file = file;
       await this.#wal(emptyData, DatabaseMethod.Delete);
-      await this.referencer.deleteReference(key);
       this.#queue.add({ key, file });
     }
   }
@@ -698,7 +686,6 @@ Attempting to repair file ${fileObj.name} in table ${
     this.#queue.clear("delete");
     this.files = [];
     await this.#createFile(false);
-    await this.referencer.clear();
     await this.#reset();
   }
 

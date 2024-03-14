@@ -7,7 +7,7 @@ const fs_1 = require("fs");
 const crypto_1 = require("crypto");
 const enum_js_1 = require("../../typings/enum.js");
 const utils_js_1 = require("../../utils.js");
-const newtable_js_1 = __importDefault(require("./newtable.js"));
+const Table_js_1 = __importDefault(require("./Table.js"));
 const events_1 = require("events");
 //zipping and unzipping
 const tar_1 = __importDefault(require("tar"));
@@ -51,8 +51,10 @@ class KeyValue extends events_1.EventEmitter {
             },
             fileConfig: {
                 extension: ".sql",
+                reHashOnStartup: false,
                 transactionLogPath: "./transaction/",
-                maxSize: 20 * 1024 * 1024,
+                maxSize: 10000,
+                minFileCount: 20,
             },
             encryptionConfig: {
                 securityKey: "a-32-characters-long-string-here",
@@ -91,8 +93,11 @@ class KeyValue extends events_1.EventEmitter {
                     defaultOptions.fileConfig.extension,
                 transactionLogPath: path_1.default.join(options.dataConfig?.path ?? defaultOptions.dataConfig.path, options?.fileConfig?.transactionLogPath ??
                     defaultOptions.fileConfig.transactionLogPath),
+                reHashOnStartup: options?.fileConfig?.reHashOnStartup ?? false,
                 maxSize: options?.fileConfig?.maxSize ??
                     defaultOptions.fileConfig.maxSize,
+                minFileCount: options?.fileConfig?.minFileCount ??
+                    defaultOptions.fileConfig.minFileCount,
             },
             encryptionConfig: {
                 securityKey: options?.encryptionConfig?.securityKey ??
@@ -177,7 +182,7 @@ class KeyValue extends events_1.EventEmitter {
             });
         }
         for (const table of this.#options.dataConfig.tables) {
-            const t = new newtable_js_1.default({
+            const t = new Table_js_1.default({
                 name: table,
             }, this);
             this.tables[table] = {
@@ -208,7 +213,7 @@ class KeyValue extends events_1.EventEmitter {
         const t = this.tables[table];
         if (!t)
             return undefined;
-        return await t.table.set(key, value);
+        return await t.table.set(key, value.value, value.type);
     }
     /**
      * @description get data from database
@@ -390,12 +395,11 @@ class KeyValue extends events_1.EventEmitter {
      * ```
      *
      */
-    async fullRepair(table) {
-        const t = this.tables[table];
-        if (!t)
-            return undefined;
-        return await t.table.fullRepair();
-    }
+    // async fullRepair(table: string) {
+    //     const t = this.tables[table];
+    //     if (!t) return undefined;
+    //     return await t.table.fullRepair();
+    // }
     /**
      * @description deletes all data that matches the query
      * @param table table to delete
@@ -412,7 +416,7 @@ class KeyValue extends events_1.EventEmitter {
         const t = this.tables[table];
         if (!t)
             return undefined;
-        return await t.table.deleteMany(query ?? (() => true));
+        return await t.table.removeMany(query ?? (() => true));
     }
     async ping(table) {
         const t = this.tables[table];

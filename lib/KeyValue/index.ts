@@ -1,8 +1,8 @@
-import KeyValueCacher from "./src/cache.js";
+import KeyValueCacher from "./src/LRUcache.js";
 import KeyValueData from "./src/data.js";
-
+import KeyValueFileManager from "./src/FileManager.js";
 import KeyValue from "./src/database.js";
-import KeyValueTable from "./src/table.js";
+import KeyValueTable from "./src/Table.js";
 export * from "./typings/interface.js";
 export * from "./typings/type.js";
 
@@ -11,4 +11,5 @@ export {
     KeyValueData,
     KeyValueTable,
     KeyValue,
+    KeyValueFileManager
 };

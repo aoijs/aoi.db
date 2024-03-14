@@ -9,9 +9,9 @@ import {
     ReferenceType,
     DatabaseEvents,
 } from "../../typings/enum.js";
-import { DeepRequired } from "../typings/type.js";
+import { DeepRequired, KeyValueDataValueType } from "../typings/type.js";
 import { encrypt } from "../../utils.js";
-import Table from "./newtable.js";
+import Table from "./Table.js";
 import { EventEmitter } from "events";
 //zipping and unzipping
 import tar from "tar";
@@ -65,8 +65,10 @@ export default class KeyValue extends EventEmitter {
             },
             fileConfig: {
                 extension: ".sql",
+                reHashOnStartup: false,
                 transactionLogPath: "./transaction/",
-                maxSize: 20 * 1024 * 1024,
+                maxSize: 10000,
+                minFileCount: 20,
             },
             encryptionConfig: {
                 securityKey: "a-32-characters-long-string-here",
@@ -116,9 +118,13 @@ export default class KeyValue extends EventEmitter {
                     options?.fileConfig?.transactionLogPath ??
                         defaultOptions.fileConfig.transactionLogPath,
                 ),
+                reHashOnStartup: options?.fileConfig?.reHashOnStartup ?? false,
                 maxSize:
                     options?.fileConfig?.maxSize ??
                     defaultOptions.fileConfig.maxSize,
+                minFileCount:
+                    options?.fileConfig?.minFileCount ??
+                    defaultOptions.fileConfig.minFileCount,
             },
             encryptionConfig: {
                 securityKey:
@@ -299,7 +305,7 @@ export default class KeyValue extends EventEmitter {
         const t = this.tables[table];
         if (!t) return undefined;
 
-        return await t.table.set(key, value);
+        return await t.table.set(key, value.value as KeyValueDataValueType, value.type);
     }
 
     /**
@@ -513,12 +519,12 @@ export default class KeyValue extends EventEmitter {
      *
      */
 
-    async fullRepair(table: string) {
-        const t = this.tables[table];
-        if (!t) return undefined;
+    // async fullRepair(table: string) {
+    //     const t = this.tables[table];
+    //     if (!t) return undefined;
 
-        return await t.table.fullRepair();
-    }
+    //     return await t.table.fullRepair();
+    // }
 
     /**
      * @description deletes all data that matches the query
@@ -540,7 +546,7 @@ export default class KeyValue extends EventEmitter {
         const t = this.tables[table];
         if (!t) return undefined;
 
-        return await t.table.deleteMany(query?? (() => true));
+        return await t.table.removeMany(query?? (() => true));
     }
 
     async ping(table:string) {

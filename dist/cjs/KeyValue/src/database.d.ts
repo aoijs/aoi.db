@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { KeyValueDataInterface, KeyValueOptions } from "../typings/interface.js";
 import { DeepRequired } from "../typings/type.js";
-import Table from "./newtable.js";
+import Table from "./Table.js";
 import { EventEmitter } from "events";
 import Data from "./data.js";
 export default class KeyValue extends EventEmitter {
@@ -72,7 +72,7 @@ export default class KeyValue extends EventEmitter {
      * <KeyValue>.get("main","key");
      * ```
      */
-    get(table: string, key: string): Promise<Data | null | undefined>;
+    get(table: string, key: string): Promise<Data | undefined>;
     /**
      * @description delete data from database
      * @param table table where data is saved
@@ -131,7 +131,7 @@ export default class KeyValue extends EventEmitter {
      * })
      * ```
      */
-    findOne(table: string, query: (value: Data) => boolean): Promise<Data | null | undefined>;
+    findOne(table: string, query: (value: Data) => boolean): Promise<Data | undefined>;
     /**
      * @description find all data that matches the query
      * @param table table to find
@@ -184,7 +184,6 @@ export default class KeyValue extends EventEmitter {
      * ```
      *
      */
-    fullRepair(table: string): Promise<void>;
     /**
      * @description deletes all data that matches the query
      * @param table table to delete

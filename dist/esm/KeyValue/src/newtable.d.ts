@@ -4,8 +4,8 @@ import EventEmitter from "events";
 import { KeyValue, KeyValueDataInterface, KeyValueJSONOption, KeyValueTableOptions, LogBlock } from "../index.js";
 import Cacher from "./newcache.js";
 import { WriteStream } from "fs";
-import Referencer from "../../global/referencer.js";
 import Data from "./data.js";
+import HashManager from "./FileManager.js";
 export default class Table extends EventEmitter {
     #private;
     locked: boolean;
@@ -28,10 +28,12 @@ export default class Table extends EventEmitter {
         fullWriter: WriteStream;
         logIV: string;
     };
-    referencer: Referencer;
     readyAt: number;
+    hashManager: HashManager;
+    referencer: any;
     constructor(options: KeyValueTableOptions, db: KeyValue);
     get options(): KeyValueTableOptions;
+    get db(): KeyValue;
     initialize(): Promise<void>;
     fetchFile(path: string): Promise<Record<string, KeyValueJSONOption> | undefined>;
     getLogs(): Promise<LogBlock[]>;

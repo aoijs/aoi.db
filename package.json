@@ -43,7 +43,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@akarui/structures": "^2.1.0",
+    "@akarui/structures": "github:akaruidevelopment/structures#v2",
     "jsonrepair": "^3.5.1",
     "JSONStream": "^1.3.5",
     "tar": "^6.1.15",

@@ -20,6 +20,8 @@ export interface KeyValueFileConfig {
     extension?: string;
     transactionLogPath?: string;
     maxSize?: number;
+    reHashOnStartup?: boolean;
+    minFileCount?: number;
 }
 
 export interface KeyValueEncryptionConfig {
