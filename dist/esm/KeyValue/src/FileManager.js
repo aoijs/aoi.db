@@ -104,7 +104,7 @@ class FileManager {
                         return Array.from(data);
                 }
             }
-            return data;
+            return Array.from(data);
         }
         else {
             const data = [];

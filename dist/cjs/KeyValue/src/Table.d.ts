@@ -31,7 +31,7 @@ export default class Table extends EventEmitter {
     delete(key: string): Promise<void>;
     clear(): Promise<void>;
     has(key: string): Promise<boolean>;
-    all(query: (d: Data) => boolean, limit: number, order: "firstN" | "asc" | "desc"): Promise<Data[] | Set<Data>>;
+    all(query: (d: Data) => boolean, limit: number, order: "firstN" | "asc" | "desc"): Promise<Data[]>;
     findOne(query: (d: Data) => boolean): Promise<Data | undefined>;
     findMany(query: (d: Data) => boolean): Promise<Data[]>;
     removeMany(query: (d: Data) => boolean): Promise<void>;

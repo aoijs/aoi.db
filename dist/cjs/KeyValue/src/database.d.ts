@@ -160,7 +160,7 @@ export default class KeyValue extends EventEmitter {
      * },10)
      * ```
      */
-    all(table: string, query?: (value: Data) => boolean, limit?: number, order?: 'firstN' | 'asc' | 'desc'): Promise<Data[] | Set<Data> | undefined>;
+    all(table: string, query?: (value: Data) => boolean, limit?: number, order?: 'firstN' | 'asc' | 'desc'): Promise<Data[] | undefined>;
     /**
      * @description perform a backup of database
      * @returns

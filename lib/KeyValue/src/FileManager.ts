@@ -133,7 +133,7 @@ export default class FileManager {
         if (data.size == limit) return Array.from(data);
         }
       }
-      return data;
+      return Array.from(data);
     } else {
       const data: Data[] = [];
       for (const file of this.#array) {

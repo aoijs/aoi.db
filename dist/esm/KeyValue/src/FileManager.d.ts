@@ -11,7 +11,7 @@ export default class FileManager {
     get(key: KeyValueData["key"]): Promise<KeyValueData | undefined>;
     clear(): void;
     has(key: KeyValueData["key"]): Promise<boolean>;
-    all(query: (d: KeyValueData) => boolean, limit: number, order: "firstN" | "asc" | "desc"): Promise<KeyValueData[] | Set<KeyValueData>>;
+    all(query: (d: KeyValueData) => boolean, limit: number, order: "firstN" | "asc" | "desc"): Promise<KeyValueData[]>;
     findOne(query: (d: KeyValueData) => boolean): Promise<KeyValueData | undefined>;
     findMany(query: (d: KeyValueData) => boolean): Promise<KeyValueData[]>;
     getFirstN(query: (d: KeyValueData) => boolean, limit: number): Promise<KeyValueData[]>;
