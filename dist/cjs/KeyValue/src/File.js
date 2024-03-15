@@ -20,6 +20,7 @@ class File {
     #flushQueue;
     #removeQueue;
     #interval;
+    #retries = 0;
     #table;
     constructor(path, capacity, table) {
         this.#cache = new LRUcache_js_1.default(capacity);
@@ -175,11 +176,25 @@ class File {
         const buffer = Buffer.from(writeData);
         await (0, promisifiers_js_1.write)(fd, buffer, 0, buffer.length, 0);
         await (0, promisifiers_js_1.close)(this.#fd);
-        await node_fs_1.default.promises.rename(tempFile, this.#path);
+        await this.#retry(async () => await node_fs_1.default.promises.rename(tempFile, this.#path), 10, 100);
         this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         this.#flushQueue = [];
         this.#removeQueue = [];
         this.#locked = false;
+    }
+    async #retry(fn, maxRetries = 10, delay = 100) {
+        try {
+            return await fn();
+        }
+        catch (error) {
+            if (this.#retries >= maxRetries) {
+                this.#retries = 0;
+                throw error;
+            }
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            this.#retries++;
+            return await this.#retry(fn, maxRetries, delay * 2);
+        }
     }
     async getAll(query) {
         if (!query)
@@ -309,7 +324,9 @@ class File {
         const buffer = Buffer.from(data);
         await (0, promisifiers_js_1.write)(fd, buffer, 0, buffer.length, 0);
         await (0, promisifiers_js_1.close)(this.#fd);
-        await node_fs_1.default.promises.rename(tempFile, this.#path);
+        await this.#retry(async () => await node_fs_1.default.promises.rename(tempFile, this.#path).then(() => {
+            this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        }), 10, 100);
         this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         this.#locked = false;
     }

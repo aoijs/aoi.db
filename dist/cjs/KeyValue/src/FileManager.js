@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const node_crypto_1 = __importDefault(require("node:crypto"));
 const File_js_1 = __importDefault(require("./File.js"));
 const node_fs_1 = require("node:fs");
 class FileManager {
@@ -33,9 +32,11 @@ class FileManager {
         return this.#hashSize;
     }
     #hash(key) {
-        const hash = node_crypto_1.default.createHash("sha256");
-        hash.update(key);
-        return hash.digest("hex");
+        const hash = key.split("").reduce((a, b) => {
+            a = (a << 5) - a + b.charCodeAt(0);
+            return a & a;
+        }, 1);
+        return hash.toString(16);
     }
     add(data) {
         const hash = this.#hash(data.key);

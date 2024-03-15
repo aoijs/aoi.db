@@ -19,6 +19,7 @@ export default class File {
   #flushQueue: Data[];
   #removeQueue: Data["key"][];
   #interval!: NodeJS.Timeout;
+  #retries = 0;
   #table: Table;
   constructor(path: string, capacity: number, table: Table) {
     this.#cache = new LRUCache(capacity);
@@ -210,7 +211,12 @@ export default class File {
     const buffer = Buffer.from(writeData);
     await write(fd, buffer, 0, buffer.length, 0);
     await close(this.#fd);
-    await fs.promises.rename(tempFile, this.#path);
+
+    await this.#retry(
+      async () => await fs.promises.rename(tempFile, this.#path),
+      10,
+      100
+    );
     this.#fd = fs.openSync(
       this.#path,
       fs.constants.O_RDWR | fs.constants.O_CREAT
@@ -218,6 +224,24 @@ export default class File {
     this.#flushQueue = [];
     this.#removeQueue = [];
     this.#locked = false;
+  }
+
+  async #retry<T>(
+    fn: () => Promise<T>,
+    maxRetries = 10,
+    delay = 100
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      if (this.#retries >= maxRetries) {
+        this.#retries = 0;
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      this.#retries++;
+      return await this.#retry(fn, maxRetries, delay * 2);
+    }
   }
 
   async getAll(query?: (d: Data) => boolean): Promise<Data[]> {
@@ -250,8 +274,8 @@ export default class File {
 
   async findOne(query?: (d: Data) => boolean): Promise<Data | undefined> {
     if (!query) query = () => true;
-    const f =this.#cache.findOne(query);
-    if(f) return f;
+    const f = this.#cache.findOne(query);
+    if (f) return f;
     let json = JSON.parse(
       await fs.promises.readFile(this.#path, { encoding: "utf-8" })
     );
@@ -375,7 +399,17 @@ export default class File {
     await write(fd, buffer, 0, buffer.length, 0);
     await close(this.#fd);
 
-    await fs.promises.rename(tempFile, this.#path);
+    await this.#retry(
+      async () =>
+        await fs.promises.rename(tempFile, this.#path).then(() => {
+          this.#fd = fs.openSync(
+            this.#path,
+            fs.constants.O_RDWR | fs.constants.O_CREAT
+          );
+        }),
+      10,
+      100
+    );
     this.#fd = await open(
       this.#path,
       fs.constants.O_RDWR | fs.constants.O_CREAT
