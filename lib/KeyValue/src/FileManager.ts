@@ -45,7 +45,7 @@ export default class FileManager {
 
   #hash(key: string) {
     const hash = key.split("").reduce((a, b) => {
-      a = (a << 5) - a + b.charCodeAt(0);
+      a += b.charCodeAt(0);
       return a & a;
     }, 1);
     return hash.toString(16);
