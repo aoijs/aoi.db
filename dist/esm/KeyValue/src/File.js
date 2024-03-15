@@ -154,7 +154,6 @@ class File {
     }
     async #atomicFlush() {
         const tempFile = `${this.#path}.tmp`;
-        const fd = await (0, promisifiers_js_1.open)(tempFile, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8"));
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
@@ -173,8 +172,7 @@ class File {
         else {
             writeData = JSON.stringify(json);
         }
-        const buffer = Buffer.from(writeData);
-        await (0, promisifiers_js_1.write)(fd, buffer, 0, buffer.length, 0);
+        await node_fs_1.default.promises.writeFile(tempFile, writeData);
         await (0, promisifiers_js_1.close)(this.#fd);
         await this.#retry(async () => await node_fs_1.default.promises.rename(tempFile, this.#path), 10, 100);
         this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
@@ -320,9 +318,7 @@ class File {
     async #atomicWrite(data) {
         this.#locked = true;
         const tempFile = `${this.#path}.tmp`;
-        const fd = await (0, promisifiers_js_1.open)(tempFile, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
-        const buffer = Buffer.from(data);
-        await (0, promisifiers_js_1.write)(fd, buffer, 0, buffer.length, 0);
+        await node_fs_1.default.promises.writeFile(tempFile, data);
         await (0, promisifiers_js_1.close)(this.#fd);
         await this.#retry(async () => await node_fs_1.default.promises.rename(tempFile, this.#path).then(() => {
             this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);

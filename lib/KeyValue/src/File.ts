@@ -182,7 +182,6 @@ export default class File {
 
   async #atomicFlush() {
     const tempFile = `${this.#path}.tmp`;
-    const fd = await open(tempFile, fs.constants.O_RDWR | fs.constants.O_CREAT);
     let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
     if (this.#table.db.options.encryptionConfig.encriptData) {
       const decryptedData = decrypt(
@@ -208,8 +207,7 @@ export default class File {
     } else {
       writeData = JSON.stringify(json);
     }
-    const buffer = Buffer.from(writeData);
-    await write(fd, buffer, 0, buffer.length, 0);
+    await fs.promises.writeFile(tempFile, writeData);
     await close(this.#fd);
 
     await this.#retry(
@@ -394,9 +392,7 @@ export default class File {
   async #atomicWrite(data: string) {
     this.#locked = true;
     const tempFile = `${this.#path}.tmp`;
-    const fd = await open(tempFile, fs.constants.O_RDWR | fs.constants.O_CREAT);
-    const buffer = Buffer.from(data);
-    await write(fd, buffer, 0, buffer.length, 0);
+    await fs.promises.writeFile(tempFile, data);
     await close(this.#fd);
 
     await this.#retry(
