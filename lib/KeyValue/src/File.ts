@@ -7,11 +7,12 @@ import JSONStream from "JSONStream";
 import { KeyValueJSONOption } from "../typings/interface.js";
 import Table from "./Table.js";
 import { decrypt, encrypt } from "../../utils.js";
+import { close, ftruncate, open, write } from "../../promisifiers.js";
 
 export default class File {
   #cache: LRUCache;
   #path: string;
-  #fd!: fs.promises.FileHandle;
+  #fd!: number;
   #size: number;
   #isDirty: boolean;
   #locked: boolean;
@@ -30,16 +31,17 @@ export default class File {
     this.#removeQueue = [];
 
     // Open file
-    fs.promises
-      .open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT)
-      .then(async (fd) => {
-        this.#fd = fd;
-        await this.#checkIntegrity();
-        this.#enableInterval();
-      })
-      .catch((e) => {
-        throw e;
-      });
+    this.#fd = fs.openSync(
+      this.#path,
+      fs.constants.O_RDWR | fs.constants.O_CREAT
+    );
+    if (fs.fstatSync(this.#fd).size === 0)
+      fs.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
+    this.#checkIntegrity().catch((e) => {
+      this.#isDirty = true;
+      console.error(e);
+    });
+    this.#enableInterval();
   }
 
   get name() {
@@ -92,7 +94,8 @@ export default class File {
     await new Promise<void>((resolve, reject) => {
       try {
         const jsonstream = JSONStream.parse("*");
-        this.#fd.createReadStream().pipe(jsonstream);
+        const stream = fs.createReadStream(this.#path);
+        stream.pipe(jsonstream);
         jsonstream.on("data", (data: KeyValueJSONOption) => {
           this.#size++;
           this.#cache.put(
@@ -117,14 +120,13 @@ export default class File {
   }
 
   async get(key: string): Promise<Data | undefined> {
+    if (this.#cache.has(key)) {
+      return this.#cache.get(key);
+    }
     const idx = this.#flushQueue.findIndex((data) => data.key === key);
 
     if (idx !== -1) {
       return this.#flushQueue[idx];
-    }
-
-    if (this.#cache.has(key)) {
-      return this.#cache.get(key);
     }
 
     if (this.#isDirty) {
@@ -137,38 +139,38 @@ export default class File {
 
     this.#locked = true;
     const value = await this.#getFromDisk(key);
-    this.#locked = false;
+    // this.#locked = false;
     return value;
   }
 
   async #getFromDisk(key: string): Promise<Data | undefined> {
-    return await new Promise<Data>((resolve, reject) => {
-      const jsonstream = JSONStream.parse("*");
-      this.#fd.createReadStream().pipe(jsonstream);
-      let value: Data;
-      jsonstream.on("data", (data: KeyValueJSONOption) => {
-        if (data.key === key) {
-          value = new Data({
-            key: data.key,
-            value: data.value,
-            type: data.type,
+    this.#locked = true;
+    let value: Data | undefined;
+    try {
+      let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
+      if (this.#table.db.options.encryptionConfig.encriptData) {
+        const decryptedData = decrypt(
+          json,
+          this.#table.db.options.encryptionConfig.securityKey
+        );
+        json = JSON.parse(decryptedData);
+      }
+      if (json[key]) {
+        this.#cache.put(
+          key,
+          new Data({
+            key: key,
+            value: json[key].value,
+            type: json[key].type,
             file: this.#path,
-          });
-          this.#cache.put(data.key, value);
-          jsonstream.end();
-        }
-      });
-
-      jsonstream.on("end", () => {
-        this.#locked = false;
-        resolve(value);
-      });
-
-      jsonstream.on("error", (e: any) => {
-        this.#locked = false;
-        reject(e);
-      });
-    });
+          })
+        );
+        value = json[key];
+      }
+    } finally {
+      this.#locked = false;
+    }
+    return value;
   }
 
   async put(key: string, value: Data): Promise<void> {
@@ -179,11 +181,8 @@ export default class File {
 
   async #atomicFlush() {
     const tempFile = `${this.#path}.tmp`;
-    const fd = await fs.promises.open(
-      tempFile,
-      fs.constants.O_RDWR | fs.constants.O_CREAT
-    );
-    let json = JSON.parse(await this.#fd.readFile({ encoding: "utf-8" }));
+    const fd = await open(tempFile, fs.constants.O_RDWR | fs.constants.O_CREAT);
+    let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
     if (this.#table.db.options.encryptionConfig.encriptData) {
       const decryptedData = decrypt(
         json,
@@ -208,11 +207,11 @@ export default class File {
     } else {
       writeData = JSON.stringify(json);
     }
-
-    await fd.writeFile(writeData);
-    await this.#fd.close();
+    const buffer = Buffer.from(writeData);
+    await write(fd, buffer, 0, buffer.length, 0);
+    await close(this.#fd);
     await fs.promises.rename(tempFile, this.#path);
-    this.#fd = await fs.promises.open(
+    this.#fd = fs.openSync(
       this.#path,
       fs.constants.O_RDWR | fs.constants.O_CREAT
     );
@@ -223,7 +222,9 @@ export default class File {
 
   async getAll(query?: (d: Data) => boolean): Promise<Data[]> {
     if (!query) query = () => true;
-    let json = JSON.parse(await this.#fd.readFile({ encoding: "utf-8" }));
+    let json = JSON.parse(
+      await fs.promises.readFile(this.#path, { encoding: "utf-8" })
+    );
     const arr: Data[] = [];
     if (this.#table.db.options.encryptionConfig.encriptData) {
       const decryptedData = decrypt(
@@ -233,14 +234,27 @@ export default class File {
       json = JSON.parse(decryptedData);
     }
     for (const key in json) {
-      if (query(json[key])) arr.push(json[key]);
+      if (query(json[key])) {
+        const data = new Data({
+          key: json[key].key,
+          value: json[key].value,
+          type: json[key].type,
+          file: this.#path,
+        });
+        this.#cache.put(key, data);
+        arr.push(data);
+      }
     }
     return arr;
   }
 
   async findOne(query?: (d: Data) => boolean): Promise<Data | undefined> {
     if (!query) query = () => true;
-    let json = JSON.parse(await this.#fd.readFile({ encoding: "utf-8" }));
+    const f =this.#cache.findOne(query);
+    if(f) return f;
+    let json = JSON.parse(
+      await fs.promises.readFile(this.#path, { encoding: "utf-8" })
+    );
     if (this.#table.db.options.encryptionConfig.encriptData) {
       const decryptedData = decrypt(
         json,
@@ -249,7 +263,16 @@ export default class File {
       json = JSON.parse(decryptedData);
     }
     for (const key in json) {
-      if (query(json[key])) return json[key];
+      if (query(json[key])) {
+        const data = new Data({
+          key: json[key].key,
+          value: json[key].value,
+          type: json[key].type,
+          file: this.#path,
+        });
+        this.#cache.put(key, data);
+        return data;
+      }
     }
   }
 
@@ -264,32 +287,23 @@ export default class File {
     this.#size = 0;
     this.#flushQueue = [];
     this.#removeQueue = [];
-    await this.#fd.truncate(0);
+    await ftruncate(this.#fd, 0);
     const buffer = Buffer.from("{}");
-    await this.#fd.write(buffer, 0, buffer.length, 0);
+    await write(this.#fd, buffer, 0, buffer.length, 0);
   }
 
   async #has(key: string): Promise<boolean> {
-    const jsonStream = JSONStream.parse("*.key");
-    this.#fd.createReadStream().pipe(jsonStream);
-    return new Promise<boolean>((resolve, reject) => {
-      let found = false;
-      jsonStream.on("data", (data: KeyValueJSONOption) => {
-        if (data.key === key) {
-          resolve(true);
-          found = true;
-          jsonStream.end();
-        }
-      });
-
-      jsonStream.on("end", () => {
-        if (!found) resolve(false);
-      });
-
-      jsonStream.on("error", (e: any) => {
-        reject(e);
-      });
-    });
+    let json = JSON.parse(
+      await fs.promises.readFile(this.#path, { encoding: "utf-8" })
+    );
+    if (this.#table.db.options.encryptionConfig.encriptData) {
+      const decryptedData = decrypt(
+        json,
+        this.#table.db.options.encryptionConfig.securityKey
+      );
+      json = JSON.parse(decryptedData);
+    }
+    return !!json[key];
   }
 
   async has(key: string): Promise<boolean> {
@@ -315,7 +329,9 @@ export default class File {
   }
 
   async removeMany(query: (d: Data) => boolean): Promise<void> {
-    let json = JSON.parse(await this.#fd.readFile({ encoding: "utf-8" }));
+    let json = JSON.parse(
+      await fs.promises.readFile(this.#path, { encoding: "utf-8" })
+    );
     if (this.#table.db.options.encryptionConfig.encriptData) {
       const decryptedData = decrypt(
         json,
@@ -341,12 +357,12 @@ export default class File {
     }
     const f = () => {
       if (this.#locked) setTimeout(() => f(), 100);
-      else this.#fd.writeFile(writeData);
+      else this.#atomicWrite(writeData);
     };
     if (this.#locked)
       setTimeout(() => {
         if (this.#locked) setTimeout(() => f(), 100);
-        else this.#fd.writeFile(writeData);
+        else this.#atomicWrite(writeData);
       }, 100);
     else await this.#atomicWrite(writeData);
   }
@@ -354,15 +370,13 @@ export default class File {
   async #atomicWrite(data: string) {
     this.#locked = true;
     const tempFile = `${this.#path}.tmp`;
-    const fd = await fs.promises.open(
-      tempFile,
-      fs.constants.O_RDWR | fs.constants.O_CREAT
-    );
-    await fd.writeFile(data);
-    await this.#fd.close();
+    const fd = await open(tempFile, fs.constants.O_RDWR | fs.constants.O_CREAT);
+    const buffer = Buffer.from(data);
+    await write(fd, buffer, 0, buffer.length, 0);
+    await close(this.#fd);
 
     await fs.promises.rename(tempFile, this.#path);
-    this.#fd = await fs.promises.open(
+    this.#fd = await open(
       this.#path,
       fs.constants.O_RDWR | fs.constants.O_CREAT
     );

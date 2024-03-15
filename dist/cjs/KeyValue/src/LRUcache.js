@@ -26,9 +26,9 @@ class LRUCache {
             if (this.cache.size === this.capacity) {
                 const evictedKey = this.queue.pop().key;
                 this.cache.delete(evictedKey);
+                this.cache.set(key, value);
+                this.queue.push({ key, timestamp: Date.now() });
             }
-            this.cache.set(key, value);
-            this.queue.push({ key, timestamp: Date.now() });
         }
     }
     has(key) {
@@ -48,6 +48,12 @@ class LRUCache {
         this.cache.clear();
         this.queue._heap = [];
         this.queue._keyMap.clear();
+    }
+    all() {
+        return Array.from(this.cache.values());
+    }
+    findOne(query) {
+        return this.all().find(query);
     }
 }
 exports.default = LRUCache;

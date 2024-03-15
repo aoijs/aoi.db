@@ -12,6 +12,8 @@ import {
 } from "../../utils.js";
 import { KeyValueDataValueType, KeyValueTypeList } from "../typings/type.js";
 import Data from "./data.js";
+import { createInterface } from "node:readline/promises";
+import { ftruncate, write } from "../../promisifiers.js";
 
 export default class Table extends EventEmitter {
   #options: KeyValueTableOptions;
@@ -24,8 +26,9 @@ export default class Table extends EventEmitter {
     table: string;
   };
   logData!: {
-    fd: fs.promises.FileHandle;
+    fd: number;
     size: number;
+    fileSize: number;
     logIV: string;
   };
   readyAt: number = -1;
@@ -59,7 +62,7 @@ export default class Table extends EventEmitter {
     await this.#getLogData();
     await this.#syncWithLog();
     this.readyAt = Date.now();
-    this.emit(DatabaseEvents.TableReady, this);
+    this.#db.emit(DatabaseEvents.TableReady, this);
   }
 
   async #getPaths() {
@@ -83,18 +86,29 @@ export default class Table extends EventEmitter {
       }
       size++;
     }
+
     this.logData = {
-      fd,
+      fd: await fs.openSync(this.paths.log, "a+"),
       size,
+      fileSize: fs.statSync(this.paths.log).size,
       logIV,
     };
+
   }
 
   async getLogs() {
     const logs: LogBlock[] = [];
     let ignoreFirstLine = true;
     const { securityKey } = this.#db.options.encryptionConfig;
-    for await (const line of this.logData.fd.readLines()) {
+    const stream = fs.createReadStream(this.paths.log, {
+      encoding: "utf-8",
+    })
+    const rl = createInterface({
+      input: stream,
+      crlfDelay: Infinity,
+    })
+
+    for await (const line of rl) {
       if (ignoreFirstLine) ignoreFirstLine = false;
       else {
         const [key, value, type, ttl, method] = decodeHash(
@@ -162,16 +176,16 @@ export default class Table extends EventEmitter {
         this.logData.logIV
       );
 
-      await this.logData.fd.appendFile(logHash);
+      const {bytesWritten,buffer} =  await write(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
+      this.logData.fileSize += bytesWritten;
       this.logData.size++;
 
       if (
         method === DatabaseMethod.Flush &&
         this.logData.size > this.#db.options.fileConfig.maxSize
       ) {
-        await this.logData.fd.truncate(33);
+        await ftruncate(this.logData.fd, 33);
       }
-
       resolve();
       return;
     });

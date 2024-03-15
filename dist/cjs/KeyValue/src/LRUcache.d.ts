@@ -10,6 +10,8 @@ declare class LRUCache {
     private updatePriority;
     remove(key: string): void;
     clear(): void;
+    all(): Data[];
+    findOne(query: (data: Data) => boolean): Data | undefined;
 }
 export default LRUCache;
 //# sourceMappingURL=LRUcache.d.ts.map

@@ -29,10 +29,10 @@ class LRUCache {
       if (this.cache.size === this.capacity) {
         const evictedKey = this.queue.pop().key;
         this.cache.delete(evictedKey);
-      }
 
-      this.cache.set(key, value);
-      this.queue.push({ key, timestamp: Date.now() });
+        this.cache.set(key, value);
+        this.queue.push({ key, timestamp: Date.now() });
+      }
     }
   }
 
@@ -60,6 +60,12 @@ class LRUCache {
     this.cache.clear();
     this.queue._heap = [];
     this.queue._keyMap.clear();
+  }
+  all(): Data[] {
+    return Array.from(this.cache.values());
+  }
+  findOne(query: (data: Data) => boolean): Data | undefined {
+    return this.all().find(query);
   }
 }
 

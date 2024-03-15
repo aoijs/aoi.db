@@ -9,6 +9,8 @@ const node_fs_1 = __importDefault(require("node:fs"));
 const enum_js_1 = require("../../typings/enum.js");
 const utils_js_1 = require("../../utils.js");
 const data_js_1 = __importDefault(require("./data.js"));
+const promises_1 = require("node:readline/promises");
+const promisifiers_js_1 = require("../../promisifiers.js");
 class Table extends node_events_1.default {
     #options;
     #db;
@@ -39,7 +41,7 @@ class Table extends node_events_1.default {
         await this.#getLogData();
         await this.#syncWithLog();
         this.readyAt = Date.now();
-        this.emit(enum_js_1.DatabaseEvents.TableReady, this);
+        this.#db.emit(enum_js_1.DatabaseEvents.TableReady, this);
     }
     async #getPaths() {
         const { path } = this.#db.options.dataConfig;
@@ -61,8 +63,9 @@ class Table extends node_events_1.default {
             size++;
         }
         this.logData = {
-            fd,
+            fd: await node_fs_1.default.openSync(this.paths.log, "a+"),
             size,
+            fileSize: node_fs_1.default.statSync(this.paths.log).size,
             logIV,
         };
     }
@@ -70,7 +73,14 @@ class Table extends node_events_1.default {
         const logs = [];
         let ignoreFirstLine = true;
         const { securityKey } = this.#db.options.encryptionConfig;
-        for await (const line of this.logData.fd.readLines()) {
+        const stream = node_fs_1.default.createReadStream(this.paths.log, {
+            encoding: "utf-8",
+        });
+        const rl = (0, promises_1.createInterface)({
+            input: stream,
+            crlfDelay: Infinity,
+        });
+        for await (const line of rl) {
             if (ignoreFirstLine)
                 ignoreFirstLine = false;
             else {
@@ -122,11 +132,12 @@ class Table extends node_events_1.default {
                 method.toString(),
             ]);
             const logHash = (0, utils_js_1.createHash)(delimitedString, securityKey, this.logData.logIV);
-            await this.logData.fd.appendFile(logHash);
+            const { bytesWritten, buffer } = await (0, promisifiers_js_1.write)(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
+            this.logData.fileSize += bytesWritten;
             this.logData.size++;
             if (method === enum_js_1.DatabaseMethod.Flush &&
                 this.logData.size > this.#db.options.fileConfig.maxSize) {
-                await this.logData.fd.truncate(33);
+                await (0, promisifiers_js_1.ftruncate)(this.logData.fd, 33);
             }
             resolve();
             return;

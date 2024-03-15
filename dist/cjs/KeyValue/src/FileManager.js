@@ -13,13 +13,14 @@ class FileManager {
     #table;
     constructor(maxSize, hashSize = 20, table) {
         this.#maxSize = maxSize;
-        const filesCount = (0, node_fs_1.readdirSync)(table.paths.table).length;
-        this.#hashSize = Math.max(hashSize, filesCount);
+        this.#hashSize = hashSize;
         this.#table = table;
     }
     initialize() {
+        const filesCount = (0, node_fs_1.readdirSync)(this.#table.paths.table).length;
+        this.#hashSize = Math.max(this.#hashSize, filesCount);
         this.#array = Array.from({ length: this.#hashSize }, (_, i) => {
-            return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
+            return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
         });
         if (this.#table.db.options.fileConfig.reHashOnStartup) {
             this.#rehash();
@@ -86,22 +87,32 @@ class FileManager {
         return this.#array[index].has(key);
     }
     async all(query, limit, order) {
-        const data = [];
         if (order === "firstN") {
+            const data = new Set();
+            for (const file of this.#array) {
+                for (const value of file.cache.all()) {
+                    data.add(value);
+                    if (data.size === limit)
+                        return Array.from(data);
+                }
+            }
             for (const file of this.#array) {
                 const d = await file.getAll(query);
-                data.concat(d);
-                if (data.length == limit)
-                    return data;
-                else if (data.length > limit)
-                    return data.slice(0, limit);
+                for (const value of d) {
+                    data.add(value);
+                    if (data.size == limit)
+                        return Array.from(data);
+                }
             }
             return data;
         }
         else {
+            const data = [];
             for (const file of this.#array) {
                 const d = await file.getAll(query);
-                data.concat(d);
+                for (const value of d) {
+                    data.push(value);
+                }
             }
             if (order === "asc") {
                 data.sort((a, b) => a.key.localeCompare(b.key));
@@ -123,7 +134,9 @@ class FileManager {
         const data = [];
         for (const file of this.#array) {
             const d = await file.getAll(query);
-            data.concat(d);
+            for (const value of d) {
+                data.push(value);
+            }
         }
         return data;
     }
@@ -131,11 +144,11 @@ class FileManager {
         const data = [];
         for (const file of this.#array) {
             const d = await file.getAll(query);
-            data.concat(d);
-            if (data.length == limit)
-                return data;
-            else if (data.length > limit)
-                return data.slice(0, limit);
+            for (const value of d) {
+                data.push(value);
+                if (data.length == limit)
+                    return data;
+            }
         }
         return data;
     }

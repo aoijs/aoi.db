@@ -203,29 +203,29 @@ export default class KeyValue extends EventEmitter {
                 );
             }
         }
-        if (!existsSync(this.#options.dataConfig.referencePath)) {
-            mkdirSync(this.#options.dataConfig.referencePath);
-        }
-        for (const table of this.#options.dataConfig.tables) {
-            if (
-                !existsSync(
-                    `${this.#options.dataConfig.referencePath}/${table}`,
-                )
-            ) {
-                mkdirSync(
-                    `${this.#options.dataConfig.referencePath}/${table}`,
-                    {
-                        recursive: true,
-                    },
-                );
-                writeFileSync(
-                    `${
-                        this.#options.dataConfig.referencePath
-                    }/${table}/reference_1.log`,
-                    ``,
-                );
-            }
-        }
+        // if (!existsSync(this.#options.dataConfig.referencePath)) {
+        //     mkdirSync(this.#options.dataConfig.referencePath);
+        // }
+        // for (const table of this.#options.dataConfig.tables) {
+        //     if (
+        //         !existsSync(
+        //             `${this.#options.dataConfig.referencePath}/${table}`,
+        //         )
+        //     ) {
+        //         mkdirSync(
+        //             `${this.#options.dataConfig.referencePath}/${table}`,
+        //             {
+        //                 recursive: true,
+        //             },
+        //         );
+        //         writeFileSync(
+        //             `${
+        //                 this.#options.dataConfig.referencePath
+        //             }/${table}/reference_1.log`,
+        //             ``,
+        //         );
+        //     }
+        // }
 
         if (!existsSync(this.#options.fileConfig.transactionLogPath)) {
             mkdirSync(this.#options.fileConfig.transactionLogPath);
@@ -249,12 +249,12 @@ export default class KeyValue extends EventEmitter {
                     `${randomBytes(16).toString("hex")}\n`,
                 );
 
-                writeFileSync(
-                    `${
-                        this.#options.fileConfig.transactionLogPath
-                    }/${table}/fullWriter.log`,
-                    ``,
-                );
+                // writeFileSync(
+                //     `${
+                //         this.#options.fileConfig.transactionLogPath
+                //     }/${table}/fullWriter.log`,
+                //     ``,
+                // );
             }
         }
 

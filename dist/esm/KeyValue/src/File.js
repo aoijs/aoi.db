@@ -9,6 +9,7 @@ const node_fs_1 = __importDefault(require("node:fs"));
 //@ts-ignore
 const JSONStream_1 = __importDefault(require("JSONStream"));
 const utils_js_1 = require("../../utils.js");
+const promisifiers_js_1 = require("../../promisifiers.js");
 class File {
     #cache;
     #path;
@@ -30,16 +31,14 @@ class File {
         this.#flushQueue = [];
         this.#removeQueue = [];
         // Open file
-        node_fs_1.default.promises
-            .open(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT)
-            .then(async (fd) => {
-            this.#fd = fd;
-            await this.#checkIntegrity();
-            this.#enableInterval();
-        })
-            .catch((e) => {
-            throw e;
+        this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        if (node_fs_1.default.fstatSync(this.#fd).size === 0)
+            node_fs_1.default.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
+        this.#checkIntegrity().catch((e) => {
+            this.#isDirty = true;
+            console.error(e);
         });
+        this.#enableInterval();
     }
     get name() {
         return this.#path.split("/").pop().split(".")[0];
@@ -83,7 +82,8 @@ class File {
         await new Promise((resolve, reject) => {
             try {
                 const jsonstream = JSONStream_1.default.parse("*");
-                this.#fd.createReadStream().pipe(jsonstream);
+                const stream = node_fs_1.default.createReadStream(this.#path);
+                stream.pipe(jsonstream);
                 jsonstream.on("data", (data) => {
                     this.#size++;
                     this.#cache.put(data.key, new data_js_1.default({
@@ -104,12 +104,12 @@ class File {
         });
     }
     async get(key) {
+        if (this.#cache.has(key)) {
+            return this.#cache.get(key);
+        }
         const idx = this.#flushQueue.findIndex((data) => data.key === key);
         if (idx !== -1) {
             return this.#flushQueue[idx];
-        }
-        if (this.#cache.has(key)) {
-            return this.#cache.get(key);
         }
         if (this.#isDirty) {
             return;
@@ -119,35 +119,32 @@ class File {
         }
         this.#locked = true;
         const value = await this.#getFromDisk(key);
-        this.#locked = false;
+        // this.#locked = false;
         return value;
     }
     async #getFromDisk(key) {
-        return await new Promise((resolve, reject) => {
-            const jsonstream = JSONStream_1.default.parse("*");
-            this.#fd.createReadStream().pipe(jsonstream);
-            let value;
-            jsonstream.on("data", (data) => {
-                if (data.key === key) {
-                    value = new data_js_1.default({
-                        key: data.key,
-                        value: data.value,
-                        type: data.type,
-                        file: this.#path,
-                    });
-                    this.#cache.put(data.key, value);
-                    jsonstream.end();
-                }
-            });
-            jsonstream.on("end", () => {
-                this.#locked = false;
-                resolve(value);
-            });
-            jsonstream.on("error", (e) => {
-                this.#locked = false;
-                reject(e);
-            });
-        });
+        this.#locked = true;
+        let value;
+        try {
+            let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8"));
+            if (this.#table.db.options.encryptionConfig.encriptData) {
+                const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
+                json = JSON.parse(decryptedData);
+            }
+            if (json[key]) {
+                this.#cache.put(key, new data_js_1.default({
+                    key: key,
+                    value: json[key].value,
+                    type: json[key].type,
+                    file: this.#path,
+                }));
+                value = json[key];
+            }
+        }
+        finally {
+            this.#locked = false;
+        }
+        return value;
     }
     async put(key, value) {
         this.#cache.put(key, value);
@@ -156,8 +153,8 @@ class File {
     }
     async #atomicFlush() {
         const tempFile = `${this.#path}.tmp`;
-        const fd = await node_fs_1.default.promises.open(tempFile, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
-        let json = JSON.parse(await this.#fd.readFile({ encoding: "utf-8" }));
+        const fd = await (0, promisifiers_js_1.open)(tempFile, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8"));
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
             json = decryptedData;
@@ -175,10 +172,11 @@ class File {
         else {
             writeData = JSON.stringify(json);
         }
-        await fd.writeFile(writeData);
-        await this.#fd.close();
+        const buffer = Buffer.from(writeData);
+        await (0, promisifiers_js_1.write)(fd, buffer, 0, buffer.length, 0);
+        await (0, promisifiers_js_1.close)(this.#fd);
         await node_fs_1.default.promises.rename(tempFile, this.#path);
-        this.#fd = await node_fs_1.default.promises.open(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         this.#flushQueue = [];
         this.#removeQueue = [];
         this.#locked = false;
@@ -186,29 +184,48 @@ class File {
     async getAll(query) {
         if (!query)
             query = () => true;
-        let json = JSON.parse(await this.#fd.readFile({ encoding: "utf-8" }));
+        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
         const arr = [];
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
         }
         for (const key in json) {
-            if (query(json[key]))
-                arr.push(json[key]);
+            if (query(json[key])) {
+                const data = new data_js_1.default({
+                    key: json[key].key,
+                    value: json[key].value,
+                    type: json[key].type,
+                    file: this.#path,
+                });
+                this.#cache.put(key, data);
+                arr.push(data);
+            }
         }
         return arr;
     }
     async findOne(query) {
         if (!query)
             query = () => true;
-        let json = JSON.parse(await this.#fd.readFile({ encoding: "utf-8" }));
+        const f = this.#cache.findOne(query);
+        if (f)
+            return f;
+        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
         }
         for (const key in json) {
-            if (query(json[key]))
-                return json[key];
+            if (query(json[key])) {
+                const data = new data_js_1.default({
+                    key: json[key].key,
+                    value: json[key].value,
+                    type: json[key].type,
+                    file: this.#path,
+                });
+                this.#cache.put(key, data);
+                return data;
+            }
         }
     }
     async remove(data) {
@@ -221,30 +238,17 @@ class File {
         this.#size = 0;
         this.#flushQueue = [];
         this.#removeQueue = [];
-        await this.#fd.truncate(0);
+        await (0, promisifiers_js_1.ftruncate)(this.#fd, 0);
         const buffer = Buffer.from("{}");
-        await this.#fd.write(buffer, 0, buffer.length, 0);
+        await (0, promisifiers_js_1.write)(this.#fd, buffer, 0, buffer.length, 0);
     }
     async #has(key) {
-        const jsonStream = JSONStream_1.default.parse("*.key");
-        this.#fd.createReadStream().pipe(jsonStream);
-        return new Promise((resolve, reject) => {
-            let found = false;
-            jsonStream.on("data", (data) => {
-                if (data.key === key) {
-                    resolve(true);
-                    found = true;
-                    jsonStream.end();
-                }
-            });
-            jsonStream.on("end", () => {
-                if (!found)
-                    resolve(false);
-            });
-            jsonStream.on("error", (e) => {
-                reject(e);
-            });
-        });
+        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
+        if (this.#table.db.options.encryptionConfig.encriptData) {
+            const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
+            json = JSON.parse(decryptedData);
+        }
+        return !!json[key];
     }
     async has(key) {
         if (this.#cache.has(key))
@@ -265,7 +269,7 @@ class File {
         return value ? true : false;
     }
     async removeMany(query) {
-        let json = JSON.parse(await this.#fd.readFile({ encoding: "utf-8" }));
+        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
@@ -286,14 +290,14 @@ class File {
             if (this.#locked)
                 setTimeout(() => f(), 100);
             else
-                this.#fd.writeFile(writeData);
+                this.#atomicWrite(writeData);
         };
         if (this.#locked)
             setTimeout(() => {
                 if (this.#locked)
                     setTimeout(() => f(), 100);
                 else
-                    this.#fd.writeFile(writeData);
+                    this.#atomicWrite(writeData);
             }, 100);
         else
             await this.#atomicWrite(writeData);
@@ -301,11 +305,12 @@ class File {
     async #atomicWrite(data) {
         this.#locked = true;
         const tempFile = `${this.#path}.tmp`;
-        const fd = await node_fs_1.default.promises.open(tempFile, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
-        await fd.writeFile(data);
-        await this.#fd.close();
+        const fd = await (0, promisifiers_js_1.open)(tempFile, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        const buffer = Buffer.from(data);
+        await (0, promisifiers_js_1.write)(fd, buffer, 0, buffer.length, 0);
+        await (0, promisifiers_js_1.close)(this.#fd);
         await node_fs_1.default.promises.rename(tempFile, this.#path);
-        this.#fd = await node_fs_1.default.promises.open(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         this.#locked = false;
     }
     async ping() {

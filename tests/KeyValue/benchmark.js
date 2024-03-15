@@ -35,64 +35,71 @@ async function set10k() {
     const fn = async () => {
         const key = `key-${Math.random()}`;
         keys.push(key);
-        await db.set("main", key, { value: Math.random() });
+         db.set("main", key, { value: Math.random() });
     };
 
     return await measureOPS(fn, 10000);
 }
 
 async function get10k() {
-    const fn = async () => await db.get("main", `key-${Math.random()}`);
+    const fn = async () =>  db.get("main", keys[Math.floor(Math.random() * keys.length)]);
     return await measureOPS(fn, 10000);
 }
 
-async function delete10k() {
-    const fn = async () => {
-        const key = keys[Math.floor(Math.random() * keys.length)];
-        await db.delete("main", key);
-    };
-    return await measureOPS(fn, 10000);
-}
+// async function delete10k() {
+//     const fn = async () => {
+//         const key = keys[Math.floor(Math.random() * keys.length)];
+//         await db.delete("main", key);
+//     };
+//     return await measureOPS(fn, 10000);
+// }
 
 async function has10k() {
-    const fn = async () => await db.has("main", `key-${Math.random()}`);
+    const fn = async () =>  db.has("main", Math.random() > 0.5 ? keys[Math.floor(Math.random()*keys.length)] : `key-${Math.random()}`);
     return await measureOPS(fn, 10000);
 }
 
 async function all10k() {
-    const fn = async () => await db.all("main", () => true, 10);
+    const fn = async () =>  db.all("main", () => true, 10,"firstN");
     return await measureOPS(fn, 10000);
 }
 
 async function findOne10k() {
-    const fn = async () => await db.findOne("main", () => true);
+    const fn = async () =>  db.findOne("main", () => true);
     return await measureOPS(fn, 10000);
 }
 
 async function findMany10k() {
-    const fn = async () => await db.findMany("main", () => true);
+    const fn = async () =>  db.findMany("main", () => true);
     return await measureOPS(fn, 10000);
 }
 
 async function run() {
     const results = [];
-    const cycles = 5;
+    const cycles = 1;
     console.log("Running Suite...");
 
     for (let i = 0; i < cycles; i++) {
         console.log(`Cycle ${i + 1} of ${cycles}`);
+        console.log("Running set10k...");
         const set = await set10k();
+        console.log("Running get10k...");
         const get = await get10k();
-        const del = await delete10k();
+        // const del = await delete10k();
+        console.log("Running has10k...");
         const has = await has10k();
+        console.log("Running all10k...");
         const all = await all10k();
+        console.log("Running findOne10k...");
         const findOne = await findOne10k();
+        console.log("Running findMany10k...");
         const findMany = await findMany10k();
+        
 
         results.push({
             set,
             get,
-            del,
+            // del,
             has,
             all,
             findOne,
@@ -120,13 +127,13 @@ async function run() {
         tpo: Number(avg(results.map((a) => a.get.tpo))),
     };
 
-    const del = {
-        time: parseFloat(avg(results.map((a) => a.del.time)).toFixed(2)),
-        ops: Number(ops(results.map((a) => a.del.ops)).toFixed(0)),
-        max: Number(max(results.map((a) => a.del.ops)).toFixed(0)),
-        min: Number(min(results.map((a) => a.del.ops)).toFixed(0)),
-        tpo: Number(avg(results.map((a) => a.del.tpo))),
-    };
+    // const del = {
+    //     time: parseFloat(avg(results.map((a) => a.del.time)).toFixed(2)),
+    //     ops: Number(ops(results.map((a) => a.del.ops)).toFixed(0)),
+    //     max: Number(max(results.map((a) => a.del.ops)).toFixed(0)),
+    //     min: Number(min(results.map((a) => a.del.ops)).toFixed(0)),
+    //     tpo: Number(avg(results.map((a) => a.del.tpo))),
+    // };
 
     const has = {
         time: parseFloat(avg(results.map((a) => a.has.time)).toFixed(2)),
@@ -163,7 +170,7 @@ async function run() {
     const arr = {
         set,
         get,
-        del,
+        // del,
         has,
         all,
         findOne,

@@ -153,17 +153,29 @@ class KeyValue extends events_1.EventEmitter {
                     : {}));
             }
         }
-        if (!(0, fs_1.existsSync)(this.#options.dataConfig.referencePath)) {
-            (0, fs_1.mkdirSync)(this.#options.dataConfig.referencePath);
-        }
-        for (const table of this.#options.dataConfig.tables) {
-            if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.referencePath}/${table}`)) {
-                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.referencePath}/${table}`, {
-                    recursive: true,
-                });
-                (0, fs_1.writeFileSync)(`${this.#options.dataConfig.referencePath}/${table}/reference_1.log`, ``);
-            }
-        }
+        // if (!existsSync(this.#options.dataConfig.referencePath)) {
+        //     mkdirSync(this.#options.dataConfig.referencePath);
+        // }
+        // for (const table of this.#options.dataConfig.tables) {
+        //     if (
+        //         !existsSync(
+        //             `${this.#options.dataConfig.referencePath}/${table}`,
+        //         )
+        //     ) {
+        //         mkdirSync(
+        //             `${this.#options.dataConfig.referencePath}/${table}`,
+        //             {
+        //                 recursive: true,
+        //             },
+        //         );
+        //         writeFileSync(
+        //             `${
+        //                 this.#options.dataConfig.referencePath
+        //             }/${table}/reference_1.log`,
+        //             ``,
+        //         );
+        //     }
+        // }
         if (!(0, fs_1.existsSync)(this.#options.fileConfig.transactionLogPath)) {
             (0, fs_1.mkdirSync)(this.#options.fileConfig.transactionLogPath);
         }
@@ -173,7 +185,12 @@ class KeyValue extends events_1.EventEmitter {
                     recursive: true,
                 });
                 (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/transaction.log`, `${(0, crypto_1.randomBytes)(16).toString("hex")}\n`);
-                (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/fullWriter.log`, ``);
+                // writeFileSync(
+                //     `${
+                //         this.#options.fileConfig.transactionLogPath
+                //     }/${table}/fullWriter.log`,
+                //     ``,
+                // );
             }
         }
         if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/.backup`)) {

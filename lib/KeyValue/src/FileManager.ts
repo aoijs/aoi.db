@@ -12,18 +12,19 @@ export default class FileManager {
   #table: Table;
   constructor(maxSize: number, hashSize = 20, table: Table) {
     this.#maxSize = maxSize;
-    const filesCount = readdirSync(table.paths.table).length;
-    this.#hashSize = Math.max(hashSize, filesCount);
+    this.#hashSize = hashSize;
 
     this.#table = table;
   }
 
   initialize() {
+    const filesCount = readdirSync(this.#table.paths.table).length;
+    this.#hashSize = Math.max(this.#hashSize, filesCount);
     this.#array = Array.from({ length: this.#hashSize }, (_, i: number) => {
       return new File(
-        `${this.#table.paths.table}/${this.#table.options.name}_scheme_${i}${
-          this.#table.db.options.fileConfig.extension
-        }`,
+        `${this.#table.paths.table}/${this.#table.options.name}_scheme_${
+          i + 1
+        }${this.#table.db.options.fileConfig.extension}`,
         this.#table.db.options.fileConfig.maxSize / 4,
         this.#table
       );
@@ -115,19 +116,31 @@ export default class FileManager {
     limit: number,
     order: "firstN" | "asc" | "desc"
   ) {
-    const data: Data[] = [];
+
     if (order === "firstN") {
+      const data: Set<Data> = new Set();
+      for(const file of this.#array) {
+        for(const value of file.cache.all()) {
+          data.add(value);
+          if(data.size === limit) return Array.from(data);
+        }
+      }
+
       for (const file of this.#array) {
         const d = await file.getAll(query);
-        data.concat(d);
-        if (data.length == limit) return data;
-        else if (data.length > limit) return data.slice(0, limit);
+        for(const value of d) {
+          data.add(value);
+        if (data.size == limit) return Array.from(data);
+        }
       }
       return data;
     } else {
+      const data: Data[] = [];
       for (const file of this.#array) {
         const d = await file.getAll(query);
-        data.concat(d);
+        for (const value of d) {
+          data.push(value);
+        }
       }
       if (order === "asc") {
         data.sort((a, b) => a.key.localeCompare(b.key));
@@ -149,7 +162,9 @@ export default class FileManager {
     const data: Data[] = [];
     for (const file of this.#array) {
       const d = await file.getAll(query);
-      data.concat(d);
+      for (const value of d) {
+        data.push(value);
+      }
     }
     return data;
   }
@@ -158,9 +173,10 @@ export default class FileManager {
     const data: Data[] = [];
     for (const file of this.#array) {
       const d = await file.getAll(query);
-      data.concat(d);
-      if (data.length == limit) return data;
-      else if (data.length > limit) return data.slice(0, limit);
+      for (const value of d) {
+        data.push(value);
+        if (data.length == limit) return data;
+      }
     }
     return data;
   }
