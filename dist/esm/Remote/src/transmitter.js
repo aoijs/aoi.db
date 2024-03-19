@@ -1,15 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const events_1 = __importDefault(require("events"));
-const net_1 = require("net");
-const enum_js_1 = require("../../typings/enum.js");
-const crypto_1 = require("crypto");
-const enum_js_2 = require("../typings/enum.js");
-const util_1 = require("util");
-class Transmitter extends events_1.default {
+import EventEmitter from "events";
+import { createConnection } from "net";
+import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
+import { randomBytes } from "crypto";
+import { ReceiverOpCodes, TransmitterOpCodes } from "../typings/enum.js";
+import { inspect } from "util";
+export default class Transmitter extends EventEmitter {
     client;
     options;
     data = {
@@ -21,8 +16,8 @@ class Transmitter extends events_1.default {
     readyAt = -1;
     constructor(options) {
         super();
-        this.client = (0, net_1.createConnection)(options, () => {
-            const reqData = this.sendDataFormat(enum_js_2.TransmitterOpCodes.Connect, enum_js_1.DatabaseMethod.NOOP, Date.now(), this.data.seq, {
+        this.client = createConnection(options, () => {
+            const reqData = this.sendDataFormat(TransmitterOpCodes.Connect, DatabaseMethod.NOOP, Date.now(), this.data.seq, {
                 u: options.username,
                 p: options.password,
                 db: this.#createDbConfig(),
@@ -52,23 +47,23 @@ class Transmitter extends events_1.default {
         };
     }
     #createDebug(data) {
-        this.emit(enum_js_1.DatabaseEvents.Debug, `[Debug: Received Data] ${(0, util_1.inspect)(data)}`);
+        this.emit(DatabaseEvents.Debug, `[Debug: Received Data] ${inspect(data)}`);
     }
     #bindEvents() {
         this.client.on("data", (buffer) => {
             const data = this.receiveDataFormat(buffer);
             this.data.seq = data.s;
             switch (data.op) {
-                case enum_js_2.ReceiverOpCodes.ConnectionDenied: {
-                    this.emit(enum_js_1.DatabaseEvents.Disconnect, data.d);
+                case ReceiverOpCodes.ConnectionDenied: {
+                    this.emit(DatabaseEvents.Disconnect, data.d);
                     this.data.ping = Date.now() - this.data.lastPingTimestamp;
                 }
-                case enum_js_2.ReceiverOpCodes.AckConnect:
+                case ReceiverOpCodes.AckConnect:
                     {
                         this.emit("AckConnect", data.d);
                     }
                     break;
-                case enum_js_2.ReceiverOpCodes.Pong:
+                case ReceiverOpCodes.Pong:
                     {
                         this.data.ping = Date.now() - this.data.lastPingTimestamp;
                     }
@@ -94,12 +89,12 @@ class Transmitter extends events_1.default {
             t: timestamp,
             d: data,
             s: seq,
-            h: (0, crypto_1.randomBytes)(16).toString("hex"),
+            h: randomBytes(16).toString("hex"),
         }));
     }
     ping() {
         this.data.lastPingTimestamp = Date.now();
-        this.client.write(this.sendDataFormat(enum_js_2.TransmitterOpCodes.Ping, enum_js_1.DatabaseMethod.Ping, this.data.lastPingTimestamp, this.data.seq));
+        this.client.write(this.sendDataFormat(TransmitterOpCodes.Ping, DatabaseMethod.Ping, this.data.lastPingTimestamp, this.data.seq));
     }
     async #req(op, method, data) {
         return new Promise((resolve, reject) => {
@@ -117,63 +112,63 @@ class Transmitter extends events_1.default {
         });
     }
     async get(table, key) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Get, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Get, {
             table,
             key,
         })).d;
     }
     async set(table, key, value) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Set, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Set, {
             table,
             key,
             value,
         })).d;
     }
     async delete(table, key) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Delete, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Delete, {
             table,
             key,
         })).d;
     }
     async clear(table) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Clear, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Clear, {
             table,
         })).d;
     }
     async all(table, query, limit) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.All, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.All, {
             table,
             query,
             limit,
         })).d;
     }
     async has(table, key) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Has, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Has, {
             table,
             key,
         })).d;
     }
     async findOne(table, query) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.FindOne, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.FindOne, {
             table,
             query,
         })).d;
     }
     async findMany(table, query) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.FindMany, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.FindMany, {
             table,
             query,
         })).d;
     }
     async deleteMany(table, query) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.DeleteMany, {
+        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.DeleteMany, {
             table,
             query,
         })).d;
     }
     async analyze(table, data) {
-        const sendD = this.sendDataFormat(enum_js_2.TransmitterOpCodes.Analyze, enum_js_1.DatabaseMethod[data.method], Date.now(), this.data.seq);
-        const res = await this.#req(enum_js_2.TransmitterOpCodes.Analyze, enum_js_1.DatabaseMethod[data.method], {
+        const sendD = this.sendDataFormat(TransmitterOpCodes.Analyze, DatabaseMethod[data.method], Date.now(), this.data.seq);
+        const res = await this.#req(TransmitterOpCodes.Analyze, DatabaseMethod[data.method], {
             table,
             data,
         });
@@ -182,7 +177,7 @@ class Transmitter extends events_1.default {
     #formatAnalyzeData(data, sednD) {
         const res = {
             opCode: data.op,
-            method: enum_js_1.DatabaseMethod[data.m],
+            method: DatabaseMethod[data.m],
             timestamp: data.t,
             seq: data.s,
             data: {
@@ -199,5 +194,4 @@ class Transmitter extends events_1.default {
         return res;
     }
 }
-exports.default = Transmitter;
 //# sourceMappingURL=transmitter.js.map

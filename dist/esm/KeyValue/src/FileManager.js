@@ -1,11 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const File_js_1 = __importDefault(require("./File.js"));
-const node_fs_1 = require("node:fs");
-class FileManager {
+import File from "./File.js";
+import { readdirSync } from "node:fs";
+export default class FileManager {
     #maxSize;
     #hashSize;
     #array;
@@ -16,10 +11,10 @@ class FileManager {
         this.#table = table;
     }
     initialize() {
-        const filesCount = (0, node_fs_1.readdirSync)(this.#table.paths.table).length;
+        const filesCount = readdirSync(this.#table.paths.table).length;
         this.#hashSize = Math.max(this.#hashSize, filesCount);
         this.#array = Array.from({ length: this.#hashSize }, (_, i) => {
-            return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
+            return new File(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
         });
         if (this.#table.db.options.fileConfig.reHashOnStartup) {
             this.#rehash();
@@ -54,7 +49,7 @@ class FileManager {
     async #rehash() {
         const newArraySize = this.#hashSize * 2;
         const newArray = Array.from({ length: newArraySize }, (_, i) => {
-            return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
+            return new File(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
         });
         for (const file of this.#array) {
             const data = await file.getAll();
@@ -166,5 +161,4 @@ class FileManager {
         return sum / this.#hashSize;
     }
 }
-exports.default = FileManager;
 //# sourceMappingURL=FileManager.js.map

@@ -1,18 +1,13 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
-const crypto_1 = require("crypto");
-const enum_js_1 = require("../../typings/enum.js");
-const utils_js_1 = require("../../utils.js");
-const Table_js_1 = __importDefault(require("./Table.js"));
-const events_1 = require("events");
+import { createWriteStream, existsSync, mkdirSync, writeFileSync } from "fs";
+import { randomBytes } from "crypto";
+import { CacheType, ReferenceType, DatabaseEvents, } from "../../typings/enum.js";
+import { encrypt } from "../../utils.js";
+import Table from "./Table.js";
+import { EventEmitter } from "events";
 //zipping and unzipping
-const tar_1 = __importDefault(require("tar"));
-const path_1 = __importDefault(require("path"));
-class KeyValue extends events_1.EventEmitter {
+import tar from "tar";
+import path from "path";
+export default class KeyValue extends EventEmitter {
     #options;
     tables = {};
     readyAt;
@@ -61,8 +56,8 @@ class KeyValue extends events_1.EventEmitter {
                 encriptData: false,
             },
             cacheConfig: {
-                cache: enum_js_1.CacheType.LRU,
-                reference: enum_js_1.ReferenceType.Cache,
+                cache: CacheType.LRU,
+                reference: ReferenceType.Cache,
                 limit: 1000,
                 sorted: false,
                 sortFunction: (a, b) => {
@@ -85,13 +80,13 @@ class KeyValue extends events_1.EventEmitter {
                 path: options?.dataConfig?.path ?? defaultOptions.dataConfig.path,
                 tables: options?.dataConfig?.tables ??
                     defaultOptions.dataConfig.tables,
-                referencePath: path_1.default.join(options.dataConfig?.path ?? defaultOptions.dataConfig.path, options?.dataConfig?.referencePath ??
+                referencePath: path.join(options.dataConfig?.path ?? defaultOptions.dataConfig.path, options?.dataConfig?.referencePath ??
                     defaultOptions.dataConfig.referencePath),
             },
             fileConfig: {
                 extension: options?.fileConfig?.extension ??
                     defaultOptions.fileConfig.extension,
-                transactionLogPath: path_1.default.join(options.dataConfig?.path ?? defaultOptions.dataConfig.path, options?.fileConfig?.transactionLogPath ??
+                transactionLogPath: path.join(options.dataConfig?.path ?? defaultOptions.dataConfig.path, options?.fileConfig?.transactionLogPath ??
                     defaultOptions.fileConfig.transactionLogPath),
                 reHashOnStartup: options?.fileConfig?.reHashOnStartup ?? false,
                 maxSize: options?.fileConfig?.maxSize ??
@@ -138,18 +133,18 @@ class KeyValue extends events_1.EventEmitter {
                     return;
             }
             this.readyAt = Date.now();
-            this.removeListener(enum_js_1.DatabaseEvents.TableReady, isReady);
-            this.emit(enum_js_1.DatabaseEvents.Connect);
+            this.removeListener(DatabaseEvents.TableReady, isReady);
+            this.emit(DatabaseEvents.Connect);
         };
-        this.on(enum_js_1.DatabaseEvents.TableReady, isReady);
-        if (!(0, fs_1.existsSync)(this.#options.dataConfig.path)) {
-            (0, fs_1.mkdirSync)(this.#options.dataConfig.path);
+        this.on(DatabaseEvents.TableReady, isReady);
+        if (!existsSync(this.#options.dataConfig.path)) {
+            mkdirSync(this.#options.dataConfig.path);
         }
         for (const table of this.#options.dataConfig.tables) {
-            if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/${table}`)) {
-                (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/${table}`);
-                (0, fs_1.writeFileSync)(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
-                    ? (0, utils_js_1.encrypt)(`{}`, this.#options.encryptionConfig.securityKey)
+            if (!existsSync(`${this.#options.dataConfig.path}/${table}`)) {
+                mkdirSync(`${this.#options.dataConfig.path}/${table}`);
+                writeFileSync(`${this.#options.dataConfig.path}/${table}/${table}_scheme_1${this.#options.fileConfig.extension}`, JSON.stringify(this.#options.encryptionConfig.encriptData
+                    ? encrypt(`{}`, this.#options.encryptionConfig.securityKey)
                     : {}));
             }
         }
@@ -176,15 +171,15 @@ class KeyValue extends events_1.EventEmitter {
         //         );
         //     }
         // }
-        if (!(0, fs_1.existsSync)(this.#options.fileConfig.transactionLogPath)) {
-            (0, fs_1.mkdirSync)(this.#options.fileConfig.transactionLogPath);
+        if (!existsSync(this.#options.fileConfig.transactionLogPath)) {
+            mkdirSync(this.#options.fileConfig.transactionLogPath);
         }
         for (const table of this.#options.dataConfig.tables) {
-            if (!(0, fs_1.existsSync)(`${this.#options.fileConfig.transactionLogPath}/${table}`)) {
-                (0, fs_1.mkdirSync)(`${this.#options.fileConfig.transactionLogPath}/${table}`, {
+            if (!existsSync(`${this.#options.fileConfig.transactionLogPath}/${table}`)) {
+                mkdirSync(`${this.#options.fileConfig.transactionLogPath}/${table}`, {
                     recursive: true,
                 });
-                (0, fs_1.writeFileSync)(`${this.#options.fileConfig.transactionLogPath}/${table}/transaction.log`, `${(0, crypto_1.randomBytes)(16).toString("hex")}\n`);
+                writeFileSync(`${this.#options.fileConfig.transactionLogPath}/${table}/transaction.log`, `${randomBytes(16).toString("hex")}\n`);
                 // writeFileSync(
                 //     `${
                 //         this.#options.fileConfig.transactionLogPath
@@ -193,13 +188,13 @@ class KeyValue extends events_1.EventEmitter {
                 // );
             }
         }
-        if (!(0, fs_1.existsSync)(`${this.#options.dataConfig.path}/.backup`)) {
-            (0, fs_1.mkdirSync)(`${this.#options.dataConfig.path}/.backup`, {
+        if (!existsSync(`${this.#options.dataConfig.path}/.backup`)) {
+            mkdirSync(`${this.#options.dataConfig.path}/.backup`, {
                 recursive: true
             });
         }
         for (const table of this.#options.dataConfig.tables) {
-            const t = new Table_js_1.default({
+            const t = new Table({
                 name: table,
             }, this);
             this.tables[table] = {
@@ -389,9 +384,9 @@ class KeyValue extends events_1.EventEmitter {
             .replaceAll(" ", "_")
             .replaceAll(",", "_")
             .replaceAll(":", "_")}.tar.gz`;
-        (0, fs_1.writeFileSync)(backupName, "");
-        const writer = (0, fs_1.createWriteStream)(backupName);
-        tar_1.default.c({
+        writeFileSync(backupName, "");
+        const writer = createWriteStream(backupName);
+        tar.c({
             gzip: true,
         }, [
             this.#options.dataConfig.referencePath,
@@ -449,5 +444,4 @@ class KeyValue extends events_1.EventEmitter {
         return total / Object.keys(this.tables).length;
     }
 }
-exports.default = KeyValue;
 //# sourceMappingURL=database.js.map

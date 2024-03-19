@@ -1,19 +1,14 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
-const promises_1 = require("fs/promises");
-const MemMap_js_1 = __importDefault(require("./MemMap.js"));
-const Data_js_1 = __importDefault(require("./Data.js"));
-const crypto_1 = require("crypto");
-const promises_2 = require("fs/promises");
-const promises_3 = __importDefault(require("readline/promises"));
-const utils_js_1 = require("../../utils.js");
-const index_js_1 = require("../../index.js");
-const Referencer_js_1 = __importDefault(require("./Referencer.js"));
-class WideColumnarColumn {
+import { createReadStream, createWriteStream, existsSync, readdirSync, rmSync, truncateSync, } from "fs";
+import { appendFile, truncate, unlink } from "fs/promises";
+import MemMap from "./MemMap.js";
+import WideColumnarData from "./Data.js";
+import { randomBytes } from "crypto";
+import { writeFile } from "fs/promises";
+import readline from "readline/promises";
+import { ReferenceConstantSpace, createHash, createHashRawString, decrypt, encrypt, parse, stringify, } from "../../utils.js";
+import { DatabaseMethod } from "../../index.js";
+import WideColumnarReferencer from "./Referencer.js";
+export default class WideColumnarColumn {
     name;
     primaryKey;
     default;
@@ -43,7 +38,7 @@ class WideColumnarColumn {
         this.table = table;
     }
     #getFiles() {
-        return (0, fs_1.readdirSync)(this.path).filter((x) => x.endsWith(this.table.db.options.fileConfig.extension));
+        return readdirSync(this.path).filter((x) => x.endsWith(this.table.db.options.fileConfig.extension));
     }
     async initialize() {
         await this.#initalize();
@@ -51,36 +46,36 @@ class WideColumnarColumn {
         await this.#syncWithLogs();
     }
     async #initalize() {
-        this.memMap = new MemMap_js_1.default({
+        this.memMap = new MemMap({
             limit: this.table.db.options.cacheConfig.limit,
             sortFunction: this.table.db.options.cacheConfig.sortFunction,
         }, this);
         const transactionPath = `${this.path}/transaction.wdcl`;
         const fullWriterPath = `${this.path}/fullWriter.wdcl`;
-        if (!(0, fs_1.existsSync)(transactionPath)) {
-            const IV = (0, crypto_1.randomBytes)(16).toString("hex");
-            await (0, promises_2.writeFile)(transactionPath, IV + "\n\n");
+        if (!existsSync(transactionPath)) {
+            const IV = randomBytes(16).toString("hex");
+            await writeFile(transactionPath, IV + "\n\n");
         }
-        if (!(0, fs_1.existsSync)(fullWriterPath)) {
-            const IV = (0, crypto_1.randomBytes)(16).toString("hex");
-            await (0, promises_2.writeFile)(fullWriterPath, IV + "\n\n");
+        if (!existsSync(fullWriterPath)) {
+            const IV = randomBytes(16).toString("hex");
+            await writeFile(fullWriterPath, IV + "\n\n");
         }
         const referencePath = `${this.table.db.options.dataConfig.path}/${this.table.db.options.dataConfig.referencePath}/${this.table.name}/${this.name}/${this.name}.wdcr`;
-        if (!(0, fs_1.existsSync)(referencePath)) {
-            await (0, promises_2.writeFile)(referencePath, "");
+        if (!existsSync(referencePath)) {
+            await writeFile(referencePath, "");
         }
-        this.referencer = new Referencer_js_1.default(`${this.table.db.options.dataConfig.path}/${this.table.db.options.dataConfig.referencePath}/${this.table.name}/${this.name}`, this.table.db.options.cacheConfig.limit, this.table.db.options.cacheConfig.referenceType, this);
+        this.referencer = new WideColumnarReferencer(`${this.table.db.options.dataConfig.path}/${this.table.db.options.dataConfig.referencePath}/${this.table.name}/${this.name}`, this.table.db.options.cacheConfig.limit, this.table.db.options.cacheConfig.referenceType, this);
         this.setFiles();
     }
     async #readIvfromLog() {
         const logFile = `${this.path}/transaction.wdcl`;
         return new Promise(async (res, rej) => {
-            if (!(0, fs_1.existsSync)(logFile)) {
+            if (!existsSync(logFile)) {
                 rej("log file not found");
             }
             else {
                 let iv;
-                const rs = (0, fs_1.createReadStream)(logFile, {
+                const rs = createReadStream(logFile, {
                     highWaterMark: 33,
                     encoding: "utf8",
                     flags: "r",
@@ -101,12 +96,12 @@ class WideColumnarColumn {
     async #readIvfromFullLog() {
         const logFile = `${this.path}/fullWriter.wdcl`;
         return new Promise(async (res, rej) => {
-            if (!(0, fs_1.existsSync)(logFile)) {
+            if (!existsSync(logFile)) {
                 rej("log file not found");
             }
             else {
                 let iv;
-                const rs = (0, fs_1.createReadStream)(logFile, {
+                const rs = createReadStream(logFile, {
                     highWaterMark: 33,
                     encoding: "utf8",
                     flags: "r",
@@ -128,11 +123,11 @@ class WideColumnarColumn {
         this.#log = {
             iv: await this.#readIvfromLog(),
             path: `${this.path}/transaction.wdcl`,
-            writer: (0, fs_1.createWriteStream)(`${this.path}/transaction.wdcl`, {
+            writer: createWriteStream(`${this.path}/transaction.wdcl`, {
                 flags: "a",
                 encoding: "utf8",
             }),
-            fullWriter: (0, fs_1.createWriteStream)(`${this.path}/fullWriter.wdcl`, {
+            fullWriter: createWriteStream(`${this.path}/fullWriter.wdcl`, {
                 flags: "a",
                 encoding: "utf8",
             }),
@@ -141,8 +136,8 @@ class WideColumnarColumn {
     }
     async #syncWithLogs() {
         const logFile = this.#log.path;
-        const rl = promises_3.default.createInterface({
-            input: (0, fs_1.createReadStream)(logFile),
+        const rl = readline.createInterface({
+            input: createReadStream(logFile),
             crlfDelay: Infinity,
         });
         let index = 0;
@@ -151,28 +146,28 @@ class WideColumnarColumn {
                 index++;
                 continue;
             }
-            const decrypted = (0, utils_js_1.decrypt)({
+            const decrypted = decrypt({
                 iv: this.#log.iv,
                 data: line,
             }, this.table.db.options.encryptionConfig.securityKey);
-            const [columnValue, columnType, primaryValue, primaryType, method] = decrypted.split(utils_js_1.ReferenceConstantSpace);
+            const [columnValue, columnType, primaryValue, primaryType, method] = decrypted.split(ReferenceConstantSpace);
             const parsedMethod = Number(method.trim());
-            const data = new Data_js_1.default({
+            const data = new WideColumnarData({
                 column: {
                     name: this.name,
                     type: columnType,
-                    value: (0, utils_js_1.parse)(columnValue, columnType),
+                    value: parse(columnValue, columnType),
                 },
                 primary: {
                     name: this.table.primary.name,
                     type: this.table.primary.type,
-                    value: (0, utils_js_1.parse)(primaryValue, primaryType),
+                    value: parse(primaryValue, primaryType),
                 },
             });
-            if (parsedMethod === index_js_1.DatabaseMethod.Set) {
+            if (parsedMethod === DatabaseMethod.Set) {
                 this.memMap.set(data);
             }
-            else if (parsedMethod === index_js_1.DatabaseMethod.Delete) {
+            else if (parsedMethod === DatabaseMethod.Delete) {
                 this.memMap.delete(data.primary.value);
             }
         }
@@ -180,11 +175,11 @@ class WideColumnarColumn {
     async #createNewLogCycle() {
         return new Promise((res, rej) => {
             this.#log.writer.end(async () => {
-                const IV = (0, crypto_1.randomBytes)(16).toString("hex");
-                (0, fs_1.truncateSync)(this.#log.path);
+                const IV = randomBytes(16).toString("hex");
+                truncateSync(this.#log.path);
                 this.#log.iv = IV;
-                await (0, promises_1.appendFile)(this.#log.path, IV + "\n\n");
-                this.#log.writer = (0, fs_1.createWriteStream)(this.#log.path, {
+                await appendFile(this.#log.path, IV + "\n\n");
+                this.#log.writer = createWriteStream(this.#log.path, {
                     flags: "a",
                     encoding: "utf8",
                 });
@@ -195,17 +190,17 @@ class WideColumnarColumn {
     async #wal(data, method) {
         return new Promise(async (res, rej) => {
             const json = data.toJSON();
-            const delimitedString = (0, utils_js_1.createHashRawString)([
-                (0, utils_js_1.stringify)(json.column.value),
+            const delimitedString = createHashRawString([
+                stringify(json.column.value),
                 json.column.type,
-                (0, utils_js_1.stringify)(json.primary.value),
+                stringify(json.primary.value),
                 json.primary.type,
                 method?.toString(),
             ]);
-            const hash = (0, utils_js_1.createHash)(delimitedString, this.table.db.options.encryptionConfig.securityKey, this.#log.iv);
-            const fullHash = (0, utils_js_1.createHash)(delimitedString, this.table.db.options.encryptionConfig.securityKey, this.#log.ivFull);
-            await (0, promises_1.appendFile)(this.#log.path, hash + "\n");
-            await (0, promises_1.appendFile)(`${this.path}/fullWriter.wdcl`, fullHash + "\n");
+            const hash = createHash(delimitedString, this.table.db.options.encryptionConfig.securityKey, this.#log.iv);
+            const fullHash = createHash(delimitedString, this.table.db.options.encryptionConfig.securityKey, this.#log.ivFull);
+            await appendFile(this.#log.path, hash + "\n");
+            await appendFile(`${this.path}/fullWriter.wdcl`, fullHash + "\n");
             res();
         });
     }
@@ -214,10 +209,10 @@ class WideColumnarColumn {
             const path = `${this.path}/${this.name}_${this.files.length}${this.table.db.options.fileConfig.extension}`;
             data = data.sort(this.table.db.options.cacheConfig.sortFunction);
             const dataToWrite = data.map((x) => {
-                const encrypted = (0, utils_js_1.encrypt)(x.toString(), this.table.db.options.encryptionConfig.securityKey);
+                const encrypted = encrypt(x.toString(), this.table.db.options.encryptionConfig.securityKey);
                 return `${encrypted.iv}.${encrypted.data}`;
             });
-            await (0, promises_2.writeFile)(path, dataToWrite.join("\n"));
+            await writeFile(path, dataToWrite.join("\n"));
             this.files.push(path);
             this.memMap.heap.clear();
             await this.#createNewLogCycle();
@@ -229,7 +224,7 @@ class WideColumnarColumn {
             console.warn("Repair mode is on, this will not be logged");
             return;
         }
-        const data = new Data_js_1.default({
+        const data = new WideColumnarData({
             column: {
                 name: this.name,
                 type: this.type,
@@ -241,7 +236,7 @@ class WideColumnarColumn {
                 value: primary,
             },
         });
-        await this.#wal(data, index_js_1.DatabaseMethod.Set);
+        await this.#wal(data, DatabaseMethod.Set);
         this.memMap.set(data);
     }
     async get(primary) {
@@ -259,7 +254,7 @@ class WideColumnarColumn {
     async #get(primary) {
         return new Promise(async (res, rej) => {
             const reference = await this.referencer.getReference();
-            const file = reference[(0, utils_js_1.stringify)(primary)];
+            const file = reference[stringify(primary)];
             if (file) {
                 const line = await this.#fetchLine(file.file, file.index);
                 if (line === null) {
@@ -267,9 +262,9 @@ class WideColumnarColumn {
                     return;
                 }
                 const [iv, ecrypted] = line.split(".");
-                const decrpyted = (0, utils_js_1.decrypt)({ data: ecrypted, iv }, this.table.db.options.encryptionConfig.securityKey);
+                const decrpyted = decrypt({ data: ecrypted, iv }, this.table.db.options.encryptionConfig.securityKey);
                 const json = JSON.parse(decrpyted);
-                const data = new Data_js_1.default(json);
+                const data = new WideColumnarData(json);
                 res(data);
             }
             else {
@@ -278,8 +273,8 @@ class WideColumnarColumn {
         });
     }
     async #fetchLine(file, index) {
-        const stream = (0, fs_1.createReadStream)(file);
-        const rl = promises_3.default.createInterface({
+        const stream = createReadStream(file);
+        const rl = readline.createInterface({
             input: stream,
             crlfDelay: Infinity,
         });
@@ -309,14 +304,14 @@ class WideColumnarColumn {
             return true;
         }
         const reference = await this.referencer.getReference();
-        return reference[(0, utils_js_1.stringify)(primary)] !== undefined;
+        return reference[stringify(primary)] !== undefined;
     }
     async delete(primary) {
         if (this.repairMode) {
             console.warn("Repair mode is on, this will not be logged");
             return;
         }
-        const data = new Data_js_1.default({
+        const data = new WideColumnarData({
             column: {
                 name: this.name,
                 type: this.type,
@@ -328,7 +323,7 @@ class WideColumnarColumn {
                 value: primary,
             },
         });
-        await this.#wal(data, index_js_1.DatabaseMethod.Delete);
+        await this.#wal(data, DatabaseMethod.Delete);
         if (this.memMap.has(primary)) {
             this.memMap.delete(primary);
         }
@@ -338,7 +333,7 @@ class WideColumnarColumn {
     }
     async #delete(primary) {
         const reference = await this.referencer.getReference();
-        const file = reference[(0, utils_js_1.stringify)(primary)];
+        const file = reference[stringify(primary)];
         if (!file) {
             return;
         }
@@ -349,10 +344,10 @@ class WideColumnarColumn {
     async #flushFile(file, data) {
         return new Promise(async (res, rej) => {
             const dataToWrite = data.map((x) => {
-                const encrypted = (0, utils_js_1.encrypt)(x.toString(), this.table.db.options.encryptionConfig.securityKey);
+                const encrypted = encrypt(x.toString(), this.table.db.options.encryptionConfig.securityKey);
                 return `${encrypted.iv}.${encrypted.data}`;
             });
-            await (0, promises_2.writeFile)(file, dataToWrite.join("\n"));
+            await writeFile(file, dataToWrite.join("\n"));
             res();
         });
     }
@@ -361,12 +356,12 @@ class WideColumnarColumn {
             console.warn("Repair mode is on, this will not be logged");
             return;
         }
-        this.memMap = new MemMap_js_1.default({
+        this.memMap = new MemMap({
             limit: this.table.db.options.cacheConfig.limit,
             sortFunction: this.table.db.options.cacheConfig.sortFunction,
         }, this);
         await this.referencer.clear();
-        (0, fs_1.rmSync)(this.path, { recursive: true });
+        rmSync(this.path, { recursive: true });
         await this.#initalize();
     }
     async getHeap() {
@@ -384,17 +379,17 @@ class WideColumnarColumn {
             return await this.#findOne(query);
     }
     async #fetchFile(file) {
-        const stream = (0, fs_1.createReadStream)(file);
-        const rl = promises_3.default.createInterface({
+        const stream = createReadStream(file);
+        const rl = readline.createInterface({
             input: stream,
             crlfDelay: Infinity,
         });
         const data = [];
         for await (const line of rl) {
             const [iv, ecrypted] = line.split(".");
-            const decrpyted = (0, utils_js_1.decrypt)({ data: ecrypted, iv }, this.table.db.options.encryptionConfig.securityKey);
+            const decrpyted = decrypt({ data: ecrypted, iv }, this.table.db.options.encryptionConfig.securityKey);
             const json = JSON.parse(decrpyted);
-            const d = new Data_js_1.default(json);
+            const d = new WideColumnarData(json);
             data.push(d);
         }
         return data;
@@ -402,17 +397,17 @@ class WideColumnarColumn {
     async #findOne(query) {
         const files = this.files;
         for (const file of files) {
-            const stream = (0, fs_1.createReadStream)(`${this.path}/${file}`);
-            const rl = promises_3.default.createInterface({
+            const stream = createReadStream(`${this.path}/${file}`);
+            const rl = readline.createInterface({
                 input: stream,
                 crlfDelay: Infinity,
             });
             let i = 0;
             for await (const line of rl) {
                 const [iv, ecrypted] = line.split(".");
-                const decrpyted = (0, utils_js_1.decrypt)({ data: ecrypted, iv }, this.table.db.options.encryptionConfig.securityKey);
+                const decrpyted = decrypt({ data: ecrypted, iv }, this.table.db.options.encryptionConfig.securityKey);
                 const json = JSON.parse(decrpyted);
-                const data = new Data_js_1.default(json);
+                const data = new WideColumnarData(json);
                 if (query(data)) {
                     return data;
                 }
@@ -455,7 +450,7 @@ class WideColumnarColumn {
                 this.memMap.delete(d.primary.value);
             }
             else {
-                const file = reference[(0, utils_js_1.stringify)(d.primary.value)];
+                const file = reference[stringify(d.primary.value)];
                 if (!file) {
                     continue;
                 }
@@ -490,9 +485,9 @@ class WideColumnarColumn {
         this.repairMode = true;
         const transactionPath = this.#log.path;
         const fullWriterPath = `${this.path}/fullWriter.wdcl`;
-        await (0, promises_1.truncate)(transactionPath);
-        const rl = promises_3.default.createInterface({
-            input: (0, fs_1.createReadStream)(fullWriterPath),
+        await truncate(transactionPath);
+        const rl = readline.createInterface({
+            input: createReadStream(fullWriterPath),
             crlfDelay: Infinity,
         });
         let index = 0;
@@ -502,31 +497,31 @@ class WideColumnarColumn {
                 index++;
                 continue;
             }
-            const decrypted = (0, utils_js_1.decrypt)({
+            const decrypted = decrypt({
                 iv: this.#log.ivFull,
                 data: line,
             }, this.table.db.options.encryptionConfig.securityKey);
-            const [columnValue, columnType, primaryValue, primaryType, method] = decrypted.split(utils_js_1.ReferenceConstantSpace);
+            const [columnValue, columnType, primaryValue, primaryType, method] = decrypted.split(ReferenceConstantSpace);
             const parsedMethod = Number(method.trim());
-            const data = new Data_js_1.default({
+            const data = new WideColumnarData({
                 column: {
                     name: this.name,
                     type: columnType,
-                    value: (0, utils_js_1.parse)(columnValue, columnType),
+                    value: parse(columnValue, columnType),
                 },
                 primary: {
                     name: this.table.primary.name,
                     type: this.table.primary.type,
-                    value: (0, utils_js_1.parse)(primaryValue, primaryType),
+                    value: parse(primaryValue, primaryType),
                 },
             });
             if (this.memMap.has(data.primary.value)) {
                 continue;
             }
-            if (parsedMethod === index_js_1.DatabaseMethod.Set) {
+            if (parsedMethod === DatabaseMethod.Set) {
                 datas.push(data);
             }
-            else if (parsedMethod === index_js_1.DatabaseMethod.Delete) {
+            else if (parsedMethod === DatabaseMethod.Delete) {
                 const index = datas.findIndex((x) => x.primary.value === data.primary.value);
                 if (index !== -1) {
                     datas.splice(index, 1);
@@ -535,7 +530,7 @@ class WideColumnarColumn {
         }
         // delete all files
         for (const file of this.files) {
-            await (0, promises_1.unlink)(`${this.path}/${file}`);
+            await unlink(`${this.path}/${file}`);
         }
         this.files = [];
         // divide the datas into chunks
@@ -545,7 +540,7 @@ class WideColumnarColumn {
         while (i < j) {
             let bufferSize = "";
             while (bufferSize.length < this.table.db.options.cacheConfig.limit) {
-                const encrypted = (0, utils_js_1.encrypt)(datas[i].toString(), this.table.db.options.encryptionConfig.securityKey);
+                const encrypted = encrypt(datas[i].toString(), this.table.db.options.encryptionConfig.securityKey);
                 bufferSize += `${encrypted.iv}.${encrypted.data}\n`;
                 i++;
             }
@@ -556,7 +551,7 @@ class WideColumnarColumn {
         for (const chunk of chunks) {
             const promise = new Promise(async (res, rej) => {
                 const path = `${this.path}/${this.name}_${this.files.length}${this.table.db.options.fileConfig.extension}`;
-                await (0, promises_2.writeFile)(path, chunk);
+                await writeFile(path, chunk);
                 this.files.push(path);
                 res();
             });
@@ -566,5 +561,4 @@ class WideColumnarColumn {
         await this.#createNewLogCycle();
     }
 }
-exports.default = WideColumnarColumn;
 //# sourceMappingURL=Column.js.map

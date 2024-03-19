@@ -1,6 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class WideColumnarData {
+export default class WideColumnarData {
     primary;
     column;
     constructor(data) {
@@ -17,5 +15,4 @@ class WideColumnarData {
         };
     }
 }
-exports.default = WideColumnarData;
 //# sourceMappingURL=Data.js.map

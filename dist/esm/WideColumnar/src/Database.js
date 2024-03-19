@@ -1,15 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const events_1 = __importDefault(require("events"));
-const index_js_1 = require("../../index.js");
-const Table_js_1 = __importDefault(require("./Table.js"));
-const path_1 = __importDefault(require("path"));
-const fs_1 = require("fs");
-const tar_1 = __importDefault(require("tar"));
-class WideColumnar extends events_1.default {
+import EventEmitter from "events";
+import { DatabaseEvents, ReferenceType } from "../../index.js";
+import WideColumnarTable from "./Table.js";
+import path from "path";
+import { createWriteStream, existsSync, mkdirSync, writeFileSync } from "fs";
+import tar from "tar";
+export default class WideColumnar extends EventEmitter {
     tables = {};
     #options;
     readyAt = -1;
@@ -53,7 +48,7 @@ class WideColumnar extends events_1.default {
                 }
                 return 0;
             },
-            referenceType: index_js_1.ReferenceType.File,
+            referenceType: ReferenceType.File,
         },
         encryptionConfig: {
             securityKey: "a-32-characters-long-string-here",
@@ -100,22 +95,22 @@ class WideColumnar extends events_1.default {
                     return;
             }
             this.readyAt = Date.now();
-            this.removeListener(index_js_1.DatabaseEvents.TableReady, isReady);
-            this.emit(index_js_1.DatabaseEvents.Connect);
+            this.removeListener(DatabaseEvents.TableReady, isReady);
+            this.emit(DatabaseEvents.Connect);
         };
-        this.on(index_js_1.DatabaseEvents.TableReady, isReady);
-        const referencePath = path_1.default.join(this.#options.dataConfig.path, this.#options.dataConfig.referencePath);
-        if (!(0, fs_1.existsSync)(referencePath)) {
-            (0, fs_1.mkdirSync)(referencePath, { recursive: true });
+        this.on(DatabaseEvents.TableReady, isReady);
+        const referencePath = path.join(this.#options.dataConfig.path, this.#options.dataConfig.referencePath);
+        if (!existsSync(referencePath)) {
+            mkdirSync(referencePath, { recursive: true });
         }
-        const backupPath = path_1.default.join(this.#options.dataConfig.path, ".backup");
-        if (!(0, fs_1.existsSync)(backupPath)) {
-            (0, fs_1.mkdirSync)(backupPath, { recursive: true });
+        const backupPath = path.join(this.#options.dataConfig.path, ".backup");
+        if (!existsSync(backupPath)) {
+            mkdirSync(backupPath, { recursive: true });
         }
         for (const table of this.#options.dataConfig.tables) {
             this.tables[table.name] = {
                 ready: false,
-                table: new Table_js_1.default({
+                table: new WideColumnarTable({
                     name: table.name,
                     columns: table.columns,
                     db: this,
@@ -212,9 +207,9 @@ class WideColumnar extends events_1.default {
             .replaceAll(" ", "_")
             .replaceAll(",", "_")
             .replaceAll(":", "_")}.tar.gz`;
-        (0, fs_1.writeFileSync)(backupName, "");
-        const writer = (0, fs_1.createWriteStream)(backupName);
-        tar_1.default.c({
+        writeFileSync(backupName, "");
+        const writer = createWriteStream(backupName);
+        tar.c({
             gzip: true,
         }, [
             this.#options.dataConfig.referencePath,
@@ -224,5 +219,4 @@ class WideColumnar extends events_1.default {
         ]).pipe(writer);
     }
 }
-exports.default = WideColumnar;
 //# sourceMappingURL=Database.js.map

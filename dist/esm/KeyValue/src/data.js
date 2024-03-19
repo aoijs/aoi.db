@@ -1,7 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const util_1 = require("util");
-class Data {
+import { types } from "util";
+export default class Data {
     file;
     key;
     value;
@@ -47,7 +45,7 @@ class Data {
         return data.type === "date" &&
             (typeof data.value === "string" ||
                 typeof data.value === "number" ||
-                util_1.types.isDate(data.value))
+                types.isDate(data.value))
             ? // @ts-ignore
                 new Date(data.value)
             : data.type === "bigint" &&
@@ -69,7 +67,7 @@ class Data {
      */
     toJSON() {
         return {
-            value: util_1.types.isDate(this.value)
+            value: types.isDate(this.value)
                 ? this.value.toISOString()
                 : typeof this.value === "bigint"
                     ? this.value.toString()
@@ -95,5 +93,4 @@ class Data {
         });
     }
 }
-exports.default = Data;
 //# sourceMappingURL=data.js.map

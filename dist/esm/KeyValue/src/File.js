@@ -1,16 +1,11 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const data_js_1 = __importDefault(require("./data.js"));
-const LRUcache_js_1 = __importDefault(require("./LRUcache.js"));
-const node_fs_1 = __importDefault(require("node:fs"));
+import Data from "./data.js";
+import LRUCache from "./LRUcache.js";
+import fs from "node:fs";
 //@ts-ignore
-const JSONStream_1 = __importDefault(require("JSONStream"));
-const utils_js_1 = require("../../utils.js");
-const promisifiers_js_1 = require("../../promisifiers.js");
-class File {
+import JSONStream from "JSONStream";
+import { decrypt, encrypt } from "../../utils.js";
+import { close, ftruncate, open, write } from "../../promisifiers.js";
+export default class File {
     #cache;
     #path;
     #fd;
@@ -23,7 +18,7 @@ class File {
     #retries = 0;
     #table;
     constructor(path, capacity, table) {
-        this.#cache = new LRUcache_js_1.default(capacity);
+        this.#cache = new LRUCache(capacity);
         this.#path = path;
         this.#table = table;
         this.#size = 0;
@@ -32,9 +27,9 @@ class File {
         this.#flushQueue = [];
         this.#removeQueue = [];
         // Open file
-        this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
-        if (node_fs_1.default.fstatSync(this.#fd).size === 0)
-            node_fs_1.default.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
+        this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+        if (fs.fstatSync(this.#fd).size === 0)
+            fs.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
         this.#checkIntegrity().catch((e) => {
             this.#isDirty = true;
             console.error(e);
@@ -82,12 +77,12 @@ class File {
     async #checkIntegrity() {
         await new Promise((resolve, reject) => {
             try {
-                const jsonstream = JSONStream_1.default.parse("*");
-                const stream = node_fs_1.default.createReadStream(this.#path);
+                const jsonstream = JSONStream.parse("*");
+                const stream = fs.createReadStream(this.#path);
                 stream.pipe(jsonstream);
                 jsonstream.on("data", (data) => {
                     this.#size++;
-                    this.#cache.put(data.key, new data_js_1.default({
+                    this.#cache.put(data.key, new Data({
                         key: data.key,
                         value: data.value,
                         type: data.type,
@@ -127,13 +122,13 @@ class File {
         this.#locked = true;
         let value;
         try {
-            let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8"));
+            let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
             if (this.#table.db.options.encryptionConfig.encriptData) {
-                const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
+                const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
                 json = JSON.parse(decryptedData);
             }
             if (json[key]) {
-                this.#cache.put(key, new data_js_1.default({
+                this.#cache.put(key, new Data({
                     key: key,
                     value: json[key].value,
                     type: json[key].type,
@@ -154,9 +149,9 @@ class File {
     }
     async #atomicFlush() {
         const tempFile = `${this.#path}.tmp`;
-        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8"));
+        let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
         if (this.#table.db.options.encryptionConfig.encriptData) {
-            const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
+            const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
             json = decryptedData;
         }
         for (const data of this.#flushQueue) {
@@ -167,15 +162,15 @@ class File {
         }
         let writeData;
         if (this.#table.db.options.encryptionConfig.encriptData) {
-            writeData = JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(json), this.#table.db.options.encryptionConfig.securityKey));
+            writeData = JSON.stringify(encrypt(JSON.stringify(json), this.#table.db.options.encryptionConfig.securityKey));
         }
         else {
             writeData = JSON.stringify(json);
         }
-        await node_fs_1.default.promises.writeFile(tempFile, writeData);
-        await (0, promisifiers_js_1.close)(this.#fd);
-        await this.#retry(async () => await node_fs_1.default.promises.rename(tempFile, this.#path), 10, 100);
-        this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        await fs.promises.writeFile(tempFile, writeData);
+        await close(this.#fd);
+        await this.#retry(async () => await fs.promises.rename(tempFile, this.#path), 10, 100);
+        this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         this.#flushQueue = [];
         this.#removeQueue = [];
         this.#locked = false;
@@ -197,15 +192,15 @@ class File {
     async getAll(query) {
         if (!query)
             query = () => true;
-        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
+        let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
         const arr = [];
         if (this.#table.db.options.encryptionConfig.encriptData) {
-            const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
+            const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
         }
         for (const key in json) {
             if (query(json[key])) {
-                const data = new data_js_1.default({
+                const data = new Data({
                     key: json[key].key,
                     value: json[key].value,
                     type: json[key].type,
@@ -223,14 +218,14 @@ class File {
         const f = this.#cache.findOne(query);
         if (f)
             return f;
-        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
+        let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
         if (this.#table.db.options.encryptionConfig.encriptData) {
-            const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
+            const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
         }
         for (const key in json) {
             if (query(json[key])) {
-                const data = new data_js_1.default({
+                const data = new Data({
                     key: json[key].key,
                     value: json[key].value,
                     type: json[key].type,
@@ -251,14 +246,14 @@ class File {
         this.#size = 0;
         this.#flushQueue = [];
         this.#removeQueue = [];
-        await (0, promisifiers_js_1.ftruncate)(this.#fd, 0);
+        await ftruncate(this.#fd, 0);
         const buffer = Buffer.from("{}");
-        await (0, promisifiers_js_1.write)(this.#fd, buffer, 0, buffer.length, 0);
+        await write(this.#fd, buffer, 0, buffer.length, 0);
     }
     async #has(key) {
-        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
+        let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
         if (this.#table.db.options.encryptionConfig.encriptData) {
-            const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
+            const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
         }
         return !!json[key];
@@ -282,9 +277,9 @@ class File {
         return value ? true : false;
     }
     async removeMany(query) {
-        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
+        let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
         if (this.#table.db.options.encryptionConfig.encriptData) {
-            const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
+            const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
         }
         for (const key in json) {
@@ -294,7 +289,7 @@ class File {
         }
         let writeData;
         if (this.#table.db.options.encryptionConfig.encriptData) {
-            writeData = JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(json), this.#table.db.options.encryptionConfig.securityKey));
+            writeData = JSON.stringify(encrypt(JSON.stringify(json), this.#table.db.options.encryptionConfig.securityKey));
         }
         else {
             writeData = JSON.stringify(json);
@@ -318,12 +313,12 @@ class File {
     async #atomicWrite(data) {
         this.#locked = true;
         const tempFile = `${this.#path}.tmp`;
-        await node_fs_1.default.promises.writeFile(tempFile, data);
-        await (0, promisifiers_js_1.close)(this.#fd);
-        await this.#retry(async () => await node_fs_1.default.promises.rename(tempFile, this.#path).then(() => {
-            this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        await fs.promises.writeFile(tempFile, data);
+        await close(this.#fd);
+        await this.#retry(async () => await fs.promises.rename(tempFile, this.#path).then(() => {
+            this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         }), 10, 100);
-        this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+        this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         this.#locked = false;
     }
     async ping() {
@@ -332,5 +327,4 @@ class File {
         return performance.now() - startTime;
     }
 }
-exports.default = File;
 //# sourceMappingURL=File.js.map

@@ -1,45 +1,37 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.parse = exports.stringify = exports.returnParseString = exports.parseTransmitterQuery = exports.convertV1KeyValuetov2 = exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
-const crypto_1 = require("crypto");
-const fs_1 = require("fs");
+import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import { readFileSync, readdirSync } from "fs";
 const algorithm = "aes-256-ctr";
 //@ts-ignore
-const jsonrepair_1 = require("jsonrepair");
-function encrypt(string, key, iV) {
-    const iv = iV ? Buffer.from(iV, "hex") : (0, crypto_1.randomBytes)(16);
-    const cipher = (0, crypto_1.createCipheriv)(algorithm, key, iv);
+import { jsonrepair } from "jsonrepair";
+export function encrypt(string, key, iV) {
+    const iv = iV ? Buffer.from(iV, "hex") : randomBytes(16);
+    const cipher = createCipheriv(algorithm, key, iv);
     const encrypted = Buffer.concat([cipher.update(string), cipher.final()]);
     return {
         iv: iv.toString("hex"),
         data: encrypted.toString("hex"),
     };
 }
-exports.encrypt = encrypt;
-function decrypt(hash, key) {
-    const decipher = (0, crypto_1.createDecipheriv)(algorithm, key, Buffer.from(hash.iv, "hex"));
+export function decrypt(hash, key) {
+    const decipher = createDecipheriv(algorithm, key, Buffer.from(hash.iv, "hex"));
     const decrpyted = Buffer.concat([
         decipher.update(Buffer.from(hash.data, "hex")),
         decipher.final(),
     ]);
     return decrpyted.toString();
 }
-exports.decrypt = decrypt;
-exports.ReferenceConstantSpace = "�".repeat(5);
-function createHashRawString(strings) {
-    return strings.join(exports.ReferenceConstantSpace);
+export const ReferenceConstantSpace = "�".repeat(5);
+export function createHashRawString(strings) {
+    return strings.join(ReferenceConstantSpace);
 }
-exports.createHashRawString = createHashRawString;
-function createHash(string, key, iv) {
+export function createHash(string, key, iv) {
     return encrypt(string, key, iv).data;
 }
-exports.createHash = createHash;
-function decodeHash(hash, key, iv) {
+export function decodeHash(hash, key, iv) {
     const decrpyted = decrypt({ data: hash, iv: iv }, key);
-    return decrpyted.split(exports.ReferenceConstantSpace);
+    return decrpyted.split(ReferenceConstantSpace);
 }
-exports.decodeHash = decodeHash;
-function JSONParser(data) {
+export function JSONParser(data) {
     try {
         return {
             data: JSON.parse(data),
@@ -49,7 +41,7 @@ function JSONParser(data) {
     catch (e) {
         try {
             return {
-                data: (0, jsonrepair_1.jsonrepair)(data),
+                data: jsonrepair(data),
                 isBroken: true,
             };
         }
@@ -71,15 +63,14 @@ function JSONParser(data) {
         }
     }
 }
-exports.JSONParser = JSONParser;
-async function convertV1KeyValuetov2(oldDbFolder, db) {
-    const tables = (0, fs_1.readdirSync)(oldDbFolder);
+export async function convertV1KeyValuetov2(oldDbFolder, db) {
+    const tables = readdirSync(oldDbFolder);
     for (const table of tables) {
         if (!db.tables[table])
             continue;
-        const files = (0, fs_1.readdirSync)(oldDbFolder + "/" + table).filter((x) => !x.startsWith("$temp_"));
+        const files = readdirSync(oldDbFolder + "/" + table).filter((x) => !x.startsWith("$temp_"));
         for (const file of files) {
-            const data = (0, fs_1.readFileSync)(oldDbFolder + "/" + table + "/" + file).toString();
+            const data = readFileSync(oldDbFolder + "/" + table + "/" + file).toString();
             const { data: json, isBroken } = JSONParser(data);
             if (json.iv && json.data) {
                 json.ecrypted = json.data;
@@ -99,13 +90,11 @@ async function convertV1KeyValuetov2(oldDbFolder, db) {
         }
     }
 }
-exports.convertV1KeyValuetov2 = convertV1KeyValuetov2;
-function parseTransmitterQuery(query) {
+export function parseTransmitterQuery(query) {
     const str = returnParseString("&&", query, "===", "&&");
     return new Function(" return (Data) => " + str)();
 }
-exports.parseTransmitterQuery = parseTransmitterQuery;
-function returnParseString(key, value, sign = "===", join = "&&") {
+export function returnParseString(key, value, sign = "===", join = "&&") {
     if (key === "value" || key === "key" || key === "ttl") {
         if (sign === "$sw") {
             return `Data.${key}.startsWith(${value})`;
@@ -195,8 +184,7 @@ function returnParseString(key, value, sign = "===", join = "&&") {
     }
     return "";
 }
-exports.returnParseString = returnParseString;
-function stringify(data) {
+export function stringify(data) {
     if (typeof data === "string")
         return data;
     if (typeof data === "undefined")
@@ -209,8 +197,7 @@ function stringify(data) {
         return data.toISOString();
     return data.toString();
 }
-exports.stringify = stringify;
-function parse(data, type) {
+export function parse(data, type) {
     if (type === "string")
         return data;
     if (type === "undefined")
@@ -229,5 +216,4 @@ function parse(data, type) {
         return new Date(data);
     return data;
 }
-exports.parse = parse;
 //# sourceMappingURL=utils.js.map

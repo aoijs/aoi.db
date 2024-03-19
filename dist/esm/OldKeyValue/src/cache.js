@@ -1,11 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const structures_1 = require("@akarui/structures");
-const data_js_1 = __importDefault(require("./data.js"));
-class Cacher {
+import { Group } from "@akarui/structures";
+import Data from "./data.js";
+export default class Cacher {
     options;
     #data;
     constructor(options) {
@@ -14,7 +9,7 @@ class Cacher {
     }
     set(data) {
         if (!this.#data[data.file])
-            this.#data[data.file] = new structures_1.Group(this.options.limit);
+            this.#data[data.file] = new Group(this.options.limit);
         this.#data[data.file].set(data.key, data);
     }
     get(key, file) {
@@ -51,10 +46,10 @@ class Cacher {
     }
     replace(file, json) {
         if (!this.#data[file])
-            this.#data[file] = new structures_1.Group(this.options.limit);
+            this.#data[file] = new Group(this.options.limit);
         this.#data[file].clear();
         for (const key in json) {
-            const data = new data_js_1.default({
+            const data = new Data({
                 key,
                 file,
                 value: json[key].value,
@@ -64,5 +59,4 @@ class Cacher {
         }
     }
 }
-exports.default = Cacher;
 //# sourceMappingURL=cache.js.map

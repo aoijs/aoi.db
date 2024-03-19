@@ -1,7 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const index_js_1 = require("../index.js");
-class QueueManager {
+import { KeyValueData } from "../index.js";
+export default class QueueManager {
     // @ts-ignore
     #set = {
         data: [],
@@ -12,7 +10,7 @@ class QueueManager {
         size: 0,
     };
     add(data) {
-        if (data instanceof index_js_1.KeyValueData) {
+        if (data instanceof KeyValueData) {
             this.#set.data.push(data);
             this.#set.size += data.size;
             this.#set[data.file] = (this.#set[data.file] || 0) + data.size;
@@ -67,5 +65,4 @@ class QueueManager {
             return this.#delete.size;
     }
 }
-exports.default = QueueManager;
 //# sourceMappingURL=queue.js.map

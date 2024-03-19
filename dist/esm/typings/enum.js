@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReferenceType = exports.DatabaseEvents = exports.DatabaseMethod = exports.CacheType = void 0;
-var CacheType;
+export var CacheType;
 (function (CacheType) {
     CacheType[CacheType["LRU"] = 0] = "LRU";
     CacheType[CacheType["MRU"] = 1] = "MRU";
@@ -9,8 +6,8 @@ var CacheType;
     CacheType[CacheType["MFU"] = 3] = "MFU";
     CacheType[CacheType["FIFO"] = 4] = "FIFO";
     CacheType[CacheType["FILO"] = 5] = "FILO";
-})(CacheType || (exports.CacheType = CacheType = {}));
-var DatabaseMethod;
+})(CacheType || (CacheType = {}));
+export var DatabaseMethod;
 (function (DatabaseMethod) {
     DatabaseMethod[DatabaseMethod["Set"] = 0] = "Set";
     //Get,
@@ -30,8 +27,8 @@ var DatabaseMethod;
     DatabaseMethod[DatabaseMethod["FindMany"] = 14] = "FindMany";
     DatabaseMethod[DatabaseMethod["DeleteMany"] = 15] = "DeleteMany";
     DatabaseMethod[DatabaseMethod["Analyze"] = 16] = "Analyze";
-})(DatabaseMethod || (exports.DatabaseMethod = DatabaseMethod = {}));
-var DatabaseEvents;
+})(DatabaseMethod || (DatabaseMethod = {}));
+export var DatabaseEvents;
 (function (DatabaseEvents) {
     DatabaseEvents["Connect"] = "connect";
     DatabaseEvents["Error"] = "error";
@@ -46,10 +43,10 @@ var DatabaseEvents;
     DatabaseEvents["Disconnect"] = "disconnect";
     DatabaseEvents["TableReady"] = "tableReady";
     DatabaseEvents["Debug"] = "debug";
-})(DatabaseEvents || (exports.DatabaseEvents = DatabaseEvents = {}));
-var ReferenceType;
+})(DatabaseEvents || (DatabaseEvents = {}));
+export var ReferenceType;
 (function (ReferenceType) {
     ReferenceType[ReferenceType["Cache"] = 0] = "Cache";
     ReferenceType[ReferenceType["File"] = 1] = "File";
-})(ReferenceType || (exports.ReferenceType = ReferenceType = {}));
+})(ReferenceType || (ReferenceType = {}));
 //# sourceMappingURL=enum.js.map

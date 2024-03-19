@@ -1,6 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const structures_1 = require("@akarui/structures");
+import { PriorityQueue } from "@akarui/structures";
 class LRUCache {
     capacity;
     cache;
@@ -8,7 +6,7 @@ class LRUCache {
     constructor(capacity) {
         this.capacity = capacity;
         this.cache = new Map();
-        this.queue = new structures_1.PriorityQueue((a, b) => a.timestamp < b.timestamp);
+        this.queue = new PriorityQueue((a, b) => a.timestamp < b.timestamp);
     }
     get(key) {
         if (!this.cache.has(key)) {
@@ -56,5 +54,5 @@ class LRUCache {
         return this.all().find(query);
     }
 }
-exports.default = LRUCache;
+export default LRUCache;
 //# sourceMappingURL=LRUcache.js.map

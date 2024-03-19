@@ -1,13 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const structures_1 = require("@akarui/structures");
-const v8_1 = require("v8");
-class MemMap {
+import { Group } from "@akarui/structures";
+import { serialize } from "v8";
+export default class MemMap {
     heap;
     #options;
     #column;
     constructor(options, Column) {
-        this.heap = new structures_1.Group(Infinity);
+        this.heap = new Group(Infinity);
         this.#options = options;
         this.#column = Column;
     }
@@ -33,7 +31,7 @@ class MemMap {
         return this.#options;
     }
     getSize() {
-        const serialized = (0, v8_1.serialize)(this.heap);
+        const serialized = serialize(this.heap);
         return serialized.byteLength;
     }
     async flush() {
@@ -47,5 +45,4 @@ class MemMap {
         return this.heap.filter(query);
     }
 }
-exports.default = MemMap;
 //# sourceMappingURL=MemMap.js.map

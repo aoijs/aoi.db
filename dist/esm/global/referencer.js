@@ -1,10 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
-const utils_js_1 = require("../utils.js");
-const promises_1 = require("fs/promises");
-const enum_js_1 = require("../typings/enum.js");
-class Referencer {
+import { createWriteStream, readdirSync, statSync } from "fs";
+import { ReferenceConstantSpace } from "../utils.js";
+import { readFile, truncate, unlink } from "fs/promises";
+import { ReferenceType } from "../typings/enum.js";
+export default class Referencer {
     cache = {};
     cacheSize = -1;
     #path;
@@ -21,17 +19,17 @@ class Referencer {
      * @returns
      */
     async initialize() {
-        this.files = (0, fs_1.readdirSync)(this.#path).map((file) => {
+        this.files = readdirSync(this.#path).map((file) => {
             return {
                 name: file,
-                size: (0, fs_1.statSync)(this.#path + "/" + file).size,
-                writer: (0, fs_1.createWriteStream)(this.#path + "/" + file, {
+                size: statSync(this.#path + "/" + file).size,
+                writer: createWriteStream(this.#path + "/" + file, {
                     flags: "a",
                     encoding: "utf-8",
                 }),
             };
         });
-        if (this.type === enum_js_1.ReferenceType.Cache)
+        if (this.type === ReferenceType.Cache)
             this.cache = await this.#getReference();
     }
     get path() {
@@ -45,12 +43,12 @@ class Referencer {
     async #getReference() {
         const reference = {};
         for (const file of this.files) {
-            const data = await (0, promises_1.readFile)(this.#path + "/" + file.name, "utf-8");
+            const data = await readFile(this.#path + "/" + file.name, "utf-8");
             if (data.trim() === "")
                 return reference;
             const lines = data.split("\n");
             for (const line of lines) {
-                const [key, value] = line.split(utils_js_1.ReferenceConstantSpace);
+                const [key, value] = line.split(ReferenceConstantSpace);
                 reference[key] = {
                     file: value,
                     referenceFile: file.name,
@@ -72,7 +70,7 @@ class Referencer {
         if (this.cacheSize === -1) {
             this.cache = await this.#getReference();
             this.cacheSize = Object.keys(this.cache).length;
-            if (this.type === enum_js_1.ReferenceType.File)
+            if (this.type === ReferenceType.File)
                 setTimeout(() => {
                     this.cache = {};
                     this.cacheSize = -1;
@@ -88,7 +86,7 @@ class Referencer {
      */
     async #saveReference(key, file) {
         return new Promise((resolve, reject) => {
-            const string = `${key}${utils_js_1.ReferenceConstantSpace}${file}\n`;
+            const string = `${key}${ReferenceConstantSpace}${file}\n`;
             let currentFile = this.#currentFile();
             if (currentFile.size + string.length > this.maxSize) {
                 this.#createFile();
@@ -125,7 +123,7 @@ class Referencer {
         this.files.push({
             name: "reference_" + (this.files.length + 1) + ".log",
             size: 0,
-            writer: (0, fs_1.createWriteStream)(file, {
+            writer: createWriteStream(file, {
                 flags: "a",
                 encoding: "utf-8",
             }),
@@ -188,9 +186,9 @@ class Referencer {
         const reference = await this.#getFileReference(file);
         delete reference[key];
         const string = Object.entries(reference).map(([key, value]) => {
-            return `${key}${utils_js_1.ReferenceConstantSpace}${value}\n`;
+            return `${key}${ReferenceConstantSpace}${value}\n`;
         });
-        await (0, promises_1.truncate)(this.#path + "/" + file, 0);
+        await truncate(this.#path + "/" + file, 0);
         this.files
             .find((fil) => fil.name === file)
             .writer.write(string.join(""));
@@ -203,10 +201,10 @@ class Referencer {
     async #getFileReference(file) {
         const path = this.#path + "/" + file;
         const reference = {};
-        const data = await (0, promises_1.readFile)(this.#path + "/" + file, "utf-8");
+        const data = await readFile(this.#path + "/" + file, "utf-8");
         const lines = data.split("\n");
         for (const line of lines) {
-            const [key, value] = line.split(utils_js_1.ReferenceConstantSpace);
+            const [key, value] = line.split(ReferenceConstantSpace);
             reference[key] = value;
         }
         return reference;
@@ -224,14 +222,14 @@ class Referencer {
             file.size = 0;
             file.writer.close();
             if (file.name !== "reference_1.log") {
-                await (0, promises_1.unlink)(this.#path + "/" + file.name);
+                await unlink(this.#path + "/" + file.name);
             }
             else {
-                await (0, promises_1.truncate)(this.#path + "/" + file.name, 0);
+                await truncate(this.#path + "/" + file.name, 0);
             }
         }
         this.files = this.files.slice(0, 1);
-        this.files[0].writer = (0, fs_1.createWriteStream)(this.#path + "/reference_1.log", {
+        this.files[0].writer = createWriteStream(this.#path + "/reference_1.log", {
             flags: "a",
             encoding: "utf-8",
         });
@@ -250,7 +248,7 @@ class Referencer {
      */
     open() {
         for (const file of this.files) {
-            file.writer = (0, fs_1.createWriteStream)(this.#path + "/" + file.name, {
+            file.writer = createWriteStream(this.#path + "/" + file.name, {
                 flags: "a",
                 encoding: "utf-8",
             });
@@ -301,9 +299,9 @@ class Referencer {
             delete reference[key];
         }
         const string = Object.entries(reference).map(([key, value]) => {
-            return `${key}${utils_js_1.ReferenceConstantSpace}${value}\n`;
+            return `${key}${ReferenceConstantSpace}${value}\n`;
         });
-        await (0, promises_1.truncate)(this.#path + "/" + file, 0);
+        await truncate(this.#path + "/" + file, 0);
         this.files
             .find((fil) => fil.name === file)
             .writer.write(string.join(""));
@@ -313,11 +311,11 @@ class Referencer {
             if (!file.writer.closed)
                 file.writer.close();
         }
-        this.files = (0, fs_1.readdirSync)(this.#path).map((file) => {
+        this.files = readdirSync(this.#path).map((file) => {
             return {
                 name: file,
-                size: (0, fs_1.statSync)(this.#path + "/" + file).size,
-                writer: (0, fs_1.createWriteStream)(this.#path + "/" + file, {
+                size: statSync(this.#path + "/" + file).size,
+                writer: createWriteStream(this.#path + "/" + file, {
                     flags: "a",
                     encoding: "utf-8",
                 }),
@@ -346,5 +344,4 @@ class Referencer {
         }
     }
 }
-exports.default = Referencer;
 //# sourceMappingURL=referencer.js.map

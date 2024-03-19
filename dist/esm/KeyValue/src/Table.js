@@ -1,17 +1,12 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const node_events_1 = __importDefault(require("node:events"));
-const FileManager_js_1 = __importDefault(require("./FileManager.js"));
-const node_fs_1 = __importDefault(require("node:fs"));
-const enum_js_1 = require("../../typings/enum.js");
-const utils_js_1 = require("../../utils.js");
-const data_js_1 = __importDefault(require("./data.js"));
-const promises_1 = require("node:readline/promises");
-const promisifiers_js_1 = require("../../promisifiers.js");
-class Table extends node_events_1.default {
+import EventEmitter from "node:events";
+import FileManager from "./FileManager.js";
+import fs from "node:fs";
+import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
+import { createHash, createHashRawString, decodeHash, stringify, } from "../../utils.js";
+import Data from "./data.js";
+import { createInterface } from "node:readline/promises";
+import { ftruncate, write } from "../../promisifiers.js";
+export default class Table extends EventEmitter {
     #options;
     #db;
     #fileManager;
@@ -24,7 +19,7 @@ class Table extends node_events_1.default {
         super();
         this.#options = options;
         this.#db = db;
-        this.#fileManager = new FileManager_js_1.default(db.options.fileConfig.maxSize, db.options.fileConfig.minFileCount, this);
+        this.#fileManager = new FileManager(db.options.fileConfig.maxSize, db.options.fileConfig.minFileCount, this);
     }
     get options() {
         return this.#options;
@@ -41,7 +36,7 @@ class Table extends node_events_1.default {
         await this.#getLogData();
         await this.#syncWithLog();
         this.readyAt = Date.now();
-        this.#db.emit(enum_js_1.DatabaseEvents.TableReady, this);
+        this.#db.emit(DatabaseEvents.TableReady, this);
     }
     async #getPaths() {
         const { path } = this.#db.options.dataConfig;
@@ -53,7 +48,7 @@ class Table extends node_events_1.default {
         };
     }
     async #getLogData() {
-        const fd = await node_fs_1.default.promises.open(this.paths.log, "a+");
+        const fd = await fs.promises.open(this.paths.log, "a+");
         let size = 0;
         let logIV = "";
         for await (const lines of fd.readLines()) {
@@ -63,9 +58,9 @@ class Table extends node_events_1.default {
             size++;
         }
         this.logData = {
-            fd: await node_fs_1.default.openSync(this.paths.log, "a+"),
+            fd: await fs.openSync(this.paths.log, "a+"),
             size,
-            fileSize: node_fs_1.default.statSync(this.paths.log).size,
+            fileSize: fs.statSync(this.paths.log).size,
             logIV,
         };
     }
@@ -73,10 +68,10 @@ class Table extends node_events_1.default {
         const logs = [];
         let ignoreFirstLine = true;
         const { securityKey } = this.#db.options.encryptionConfig;
-        const stream = node_fs_1.default.createReadStream(this.paths.log, {
+        const stream = fs.createReadStream(this.paths.log, {
             encoding: "utf-8",
         });
-        const rl = (0, promises_1.createInterface)({
+        const rl = createInterface({
             input: stream,
             crlfDelay: Infinity,
         });
@@ -84,7 +79,7 @@ class Table extends node_events_1.default {
             if (ignoreFirstLine)
                 ignoreFirstLine = false;
             else {
-                const [key, value, type, ttl, method] = (0, utils_js_1.decodeHash)(line, securityKey, this.logData.logIV);
+                const [key, value, type, ttl, method] = decodeHash(line, securityKey, this.logData.logIV);
                 let parsedMethod;
                 if (!method)
                     parsedMethod = Number(ttl);
@@ -102,12 +97,12 @@ class Table extends node_events_1.default {
     }
     async #syncWithLog() {
         const logs = await this.getLogs();
-        const lastFlushIndex = logs.findLastIndex((log) => log.method === enum_js_1.DatabaseMethod.Flush);
+        const lastFlushIndex = logs.findLastIndex((log) => log.method === DatabaseMethod.Flush);
         const startIndex = lastFlushIndex === -1 ? 0 : lastFlushIndex + 1;
         for (let i = startIndex; i < logs.length; i++) {
             const log = logs[i];
-            if (log.method === enum_js_1.DatabaseMethod.Set) {
-                const data = new data_js_1.default({
+            if (log.method === DatabaseMethod.Set) {
+                const data = new Data({
                     key: log.key,
                     value: log.value,
                     type: log.type,
@@ -115,49 +110,49 @@ class Table extends node_events_1.default {
                 });
                 this.#fileManager.add(data);
             }
-            else if (log.method === enum_js_1.DatabaseMethod.Delete) {
+            else if (log.method === DatabaseMethod.Delete) {
                 this.#fileManager.remove(log.key);
             }
         }
-        await this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
+        await this.#wal(Data.emptyData(), DatabaseMethod.Flush);
     }
     async #wal(data, method) {
         return new Promise(async (resolve, reject) => {
             const { key, type, value } = data.toJSON();
             const { securityKey } = this.#db.options.encryptionConfig;
-            const delimitedString = (0, utils_js_1.createHashRawString)([
+            const delimitedString = createHashRawString([
                 key,
-                (0, utils_js_1.stringify)(value),
+                stringify(value),
                 type,
                 method.toString(),
             ]);
-            const logHash = (0, utils_js_1.createHash)(delimitedString, securityKey, this.logData.logIV);
-            const { bytesWritten, buffer } = await (0, promisifiers_js_1.write)(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
+            const logHash = createHash(delimitedString, securityKey, this.logData.logIV);
+            const { bytesWritten, buffer } = await write(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
             this.logData.fileSize += bytesWritten;
             this.logData.size++;
-            if (method === enum_js_1.DatabaseMethod.Flush &&
+            if (method === DatabaseMethod.Flush &&
                 this.logData.size > this.#db.options.fileConfig.maxSize) {
-                await (0, promisifiers_js_1.ftruncate)(this.logData.fd, 33);
+                await ftruncate(this.logData.fd, 33);
             }
             resolve();
             return;
         });
     }
     async set(key, value, type) {
-        const data = new data_js_1.default({ key, value, type, file: "" });
+        const data = new Data({ key, value, type, file: "" });
         this.#fileManager.add(data);
-        await this.#wal(data, enum_js_1.DatabaseMethod.Set);
+        await this.#wal(data, DatabaseMethod.Set);
     }
     async get(key) {
         return this.#fileManager.get(key);
     }
     async delete(key) {
         this.#fileManager.remove(key);
-        await this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Delete);
+        await this.#wal(Data.emptyData(), DatabaseMethod.Delete);
     }
     async clear() {
         this.#fileManager.clear();
-        await this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Clear);
+        await this.#wal(Data.emptyData(), DatabaseMethod.Clear);
     }
     async has(key) {
         return this.#fileManager.has(key);
@@ -178,5 +173,4 @@ class Table extends node_events_1.default {
         return this.#fileManager.ping();
     }
 }
-exports.default = Table;
 //# sourceMappingURL=Table.js.map

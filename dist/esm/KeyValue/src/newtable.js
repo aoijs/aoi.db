@@ -1,23 +1,18 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-nocheck
-const events_1 = __importDefault(require("events"));
-const newcache_js_1 = __importDefault(require("./newcache.js"));
-const fs_1 = require("fs");
-const utils_js_1 = require("../../utils.js");
-const index_js_1 = require("../../index.js");
-const promises_1 = require("fs/promises");
-const queue_js_1 = __importDefault(require("./queue.js"));
-const data_js_1 = __importDefault(require("./data.js"));
-const promises_2 = require("timers/promises");
-const crypto_1 = require("crypto");
-const promises_3 = require("readline/promises");
-const structures_1 = require("@akarui/structures");
-const FileManager_js_1 = __importDefault(require("./FileManager.js"));
-class Table extends events_1.default {
+import EventEmitter from "events";
+import Cacher from "./newcache.js";
+import { createReadStream, createWriteStream, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync, } from "fs";
+import { JSONParser, ReferenceConstantSpace, createHash, createHashRawString, decodeHash, decrypt, encrypt, stringify, } from "../../utils.js";
+import { DatabaseEvents, DatabaseMethod } from "../../index.js";
+import { readFile, rename, truncate, writeFile } from "fs/promises";
+import QueueManager from "./queue.js";
+import Data from "./data.js";
+import { setTimeout as wait } from "timers/promises";
+import { randomBytes } from "crypto";
+import { createInterface } from "readline/promises";
+import { Group } from "@akarui/structures";
+import HashManager from "./FileManager.js";
+export default class Table extends EventEmitter {
     #options;
     #db;
     #cache;
@@ -36,8 +31,8 @@ class Table extends events_1.default {
         super();
         this.#options = options;
         this.#db = db;
-        this.#cache = new newcache_js_1.default(this.#db.options.cacheConfig);
-        this.#queue = new queue_js_1.default();
+        this.#cache = new Cacher(this.#db.options.cacheConfig);
+        this.#queue = new QueueManager();
     }
     get options() {
         return this.#options;
@@ -51,11 +46,11 @@ class Table extends events_1.default {
         await this.#getLogData();
         await this.#checkIntegrity();
         await this.#syncWithLog();
-        this.hashManager = new FileManager_js_1.default(10000, 20, this);
+        this.hashManager = new HashManager(10000, 20, this);
         // await this.#syncReferencer();
         this.#enableIntervals();
         this.readyAt = Date.now();
-        this.#db.emit(index_js_1.DatabaseEvents.TableReady, this);
+        this.#db.emit(DatabaseEvents.TableReady, this);
     }
     #enableIntervals() {
         if (this.locked)
@@ -80,8 +75,8 @@ class Table extends events_1.default {
         };
     }
     #getFiles() {
-        this.files = (0, fs_1.readdirSync)(this.paths.table).map((file) => {
-            const size = (0, fs_1.statSync)(`${this.paths.table}/${file}`).size;
+        this.files = readdirSync(this.paths.table).map((file) => {
+            const size = statSync(`${this.paths.table}/${file}`).size;
             return {
                 name: file,
                 size,
@@ -91,11 +86,11 @@ class Table extends events_1.default {
     }
     async #getLogData() {
         this.logData = {
-            writer: (0, fs_1.createWriteStream)(this.paths.log, {
+            writer: createWriteStream(this.paths.log, {
                 flags: "a",
             }),
-            size: (0, fs_1.statSync)(this.paths.log).size,
-            fullWriter: (0, fs_1.createWriteStream)(this.paths.fullWriter, {
+            size: statSync(this.paths.log).size,
+            fullWriter: createWriteStream(this.paths.fullWriter, {
                 flags: "a",
             }),
             logIV: await this.#getLogIV(this.paths.log),
@@ -103,7 +98,7 @@ class Table extends events_1.default {
     }
     async #getLogIV(path) {
         return new Promise((resolve, reject) => {
-            const stream = (0, fs_1.createReadStream)(path);
+            const stream = createReadStream(path);
             let hash = "";
             stream.on("readable", () => {
                 hash = stream.read(32);
@@ -118,12 +113,12 @@ class Table extends events_1.default {
         let index = 0;
         for (const fileObj of files) {
             if (fileObj.name.startsWith("$temp_")) {
-                (0, fs_1.unlinkSync)(`${this.paths.table}/${fileObj.name}`);
+                unlinkSync(`${this.paths.table}/${fileObj.name}`);
                 this.files.splice(index, 1);
                 continue;
             }
-            const data = (0, fs_1.readFileSync)(`${this.paths.table}/${fileObj.name}`, "utf-8").trim();
-            const { data: json, isBroken } = (0, utils_js_1.JSONParser)(data);
+            const data = readFileSync(`${this.paths.table}/${fileObj.name}`, "utf-8").trim();
+            const { data: json, isBroken } = JSONParser(data);
             if (isBroken) {
                 if (!Object.keys(json).length) {
                     console.warn(`File ${fileObj.name} in table ${this.#options.name} is corrupted. Data found: 0. Locking table. please add backup or use the <KeyValue>.fullRepair("${this.#options.name}") to restore the data. from logs`);
@@ -136,21 +131,21 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 const { securityKey, encriptData } = this.#db.options.encryptionConfig;
                 let dataToWrite;
                 if (encriptData) {
-                    const decrypted = (0, utils_js_1.decrypt)(json, securityKey);
-                    const { data: parsed, isBroken } = (0, utils_js_1.JSONParser)(decrypted);
+                    const decrypted = decrypt(json, securityKey);
+                    const { data: parsed, isBroken } = JSONParser(decrypted);
                     if (isBroken) {
                         console.warn(`File ${fileObj.name} in table ${this.#options.name} is corrupted. Data found: 0. Locking table. please add backup or use the <KeyValue>.fullRepair("${this.#options.name}") to restore the data. from logs`);
                         this.locked = true;
                         return;
                     }
                     else {
-                        dataToWrite = JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(parsed), securityKey));
+                        dataToWrite = JSON.stringify(encrypt(JSON.stringify(parsed), securityKey));
                     }
                 }
                 else {
                     dataToWrite = JSON.stringify(json);
                 }
-                (0, fs_1.writeFileSync)(`${this.paths.table}/${fileObj.name}`, dataToWrite);
+                writeFileSync(`${this.paths.table}/${fileObj.name}`, dataToWrite);
             }
         }
         index++;
@@ -159,13 +154,13 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         if (this.locked)
             return;
         const logBlocks = await this.getLogs();
-        const lastFlushIndex = logBlocks.findLastIndex((block) => block.method === index_js_1.DatabaseMethod.Flush);
+        const lastFlushIndex = logBlocks.findLastIndex((block) => block.method === DatabaseMethod.Flush);
         const startIndex = lastFlushIndex === -1 ? 0 : lastFlushIndex + 1;
         for (let index = startIndex; index < logBlocks.length; index++) {
             const { key, value, type, method } = logBlocks[index];
-            if (method === index_js_1.DatabaseMethod.Set) {
+            if (method === DatabaseMethod.Set) {
                 let file;
-                const data = new data_js_1.default({
+                const data = new Data({
                     file,
                     key,
                     value,
@@ -177,7 +172,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 this.#queue.add(data);
                 this.#cache.set(data.key, data);
             }
-            if (method === index_js_1.DatabaseMethod.Delete) {
+            if (method === DatabaseMethod.Delete) {
                 if (!reference[key]) {
                     if (this.#cache.has(key)) {
                         this.#queue.add({
@@ -210,19 +205,19 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         if (fileObj.size <= 2)
             return {};
         if (fileObj.isInWriteMode) {
-            await (0, promises_2.setTimeout)(100);
+            await wait(100);
             return this.fetchFile(path);
         }
-        const dataString = await (0, promises_1.readFile)(path, "utf-8");
-        const { data: json, isBroken } = (0, utils_js_1.JSONParser)(dataString);
+        const dataString = await readFile(path, "utf-8");
+        const { data: json, isBroken } = JSONParser(dataString);
         if (isBroken && !Object.keys(json).length) {
             console.warn(`File ${path} in table ${this.#options.name} is corrupted. Data found: 0. Locking table. please add backup or use the <KeyValue>.fullRepair("${this.#options.name}") to restore the data. from logs`);
             this.locked = true;
             return;
         }
         if (encriptData) {
-            const decrypted = (0, utils_js_1.decrypt)(json, securityKey);
-            const { data: parsed, isBroken } = (0, utils_js_1.JSONParser)(decrypted);
+            const decrypted = decrypt(json, securityKey);
+            const { data: parsed, isBroken } = JSONParser(decrypted);
             if (isBroken) {
                 console.warn(`File ${path} in table ${this.#options.name} is corrupted. Data found: 0. Locking table. please add backup or use the <KeyValue>.fullRepair("${this.#options.name}") to restore the data. from logs`);
                 this.locked = true;
@@ -242,13 +237,13 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         }
         const { securityKey } = this.#db.options.encryptionConfig;
         const blocks = [];
-        const rl = (0, promises_3.createInterface)({
-            input: (0, fs_1.createReadStream)(this.paths.log),
+        const rl = createInterface({
+            input: createReadStream(this.paths.log),
             crlfDelay: Infinity,
         });
         for await (const logLine of rl) {
             const [key, value, type, ttl, // ttl for old versions backwards compatibility
-            method,] = (0, utils_js_1.decodeHash)(logLine, securityKey, this.logData.logIV);
+            method,] = decodeHash(logLine, securityKey, this.logData.logIV);
             let parsedMethod;
             if (!method)
                 parsedMethod = Number(ttl);
@@ -281,7 +276,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         const { extension } = this.#db.options.fileConfig;
         const name = `${this.files.length}.${extension}`;
         const path = `${this.paths.table}/${name}`;
-        await (0, promises_1.writeFile)(path, "{}");
+        await writeFile(path, "{}");
         const fileObj = {
             name,
             size: 2,
@@ -289,7 +284,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         };
         this.files.push(fileObj);
         if (log)
-            await this.#wal(data_js_1.default.emptyData(), index_js_1.DatabaseMethod.NewFile);
+            await this.#wal(Data.emptyData(), DatabaseMethod.NewFile);
         return fileObj;
     }
     async #initFlush() {
@@ -322,25 +317,25 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             const { securityKey, encriptData } = this.#db.options.encryptionConfig;
             let dataToWrite;
             if (encriptData) {
-                dataToWrite = JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(data), securityKey));
+                dataToWrite = JSON.stringify(encrypt(JSON.stringify(data), securityKey));
             }
             else {
                 dataToWrite = JSON.stringify(data);
             }
-            await (0, promises_1.writeFile)(`${this.paths.table}/${file}`, dataToWrite);
+            await writeFile(`${this.paths.table}/${file}`, dataToWrite);
         }
     }
     async #wal(data, method) {
         return new Promise(async (resolve, reject) => {
             const { key, type, value } = data.toJSON();
             const { securityKey } = this.#db.options.encryptionConfig;
-            const delimitedString = (0, utils_js_1.createHashRawString)([
+            const delimitedString = createHashRawString([
                 key,
-                (0, utils_js_1.stringify)(value),
+                stringify(value),
                 type,
                 method.toString(),
             ]);
-            const logHash = (0, utils_js_1.createHash)(delimitedString, securityKey, this.logData.logIV);
+            const logHash = createHash(delimitedString, securityKey, this.logData.logIV);
             this.logData.writer.write(`${logHash}\n`, (logError) => {
                 if (logError) {
                     reject(logError);
@@ -352,9 +347,9 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                         reject(fullWriterError);
                         return;
                     }
-                    if (method === index_js_1.DatabaseMethod.Flush) {
+                    if (method === DatabaseMethod.Flush) {
                         if (this.logData.size > this.#db.options.fileConfig.maxSize) {
-                            await (0, promises_1.truncate)(this.paths.log, 33);
+                            await truncate(this.paths.log, 33);
                         }
                     }
                     resolve();
@@ -370,7 +365,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         let data;
         const { value, type } = dataObj;
         if (reference[key]) {
-            data = new data_js_1.default({
+            data = new Data({
                 key,
                 value: value,
                 type: type,
@@ -378,7 +373,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             });
         }
         else {
-            data = new data_js_1.default({
+            data = new Data({
                 key,
                 value: value,
                 type: type,
@@ -388,7 +383,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             data.file = file;
         }
         this.#cache.set(key, data);
-        await this.#wal(data, index_js_1.DatabaseMethod.Set);
+        await this.#wal(data, DatabaseMethod.Set);
         await this.referencer.setReference(key, data.file);
         this.#queue.add(data);
     }
@@ -456,19 +451,19 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 const { securityKey, encriptData } = this.#db.options.encryptionConfig;
                 let dataToWrite;
                 if (encriptData) {
-                    dataToWrite = JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(fileData), securityKey));
+                    dataToWrite = JSON.stringify(encrypt(JSON.stringify(fileData), securityKey));
                 }
                 else {
                     dataToWrite = JSON.stringify(fileData);
                 }
                 // console.log(dataToWrite);
                 const path = `${this.paths.table}/$temp_${file}`;
-                (0, promises_1.writeFile)(path, dataToWrite).then(() => {
+                writeFile(path, dataToWrite).then(() => {
                     // console.log(existsSync(path));
-                    (0, promises_1.rename)(path, `${this.paths.table}/${file}`).then(() => {
+                    rename(path, `${this.paths.table}/${file}`).then(() => {
                         // console.log(existsSync(path));
-                        this.#wal(data_js_1.default.emptyData(), index_js_1.DatabaseMethod.Flush).then(() => {
-                            fileObj.size = (0, fs_1.statSync)(`${this.paths.table}/${file}`).size;
+                        this.#wal(Data.emptyData(), DatabaseMethod.Flush).then(() => {
+                            fileObj.size = statSync(`${this.paths.table}/${file}`).size;
                             fileObj.isInWriteMode = false;
                             resolve();
                         });
@@ -505,7 +500,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             this.#cache.bulkFileSet(data, file);
             if (!data[key])
                 return null;
-            const getData = new data_js_1.default({
+            const getData = new Data({
                 file,
                 key,
                 value: data[key].value,
@@ -530,15 +525,15 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             if (!data)
                 return;
             this.#cache.delete(key);
-            await this.#wal(data, index_js_1.DatabaseMethod.Delete);
+            await this.#wal(data, DatabaseMethod.Delete);
             this.#queue.add({ key, file: data.file });
         }
         else {
             const file = '';
-            const emptyData = data_js_1.default.emptyData();
+            const emptyData = Data.emptyData();
             emptyData.key = key;
             emptyData.file = file;
-            await this.#wal(emptyData, index_js_1.DatabaseMethod.Delete);
+            await this.#wal(emptyData, DatabaseMethod.Delete);
             this.#queue.add({ key, file });
         }
     }
@@ -555,12 +550,12 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
     async #reset() {
         return new Promise(async (resolve, reject) => {
             this.logData.writer.close();
-            await (0, promises_1.truncate)(this.paths.log, 0);
+            await truncate(this.paths.log, 0);
             this.logData.size = 0;
-            this.logData.writer = (0, fs_1.createWriteStream)(this.paths.log, {
+            this.logData.writer = createWriteStream(this.paths.log, {
                 flags: "a",
             });
-            const iv = (0, crypto_1.randomBytes)(16).toString("hex");
+            const iv = randomBytes(16).toString("hex");
             this.logData.logIV = iv;
             this.logData.writer.write(iv + "\n\n", (err) => {
                 if (err)
@@ -595,7 +590,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             if (!data)
                 continue;
             for (const key in data) {
-                const dataObj = new data_js_1.default({
+                const dataObj = new Data({
                     key,
                     file: file.name,
                     value: data[key].value,
@@ -620,7 +615,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             if (!data)
                 continue;
             for (const key in data) {
-                const dataObj = new data_js_1.default({
+                const dataObj = new Data({
                     key,
                     file: file.name,
                     value: data[key].value,
@@ -638,7 +633,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             throw new Error("Table is locked. please use the <KeyValue>.fullRepair() to restore the data.");
         const cacheData = this.#cache.filter(query).top(limit);
         let data;
-        if (cacheData instanceof data_js_1.default)
+        if (cacheData instanceof Data)
             data = [cacheData];
         else if (Array.isArray(cacheData))
             data = cacheData;
@@ -651,7 +646,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             if (!fileData)
                 continue;
             for (const key in fileData) {
-                const dataObj = new data_js_1.default({
+                const dataObj = new Data({
                     key,
                     file: fileObj.name,
                     value: fileData[key].value,
@@ -766,21 +761,21 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         await this.clear();
         clearInterval(this.#flushInterval);
         this.locked = true;
-        const rl = (0, promises_3.createInterface)({
-            input: (0, fs_1.createReadStream)(this.paths.fullWriter),
+        const rl = createInterface({
+            input: createReadStream(this.paths.fullWriter),
             crlfDelay: Infinity,
         });
-        const dataToAdd = new structures_1.Group(Infinity);
+        const dataToAdd = new Group(Infinity);
         for await (const logLine of rl) {
             const [key, value, type, ttl, // ttl for old versions backwards compatibility
-            method,] = logLine.split(utils_js_1.ReferenceConstantSpace);
+            method,] = logLine.split(ReferenceConstantSpace);
             let parsedMethod;
             if (!method)
                 parsedMethod = Number(ttl);
             else
                 parsedMethod = Number(method);
-            if (parsedMethod === index_js_1.DatabaseMethod.Set) {
-                const data = new data_js_1.default({
+            if (parsedMethod === DatabaseMethod.Set) {
+                const data = new Data({
                     key,
                     value,
                     type: type,
@@ -791,11 +786,11 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                 dataToAdd.set(data.key, data);
                 this.#cache.set(data.key, data);
             }
-            if (parsedMethod === index_js_1.DatabaseMethod.Delete) {
+            if (parsedMethod === DatabaseMethod.Delete) {
                 this.#cache.delete(key);
                 dataToAdd.delete(key);
             }
-            if (parsedMethod === index_js_1.DatabaseMethod.NewFile) {
+            if (parsedMethod === DatabaseMethod.NewFile) {
                 await this.#createFile(false);
             }
         }
@@ -816,7 +811,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                     for (const data of filteredData) {
                         dataObj[data.key] = data.toJSON();
                     }
-                    dataToWrite = JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(dataObj), securityKey));
+                    dataToWrite = JSON.stringify(encrypt(JSON.stringify(dataObj), securityKey));
                 }
                 else {
                     const dataObj = {};
@@ -825,7 +820,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
                     }
                     dataToWrite = JSON.stringify(dataObj);
                 }
-                await (0, promises_1.writeFile)(path, dataToWrite);
+                await writeFile(path, dataToWrite);
             });
             promises.push(promise);
         }
@@ -837,5 +832,4 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
         return this.#cache;
     }
 }
-exports.default = Table;
 //# sourceMappingURL=newtable.js.map

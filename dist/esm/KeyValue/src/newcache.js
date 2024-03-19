@@ -1,11 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const structures_1 = require("@akarui/structures");
-const data_js_1 = __importDefault(require("./data.js"));
-class Cacher extends structures_1.Group {
+import { Group } from "@akarui/structures";
+import Data from "./data.js";
+export default class Cacher extends Group {
     #cacherOptions;
     constructor(options) {
         super(options.limit);
@@ -13,7 +8,7 @@ class Cacher extends structures_1.Group {
     }
     bulkFileSet(data, file) {
         for (const key in data) {
-            const d = new data_js_1.default({
+            const d = new Data({
                 ...data[key],
                 file,
             });
@@ -28,5 +23,4 @@ class Cacher extends structures_1.Group {
         }
     }
 }
-exports.default = Cacher;
 //# sourceMappingURL=newcache.js.map

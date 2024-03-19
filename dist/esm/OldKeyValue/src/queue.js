@@ -1,10 +1,5 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const data_js_1 = __importDefault(require("./data.js"));
-class QueueManager {
+import KeyValueData from "./data.js";
+export default class QueueManager {
     // @ts-ignore
     #set = {
         data: [],
@@ -15,7 +10,7 @@ class QueueManager {
         size: 0,
     };
     add(data) {
-        if (data instanceof data_js_1.default) {
+        if (data instanceof KeyValueData) {
             this.#set.data.push(data);
             this.#set.size += data.size;
             this.#set[data.file] = (this.#set[data.file] || 0) + data.size;
@@ -70,5 +65,4 @@ class QueueManager {
             return this.#delete.size;
     }
 }
-exports.default = QueueManager;
 //# sourceMappingURL=queue.js.map

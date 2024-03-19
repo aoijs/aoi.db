@@ -1,12 +1,7 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const Column_js_1 = __importDefault(require("./Column.js"));
-const index_js_1 = require("../../index.js");
-const fs_1 = require("fs");
-class WideColumnarTable {
+import WideColumnarColumn from "./Column.js";
+import { DatabaseEvents } from "../../index.js";
+import { existsSync, mkdirSync } from "fs";
+export default class WideColumnarTable {
     name;
     columns;
     #db;
@@ -20,8 +15,8 @@ class WideColumnarTable {
     }
     #parseColumns(columns) {
         for (const column of columns) {
-            if (!(column instanceof Column_js_1.default)) {
-                const col = new Column_js_1.default(column);
+            if (!(column instanceof WideColumnarColumn)) {
+                const col = new WideColumnarColumn(column);
                 col.setTable(this);
                 this.columns.push(col);
                 if (col.primaryKey) {
@@ -43,18 +38,18 @@ class WideColumnarTable {
         for (const column of this.columns) {
             column.setTable(this);
             column.setPath(this.db.options.dataConfig.path + "/" + this.name);
-            if (!(0, fs_1.existsSync)(`${this.db.options.dataConfig.path}/${this.name}`)) {
-                (0, fs_1.mkdirSync)(`${this.db.options.dataConfig.path}/${this.name}`, { recursive: true });
+            if (!existsSync(`${this.db.options.dataConfig.path}/${this.name}`)) {
+                mkdirSync(`${this.db.options.dataConfig.path}/${this.name}`, { recursive: true });
             }
-            if (!(0, fs_1.existsSync)(`${this.db.options.dataConfig.path}/${this.#db.options.dataConfig.referencePath}/${this.name}`)) {
-                (0, fs_1.mkdirSync)(`${this.db.options.dataConfig.path}/${this.#db.options.dataConfig.referencePath}/${this.name}`, { recursive: true });
+            if (!existsSync(`${this.db.options.dataConfig.path}/${this.#db.options.dataConfig.referencePath}/${this.name}`)) {
+                mkdirSync(`${this.db.options.dataConfig.path}/${this.#db.options.dataConfig.referencePath}/${this.name}`, { recursive: true });
             }
-            if (!(0, fs_1.existsSync)(`${this.db.options.dataConfig.path}/${this.#db.options.dataConfig.referencePath}/${this.name}/${column.name}`)) {
-                (0, fs_1.mkdirSync)(`${this.db.options.dataConfig.path}/${this.#db.options.dataConfig.referencePath}/${this.name}/${column.name}`, { recursive: true });
+            if (!existsSync(`${this.db.options.dataConfig.path}/${this.#db.options.dataConfig.referencePath}/${this.name}/${column.name}`)) {
+                mkdirSync(`${this.db.options.dataConfig.path}/${this.#db.options.dataConfig.referencePath}/${this.name}/${column.name}`, { recursive: true });
             }
             await column.initialize();
         }
-        this.#db.emit(index_js_1.DatabaseEvents.TableReady, this);
+        this.#db.emit(DatabaseEvents.TableReady, this);
     }
     get primary() {
         return this.#primary;
@@ -144,5 +139,4 @@ class WideColumnarTable {
         }
     }
 }
-exports.default = WideColumnarTable;
 //# sourceMappingURL=Table.js.map
