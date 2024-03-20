@@ -92,7 +92,7 @@ export async function convertV1KeyValuetov2(oldDbFolder, db) {
 }
 export function parseTransmitterQuery(query) {
     const str = returnParseString("&&", query, "===", "&&");
-    return new Function(" return (Data) => " + str)();
+    return new Function(" return (Data) => { return " + str + " }")();
 }
 export function returnParseString(key, value, sign = "===", join = "&&") {
     if (key === "value" || key === "key" || key === "ttl") {

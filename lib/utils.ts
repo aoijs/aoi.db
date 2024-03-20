@@ -115,7 +115,7 @@ export function parseTransmitterQuery(
   query: TransmitterQuery
 ): (Data: any) => boolean {
   const str = returnParseString("&&", query, "===", "&&");
-  return new Function(" return (Data) => " + str)();
+  return new Function(" return (Data) => { return " + str + " }")();
 }
 
 export function returnParseString(

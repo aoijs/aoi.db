@@ -102,7 +102,7 @@ async function convertV1KeyValuetov2(oldDbFolder, db) {
 exports.convertV1KeyValuetov2 = convertV1KeyValuetov2;
 function parseTransmitterQuery(query) {
     const str = returnParseString("&&", query, "===", "&&");
-    return new Function(" return (Data) => " + str)();
+    return new Function(" return (Data) => { return " + str + " }")();
 }
 exports.parseTransmitterQuery = parseTransmitterQuery;
 function returnParseString(key, value, sign = "===", join = "&&") {
