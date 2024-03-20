@@ -79,6 +79,7 @@ class Receiver extends node_events_1.default {
                                 const defaultFolder = options.dataConfig?.path ?? "database";
                                 options.dataConfig = {
                                     path: `./${mainFolder}_${defaultFolder}`,
+                                    tables: options.dataConfig?.tables || ['main'],
                                     referencePath: `./reference`,
                                 };
                                 options.fileConfig = {

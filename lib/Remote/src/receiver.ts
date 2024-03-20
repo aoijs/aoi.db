@@ -104,6 +104,7 @@ export default class Receiver extends EventEmitter {
                                     options.dataConfig?.path ?? "database";
                                 options.dataConfig = {
                                     path: `./${mainFolder}_${defaultFolder}`,
+                                    tables: options.dataConfig?.tables || ['main'],
                                     referencePath: `./reference`,
                                 };
                                 options.fileConfig = {
