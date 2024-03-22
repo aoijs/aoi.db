@@ -76,6 +76,15 @@ class Transmitter extends events_1.default {
             }
             this.#createDebug(data);
         });
+        this.client.on("close", () => {
+            this.emit(enum_js_1.DatabaseEvents.Disconnect, "Connection Closed");
+        });
+        this.client.on("error", (err) => {
+            this.emit(enum_js_1.DatabaseEvents.Error, err);
+        });
+        this.client.on("connect", () => {
+            this.emit(enum_js_1.DatabaseEvents.Connect, "Connected");
+        });
     }
     connect() {
         this.#bindEvents();

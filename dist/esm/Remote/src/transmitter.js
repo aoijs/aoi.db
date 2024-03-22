@@ -71,6 +71,15 @@ export default class Transmitter extends EventEmitter {
             }
             this.#createDebug(data);
         });
+        this.client.on("close", () => {
+            this.emit(DatabaseEvents.Disconnect, "Connection Closed");
+        });
+        this.client.on("error", (err) => {
+            this.emit(DatabaseEvents.Error, err);
+        });
+        this.client.on("connect", () => {
+            this.emit(DatabaseEvents.Connect, "Connected");
+        });
     }
     connect() {
         this.#bindEvents();
