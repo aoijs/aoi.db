@@ -154,7 +154,12 @@ class Transmitter extends events_1.default {
             table,
             query: query?.toString() ?? ((_) => true).toString(),
             limit,
-        })).d.map((x) => new index_js_1.KeyValueData(x));
+        })).d.map((x) => new index_js_1.KeyValueData({
+            key: x.key,
+            value: x.value,
+            type: x.type,
+            file: x.file
+        }));
     }
     async has(table, key) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Has, {

@@ -133,13 +133,13 @@ class File {
                 json = JSON.parse(decryptedData);
             }
             if (json[key]) {
-                this.#cache.put(key, new data_js_1.default({
+                value = new data_js_1.default({
                     key: key,
                     value: json[key].value,
                     type: json[key].type,
                     file: this.#path,
-                }));
-                value = json[key];
+                });
+                this.#cache.put(key, value);
             }
         }
         finally {

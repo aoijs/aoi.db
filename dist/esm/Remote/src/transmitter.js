@@ -149,7 +149,12 @@ export default class Transmitter extends EventEmitter {
             table,
             query: query?.toString() ?? ((_) => true).toString(),
             limit,
-        })).d.map((x) => new KeyValueData(x));
+        })).d.map((x) => new KeyValueData({
+            key: x.key,
+            value: x.value,
+            type: x.type,
+            file: x.file
+        }));
     }
     async has(table, key) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Has, {

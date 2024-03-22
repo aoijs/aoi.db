@@ -128,13 +128,13 @@ export default class File {
                 json = JSON.parse(decryptedData);
             }
             if (json[key]) {
-                this.#cache.put(key, new Data({
+                value = new Data({
                     key: key,
                     value: json[key].value,
                     type: json[key].type,
                     file: this.#path,
-                }));
-                value = json[key];
+                });
+                this.#cache.put(key, value);
             }
         }
         finally {

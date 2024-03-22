@@ -157,16 +157,16 @@ export default class File {
         json = JSON.parse(decryptedData);
       }
       if (json[key]) {
+        value = new Data({
+          key: key,
+          value: json[key].value,
+          type: json[key].type,
+          file: this.#path,
+        });
         this.#cache.put(
           key,
-          new Data({
-            key: key,
-            value: json[key].value,
-            type: json[key].type,
-            file: this.#path,
-          })
+          value
         );
-        value = json[key];
       }
     } finally {
       this.#locked = false;
