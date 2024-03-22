@@ -40,7 +40,6 @@ export default class Transmitter<
 				{
 					u: options.username,
 					p: options.password,
-					db: this.#createDbConfig(),
 				}
 			);
 			this.data.lastPingTimestamp = Date.now();
@@ -57,21 +56,12 @@ export default class Transmitter<
 			);
 		const [_, username, password, host, port] =
 			options.path.split(/aoidb:\/\/|:|@/);
-		const dbOptions = options.dbOptions;
 		return new Transmitter({
 			host,
 			port: Number(port),
 			username,
 			password,
-			dbOptions,
 		});
-	}
-
-	#createDbConfig() {
-		return {
-			t: this.options.dbOptions.type,
-			o: this.options.dbOptions.options,
-		};
 	}
 	#createDebug(data: ReceiverDataFormat) {
 		this.emit(

@@ -4,10 +4,6 @@ import { DatabaseOptions, PossibleDatabaseTypes } from "./type.js";
 import { DatabaseMethod } from "../../index.js";
 import { Permissions } from "./enum.js";
 export interface TransmitterOptions<Type extends PossibleDatabaseTypes> extends TcpNetConnectOpts {
-    dbOptions: {
-        type: Type;
-        options: DatabaseOptions<Type>;
-    };
     username: string;
     password: string;
 }

@@ -21,7 +21,6 @@ export default class Transmitter extends EventEmitter {
             const reqData = this.sendDataFormat(TransmitterOpCodes.Connect, DatabaseMethod.NOOP, Date.now(), this.data.seq, {
                 u: options.username,
                 p: options.password,
-                db: this.#createDbConfig(),
             });
             this.data.lastPingTimestamp = Date.now();
             this.client.write(reqData);
@@ -32,20 +31,12 @@ export default class Transmitter extends EventEmitter {
         if (!options.path.startsWith("aoidb://"))
             throw new Error("Invalid Protocol Provided for Transmitter. Required: aoidb://");
         const [_, username, password, host, port] = options.path.split(/aoidb:\/\/|:|@/);
-        const dbOptions = options.dbOptions;
         return new Transmitter({
             host,
             port: Number(port),
             username,
             password,
-            dbOptions,
         });
-    }
-    #createDbConfig() {
-        return {
-            t: this.options.dbOptions.type,
-            o: this.options.dbOptions.options,
-        };
     }
     #createDebug(data) {
         this.emit(DatabaseEvents.Debug, `[Debug: Received Data] ${inspect(data)}`);
