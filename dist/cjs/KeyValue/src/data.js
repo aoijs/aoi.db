@@ -56,7 +56,11 @@ class Data {
                 : typeof data.value === "number" &&
                     data.value > Number.MAX_SAFE_INTEGER
                     ? BigInt(data.value)
-                    : data.value;
+                    : data.type === "boolean"
+                        ? Boolean(data.value)
+                        : data.type === "object"
+                            ? JSON.parse(data.value)
+                            : data.value;
     }
     /**
      * @description convert data to json
