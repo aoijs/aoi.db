@@ -331,7 +331,7 @@ export default class Receiver extends EventEmitter {
 			);
 		}
 		const { table, key, value } = d;
-		const db = this.usersMap.get(se) as KeyValue;
+		const db = this.usersMap.get(socket.userData.username) as KeyValue;
 		const startTime = performance.now();
 		await db.set(table, key, {
 			value,
@@ -374,7 +374,7 @@ export default class Receiver extends EventEmitter {
 		}
 
 		const { table, key } = d;
-		const db = this.usersMap.get(se) as KeyValue;
+		const db = this.usersMap.get(socket.userData.username) as KeyValue;
 		const startTime = performance.now();
 		const res = await db.get(table, key);
 		const endTime = performance.now();
@@ -415,7 +415,7 @@ export default class Receiver extends EventEmitter {
 		}
 
 		const { table, key } = d;
-		const db = this.usersMap.get(se) as KeyValue;
+		const db = this.usersMap.get(socket.userData.username) as KeyValue;
 
 		const startTime = performance.now();
 		const res = await db.delete(table, key);
@@ -457,7 +457,7 @@ export default class Receiver extends EventEmitter {
 		}
 
 		const { table, query, limit, order } = d;
-		const db = this.usersMap.get(se) as KeyValue;
+		const db = this.usersMap.get(socket.userData.username) as KeyValue;
 		const startTime = performance.now();
 		const res = await eval(`db.all(table, ${query}, ${limit},order)`);
 		const endTime = performance.now();
@@ -495,7 +495,7 @@ export default class Receiver extends EventEmitter {
         }
 
         const { table, query } = d;
-        const db = this.usersMap.get(se) as KeyValue;
+        const db = this.usersMap.get(socket.userData.username) as KeyValue;
         const startTime = performance.now();
         const res = await eval(`db.findMany(table, ${query})`);
         const endTime = performance.now();
@@ -534,7 +534,7 @@ export default class Receiver extends EventEmitter {
         }
 
         const { table, query } = d;
-        const db = this.usersMap.get(se) as KeyValue;
+        const db = this.usersMap.get(socket.userData.username) as KeyValue;
         const startTime = performance.now();
         const res = await eval(`db.findOne(table, ${query})`);
         const endTime = performance.now();
@@ -572,7 +572,7 @@ export default class Receiver extends EventEmitter {
         }
 
         const { table, key } = d;
-        const db = this.usersMap.get(se) as KeyValue;
+        const db = this.usersMap.get(socket.userData.username) as KeyValue;
         const startTime = performance.now();
         const res = await db.has(table, key);
         const endTime = performance.now();
@@ -610,7 +610,7 @@ export default class Receiver extends EventEmitter {
         }
 
         const { table, query } = d;
-        const db = this.usersMap.get(se) as KeyValue;
+        const db = this.usersMap.get(socket.userData.username) as KeyValue;
         const startTime = performance.now();
         const res = await eval(`db.deleteMany(table, ${query})`);
         const endTime = performance.now();
@@ -648,7 +648,7 @@ export default class Receiver extends EventEmitter {
         }
 
         const { table } = d;
-        const db = this.usersMap.get(se) as KeyValue;
+        const db = this.usersMap.get(socket.userData.username) as KeyValue;
         const startTime = performance.now();
         const res = await db.clear(table);
         const endTime = performance.now();
