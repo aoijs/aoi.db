@@ -27,12 +27,12 @@ class Receiver extends node_events_1.default {
     allowAddress(address) {
         this.allowList.add(address);
     }
-    async #init(options) {
+    #init(options) {
         // create database and setup user config
         const { userConfig, databaseType, databaseOptions } = options;
         let db = null;
         if (databaseType === "KeyValue") {
-            db = await this.#createKeyValue(databaseOptions);
+            db = this.#createKeyValue(databaseOptions);
         }
         if (!db) {
             throw new Error("Database type not found");
@@ -41,9 +41,9 @@ class Receiver extends node_events_1.default {
             this.usersMap.set(user.username, db);
         }
     }
-    async #createKeyValue(options) {
+    #createKeyValue(options) {
         const db = new index_js_1.KeyValue(options);
-        await db.connect();
+        db.connect();
         return db;
     }
     isAllowed(address) {
@@ -172,7 +172,7 @@ class Receiver extends node_events_1.default {
     }
     async #handleOperationRequest(dataFormat, socket) {
         const { se, s, h, m } = dataFormat;
-        const db = this.usersMap.get(se);
+        const db = this.clients.get(se);
         if (!db) {
             return this.#sendResponse({
                 op: enum_js_1.ReceiverOpCodes.ConnectionDenied,

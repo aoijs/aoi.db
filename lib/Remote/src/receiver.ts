@@ -41,12 +41,12 @@ export default class Receiver extends EventEmitter {
     }
 
 
-	async #init(options: ReceiverOptions) {
+	#init(options: ReceiverOptions) {
 		// create database and setup user config
 		const { userConfig, databaseType, databaseOptions } = options;
 		let db: KeyValue | null = null;
 		if (databaseType === "KeyValue") {
-			db = await this.#createKeyValue(databaseOptions);
+			db = this.#createKeyValue(databaseOptions);
 		}
 
 		if (!db) {
@@ -58,9 +58,9 @@ export default class Receiver extends EventEmitter {
 		}
 	}
 
-	async #createKeyValue(options: DatabaseOptions<"KeyValue">) {
+	#createKeyValue(options: DatabaseOptions<"KeyValue">) {
 		const db = new KeyValue(options);
-		await db.connect();
+		db.connect();
 		return db;
 	}
 
@@ -236,7 +236,7 @@ export default class Receiver extends EventEmitter {
 		socket: ISocket
 	) {
 		const { se, s, h, m } = dataFormat;
-		const db = this.usersMap.get(se);
+		const db = this.clients.get(se);
 		if (!db) {
 			return this.#sendResponse(
 				{
