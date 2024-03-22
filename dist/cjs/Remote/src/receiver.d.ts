@@ -14,6 +14,7 @@ export default class Receiver extends EventEmitter {
     clients: Group<string, Socket>;
     usersMap: Group<string, KeyValue>;
     constructor(options: ReceiverOptions);
+    allowAddress(address: string): void;
     isAllowed(address: string): boolean;
     sendDataFormat({ op, method, seq, data, cost, hash, session, }: {
         op: ReceiverOpCodes;

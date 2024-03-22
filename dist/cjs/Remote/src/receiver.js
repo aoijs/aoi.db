@@ -25,6 +25,9 @@ class Receiver extends node_events_1.default {
         this.#init(options);
         this.#bindEvents();
     }
+    allowAddress(address) {
+        this.allowList.add(address);
+    }
     async #init(options) {
         // create database and setup user config
         const { userConfig, databaseType, databaseOptions } = options;

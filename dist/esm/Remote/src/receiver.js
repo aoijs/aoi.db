@@ -20,6 +20,9 @@ export default class Receiver extends EventEmitter {
         this.#init(options);
         this.#bindEvents();
     }
+    allowAddress(address) {
+        this.allowList.add(address);
+    }
     async #init(options) {
         // create database and setup user config
         const { userConfig, databaseType, databaseOptions } = options;
