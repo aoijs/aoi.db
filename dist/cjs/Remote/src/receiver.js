@@ -23,7 +23,6 @@ class Receiver extends node_events_1.default {
             this.emit(index_js_1.DatabaseEvents.Connect);
         });
         this.#init(options);
-        this.#bindEvents();
     }
     allowAddress(address) {
         this.allowList.add(address);

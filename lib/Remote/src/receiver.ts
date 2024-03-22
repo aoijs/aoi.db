@@ -34,7 +34,6 @@ export default class Receiver extends EventEmitter {
 			this.emit(DatabaseEvents.Connect);
 		});
 		this.#init(options);
-		this.#bindEvents();
 	}
 
     allowAddress(address: string) {
