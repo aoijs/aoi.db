@@ -236,7 +236,7 @@ export default class Receiver extends EventEmitter {
 		socket: ISocket
 	) {
 		const { se, s, h, m } = dataFormat;
-		const db = this.clients.get(se);
+        const db = this.usersMap.get(socket.userData.username)
 		if (!db) {
 			return this.#sendResponse(
 				{
