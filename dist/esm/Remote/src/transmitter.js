@@ -149,7 +149,7 @@ export default class Transmitter extends EventEmitter {
             table,
             query: query?.toString() ?? ((_) => true).toString(),
             limit,
-        })).d;
+        })).d.map((x) => new KeyValueData(x));
     }
     async has(table, key) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Has, {
@@ -158,16 +158,19 @@ export default class Transmitter extends EventEmitter {
         })).d;
     }
     async findOne(table, query) {
-        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.FindOne, {
+        const data = (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.FindOne, {
             table,
             query: query.toString(),
         })).d;
+        if (!data)
+            return null;
+        return new KeyValueData(data);
     }
     async findMany(table, query) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.FindMany, {
             table,
             query: query.toString(),
-        })).d;
+        })).d.map((x) => new KeyValueData(x));
     }
     async deleteMany(table, query) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.DeleteMany, {

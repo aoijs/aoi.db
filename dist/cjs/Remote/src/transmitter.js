@@ -154,7 +154,7 @@ class Transmitter extends events_1.default {
             table,
             query: query?.toString() ?? ((_) => true).toString(),
             limit,
-        })).d;
+        })).d.map((x) => new index_js_1.KeyValueData(x));
     }
     async has(table, key) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Has, {
@@ -163,16 +163,19 @@ class Transmitter extends events_1.default {
         })).d;
     }
     async findOne(table, query) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.FindOne, {
+        const data = (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.FindOne, {
             table,
             query: query.toString(),
         })).d;
+        if (!data)
+            return null;
+        return new index_js_1.KeyValueData(data);
     }
     async findMany(table, query) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.FindMany, {
             table,
             query: query.toString(),
-        })).d;
+        })).d.map((x) => new index_js_1.KeyValueData(x));
     }
     async deleteMany(table, query) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.DeleteMany, {

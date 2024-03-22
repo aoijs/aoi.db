@@ -33,7 +33,7 @@ export default class Transmitter<Type extends PossibleDatabaseTypes> extends Eve
     clear(table: string): Promise<void>;
     all(table: string, query?: (data: KeyValueData) => boolean, limit?: number): Promise<Type extends "KeyValue" ? KeyValueData[] : never>;
     has(table: string, key: Key<Type>): Promise<boolean>;
-    findOne(table: string, query: (data: KeyValueData) => boolean): Promise<Type extends "KeyValue" ? KeyValueData : never>;
+    findOne(table: string, query: (data: KeyValueData) => boolean): Promise<KeyValueData | null>;
     findMany(table: string, query: (data: KeyValueData) => boolean): Promise<any>;
     deleteMany(table: string, query: (data: KeyValueData) => boolean): Promise<any>;
     analyze(table: string, data: TransmitterAnaylzeDataFormat): Promise<{

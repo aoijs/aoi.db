@@ -239,7 +239,7 @@ export default class Transmitter<
 					query?.toString() ?? ((_: KeyValueData) => true).toString(),
 				limit,
 			})
-		).d;
+		).d.map((x: any) => new KeyValueData(x));
 	}
 
 	async has(table: string, key: Key<Type>): Promise<boolean> {
@@ -253,8 +253,8 @@ export default class Transmitter<
 	async findOne(
 		table: string,
 		query: (data: KeyValueData) => boolean
-	): Promise<Type extends "KeyValue" ? KeyValueData : never> {
-		return (
+	): Promise< KeyValueData | null> {
+		const data = (
 			await this.#req(
 				TransmitterOpCodes.Operation,
 				DatabaseMethod.FindOne,
@@ -263,7 +263,9 @@ export default class Transmitter<
 					query: query.toString(),
 				}
 			)
-		).d;
+		).d
+        if(!data) return null;
+        return new KeyValueData(data);
 	}
 	async findMany(table: string, query: (data: KeyValueData) => boolean) {
 		return (
@@ -275,7 +277,7 @@ export default class Transmitter<
 					query: query.toString(),
 				}
 			)
-		).d;
+		).d.map((x: any) => new KeyValueData(x));
 	}
 
 	async deleteMany(table: string, query: (data: KeyValueData) => boolean) {
