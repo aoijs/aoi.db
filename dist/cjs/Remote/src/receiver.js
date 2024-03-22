@@ -9,6 +9,7 @@ const index_js_1 = require("../../index.js");
 const enum_js_1 = require("../typings/enum.js");
 const node_crypto_1 = require("node:crypto");
 const structures_1 = require("@akarui/structures");
+const node_util_1 = require("node:util");
 class Receiver extends node_events_1.default {
     server;
     #options;
@@ -501,6 +502,10 @@ class Receiver extends node_events_1.default {
     #sendResponse(data, socket) {
         const buffer = this.sendDataFormat(data);
         socket.write(buffer);
+        this.#createDebug(data);
+    }
+    #createDebug(data) {
+        this.emit(index_js_1.DatabaseEvents.Debug, `[Debug: Received Data] ${(0, node_util_1.inspect)(data)}`);
     }
     sendDataFormat({ op, method, seq, data, cost, hash, session, }) {
         const res = {

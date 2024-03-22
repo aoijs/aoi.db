@@ -19,6 +19,7 @@ import {
 } from "../typings/enum.js";
 import { randomBytes } from "node:crypto";
 import { Group } from "@akarui/structures";
+import { inspect } from "node:util";
 
 export default class Receiver extends EventEmitter {
 	server: Server;
@@ -682,8 +683,24 @@ export default class Receiver extends EventEmitter {
 	) {
 		const buffer = this.sendDataFormat(data);
 		socket.write(buffer);
-
+        this.#createDebug(data)
 	}
+
+    #createDebug(data: {
+        op: ReceiverOpCodes;
+        method: DatabaseMethod;
+        seq: number;
+        data: any;
+        cost: number;
+        hash: string;
+        session: string;
+    }) {
+		this.emit(
+			DatabaseEvents.Debug,
+			`[Debug: Received Data] ${inspect(data)}`
+		);
+	}
+
 
 	sendDataFormat({
 		op,
