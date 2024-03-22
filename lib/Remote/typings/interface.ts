@@ -1,6 +1,7 @@
-import {  TcpNetConnectOpts } from "net";
+import {  Socket, TcpNetConnectOpts } from "net";
 import {  DatabaseOptions, PossibleDatabaseTypes } from "./type.js";
 import { DatabaseMethod } from "../../index.js";
+import { Permissions } from "./enum.js";
 
 export interface TransmitterOptions<Type extends PossibleDatabaseTypes > extends TcpNetConnectOpts {
     dbOptions: {
@@ -15,8 +16,17 @@ export interface ReceiverOptions {
     host: string;
     port: number;
     backlog?: number;
-
+    databaseType: PossibleDatabaseTypes;
+    databaseOptions: DatabaseOptions<PossibleDatabaseTypes>;
+    userConfig: UserConfig[]
 }
+
+export interface UserConfig {
+    username: string;
+    permissions: Permissions;
+    password: string;
+}
+
 
 export interface TransmitterCreateOptions<Type extends PossibleDatabaseTypes> {
     path: `aoidb://${string}:${string}@${string}:${number}`;
@@ -43,9 +53,18 @@ export interface TransmitterDataFormat {
     s: number;
     d: any;
     h: string;
+    se: string;
 }
 
 export interface TransmitterAnaylzeDataFormat {
     method: keyof typeof DatabaseMethod;
     data: any;
+}
+
+export interface ISocket extends Socket {
+    userData: {
+        username: string;
+        session: string;
+        permissions: Permissions;
+    }
 }

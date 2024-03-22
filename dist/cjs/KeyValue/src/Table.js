@@ -11,6 +11,7 @@ const utils_js_1 = require("../../utils.js");
 const data_js_1 = __importDefault(require("./data.js"));
 const promises_1 = require("node:readline/promises");
 const promisifiers_js_1 = require("../../promisifiers.js");
+const promises_2 = require("node:timers/promises");
 class Table extends node_events_1.default {
     #options;
     #db;
@@ -39,6 +40,7 @@ class Table extends node_events_1.default {
         this.#getPaths();
         this.#fileManager.initialize();
         await this.#getLogData();
+        await (0, promises_2.setTimeout)(100);
         await this.#syncWithLog();
         this.readyAt = Date.now();
         this.#db.emit(enum_js_1.DatabaseEvents.TableReady, this);
@@ -53,17 +55,24 @@ class Table extends node_events_1.default {
         };
     }
     async #getLogData() {
-        const fd = await node_fs_1.default.promises.open(this.paths.log, "a+");
         let size = 0;
         let logIV = "";
-        for await (const lines of fd.readLines()) {
-            if (!logIV) {
-                logIV = lines;
-            }
+        const stream = node_fs_1.default.createReadStream(this.paths.log, {
+            encoding: "utf-8",
+            highWaterMark: 33,
+        });
+        const rl = (0, promises_1.createInterface)({
+            input: stream,
+            crlfDelay: Infinity,
+        });
+        for await (const line of rl) {
             size++;
+            if (size === 1) {
+                logIV = line;
+            }
         }
         this.logData = {
-            fd: await node_fs_1.default.openSync(this.paths.log, "a+"),
+            fd: node_fs_1.default.openSync(this.paths.log, "a+"),
             size,
             fileSize: node_fs_1.default.statSync(this.paths.log).size,
             logIV,
@@ -122,7 +131,7 @@ class Table extends node_events_1.default {
         await this.#wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
     }
     async #wal(data, method) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             const { key, type, value } = data.toJSON();
             const { securityKey } = this.#db.options.encryptionConfig;
             const delimitedString = (0, utils_js_1.createHashRawString)([
@@ -132,7 +141,7 @@ class Table extends node_events_1.default {
                 method.toString(),
             ]);
             const logHash = (0, utils_js_1.createHash)(delimitedString, securityKey, this.logData.logIV);
-            const { bytesWritten, buffer } = await (0, promisifiers_js_1.write)(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
+            const { bytesWritten } = await (0, promisifiers_js_1.write)(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
             this.logData.fileSize += bytesWritten;
             this.logData.size++;
             if (method === enum_js_1.DatabaseMethod.Flush &&

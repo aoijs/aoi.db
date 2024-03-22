@@ -6,6 +6,7 @@ import { createHash, createHashRawString, decodeHash, stringify, } from "../../u
 import Data from "./data.js";
 import { createInterface } from "node:readline/promises";
 import { ftruncate, write } from "../../promisifiers.js";
+import { setTimeout } from "node:timers/promises";
 export default class Table extends EventEmitter {
     #options;
     #db;
@@ -34,6 +35,7 @@ export default class Table extends EventEmitter {
         this.#getPaths();
         this.#fileManager.initialize();
         await this.#getLogData();
+        await setTimeout(100);
         await this.#syncWithLog();
         this.readyAt = Date.now();
         this.#db.emit(DatabaseEvents.TableReady, this);
@@ -48,17 +50,24 @@ export default class Table extends EventEmitter {
         };
     }
     async #getLogData() {
-        const fd = await fs.promises.open(this.paths.log, "a+");
         let size = 0;
         let logIV = "";
-        for await (const lines of fd.readLines()) {
-            if (!logIV) {
-                logIV = lines;
-            }
+        const stream = fs.createReadStream(this.paths.log, {
+            encoding: "utf-8",
+            highWaterMark: 33,
+        });
+        const rl = createInterface({
+            input: stream,
+            crlfDelay: Infinity,
+        });
+        for await (const line of rl) {
             size++;
+            if (size === 1) {
+                logIV = line;
+            }
         }
         this.logData = {
-            fd: await fs.openSync(this.paths.log, "a+"),
+            fd: fs.openSync(this.paths.log, "a+"),
             size,
             fileSize: fs.statSync(this.paths.log).size,
             logIV,
@@ -117,7 +126,7 @@ export default class Table extends EventEmitter {
         await this.#wal(Data.emptyData(), DatabaseMethod.Flush);
     }
     async #wal(data, method) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             const { key, type, value } = data.toJSON();
             const { securityKey } = this.#db.options.encryptionConfig;
             const delimitedString = createHashRawString([
@@ -127,7 +136,7 @@ export default class Table extends EventEmitter {
                 method.toString(),
             ]);
             const logHash = createHash(delimitedString, securityKey, this.logData.logIV);
-            const { bytesWritten, buffer } = await write(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
+            const { bytesWritten } = await write(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
             this.logData.fileSize += bytesWritten;
             this.logData.size++;
             if (method === DatabaseMethod.Flush &&

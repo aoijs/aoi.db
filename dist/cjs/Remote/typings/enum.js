@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReceiverOpCodes = exports.TransmitterOpCodes = void 0;
+exports.Permissions = exports.ReceiverOpCodes = exports.TransmitterOpCodes = void 0;
 var TransmitterOpCodes;
 (function (TransmitterOpCodes) {
     TransmitterOpCodes[TransmitterOpCodes["Connect"] = 1] = "Connect";
@@ -18,4 +18,12 @@ var ReceiverOpCodes;
     ReceiverOpCodes[ReceiverOpCodes["AckAnalyze"] = 16] = "AckAnalyze";
     ReceiverOpCodes[ReceiverOpCodes["AckDisconnect"] = 32] = "AckDisconnect";
 })(ReceiverOpCodes || (exports.ReceiverOpCodes = ReceiverOpCodes = {}));
+var Permissions;
+(function (Permissions) {
+    Permissions[Permissions["ROnly"] = 1] = "ROnly";
+    Permissions[Permissions["WOnly"] = 2] = "WOnly";
+    Permissions[Permissions["RW"] = 4] = "RW";
+    Permissions[Permissions["Manage"] = 8] = "Manage";
+    Permissions[Permissions["Admin"] = 16] = "Admin";
+})(Permissions || (exports.Permissions = Permissions = {}));
 //# sourceMappingURL=enum.js.map

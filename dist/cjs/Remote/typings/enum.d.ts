@@ -13,4 +13,11 @@ export declare enum ReceiverOpCodes {
     AckAnalyze = 16,
     AckDisconnect = 32
 }
+export declare enum Permissions {
+    ROnly = 1,
+    WOnly = 2,
+    RW = 4,
+    Manage = 8,
+    Admin = 16
+}
 //# sourceMappingURL=enum.d.ts.map

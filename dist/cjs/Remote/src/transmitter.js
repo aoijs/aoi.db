@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = __importDefault(require("events"));
 const net_1 = require("net");
 const enum_js_1 = require("../../typings/enum.js");
+const index_js_1 = require("../../index.js");
 const crypto_1 = require("crypto");
 const enum_js_2 = require("../typings/enum.js");
 const util_1 = require("util");
@@ -70,7 +71,8 @@ class Transmitter extends events_1.default {
                     break;
                 case enum_js_2.ReceiverOpCodes.Pong:
                     {
-                        this.data.ping = Date.now() - this.data.lastPingTimestamp;
+                        this.data.ping =
+                            Date.now() - this.data.lastPingTimestamp;
                     }
                     break;
             }
@@ -126,10 +128,13 @@ class Transmitter extends events_1.default {
         });
     }
     async get(table, key) {
-        return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Get, {
+        const data = (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Get, {
             table,
             key,
         })).d;
+        if (!data)
+            return null;
+        return new index_js_1.KeyValueData(data);
     }
     async set(table, key, value) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.Set, {
@@ -152,7 +157,7 @@ class Transmitter extends events_1.default {
     async all(table, query, limit) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.All, {
             table,
-            query,
+            query: query?.toString() ?? ((_) => true).toString(),
             limit,
         })).d;
     }
@@ -165,19 +170,19 @@ class Transmitter extends events_1.default {
     async findOne(table, query) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.FindOne, {
             table,
-            query,
+            query: query.toString(),
         })).d;
     }
     async findMany(table, query) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.FindMany, {
             table,
-            query,
+            query: query.toString(),
         })).d;
     }
     async deleteMany(table, query) {
         return (await this.#req(enum_js_2.TransmitterOpCodes.Operation, enum_js_1.DatabaseMethod.DeleteMany, {
             table,
-            query,
+            query: query.toString(),
         })).d;
     }
     async analyze(table, data) {

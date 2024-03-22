@@ -14,3 +14,11 @@ export enum ReceiverOpCodes {
     AckAnalyze = 1<<4,
     AckDisconnect = 1<<5,
 }
+
+export enum Permissions {
+    ROnly = 1<<0,
+    WOnly = 1<<1,
+    RW = 1<<2,
+    Manage = 1<<3,
+    Admin = 1<<4,
+}

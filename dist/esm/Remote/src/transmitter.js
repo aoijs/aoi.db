@@ -1,6 +1,7 @@
 import EventEmitter from "events";
 import { createConnection } from "net";
 import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
+import { KeyValueData } from "../../index.js";
 import { randomBytes } from "crypto";
 import { ReceiverOpCodes, TransmitterOpCodes } from "../typings/enum.js";
 import { inspect } from "util";
@@ -65,7 +66,8 @@ export default class Transmitter extends EventEmitter {
                     break;
                 case ReceiverOpCodes.Pong:
                     {
-                        this.data.ping = Date.now() - this.data.lastPingTimestamp;
+                        this.data.ping =
+                            Date.now() - this.data.lastPingTimestamp;
                     }
                     break;
             }
@@ -121,10 +123,13 @@ export default class Transmitter extends EventEmitter {
         });
     }
     async get(table, key) {
-        return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Get, {
+        const data = (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Get, {
             table,
             key,
         })).d;
+        if (!data)
+            return null;
+        return new KeyValueData(data);
     }
     async set(table, key, value) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.Set, {
@@ -147,7 +152,7 @@ export default class Transmitter extends EventEmitter {
     async all(table, query, limit) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.All, {
             table,
-            query,
+            query: query?.toString() ?? ((_) => true).toString(),
             limit,
         })).d;
     }
@@ -160,19 +165,19 @@ export default class Transmitter extends EventEmitter {
     async findOne(table, query) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.FindOne, {
             table,
-            query,
+            query: query.toString(),
         })).d;
     }
     async findMany(table, query) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.FindMany, {
             table,
-            query,
+            query: query.toString(),
         })).d;
     }
     async deleteMany(table, query) {
         return (await this.#req(TransmitterOpCodes.Operation, DatabaseMethod.DeleteMany, {
             table,
-            query,
+            query: query.toString(),
         })).d;
     }
     async analyze(table, data) {

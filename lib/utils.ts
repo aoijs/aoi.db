@@ -1,13 +1,11 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { Hash } from "./typings/interface.js";
-import { r } from "tar";
 import { KeyValue } from "./KeyValue/index.js";
 import { readFileSync, readdirSync } from "fs";
-import { TransmitterQuery } from "./Remote/typings/type.js";
 const algorithm = "aes-256-ctr";
 //@ts-ignore
 import { jsonrepair } from "jsonrepair";
-import { ColumnType } from "./WideColumnar/typings/types.js";
+import { ColumnType } from "./WideColumnar/index.js";
 export function encrypt(string: string, key: string, iV?: string): Hash {
   const iv = iV ? Buffer.from(iV, "hex") : randomBytes(16);
   const cipher = createCipheriv(algorithm, key, iv);
@@ -111,107 +109,8 @@ export async function convertV1KeyValuetov2(oldDbFolder: string, db: KeyValue) {
   }
 }
 
-export function parseTransmitterQuery(
-  query: TransmitterQuery
-): (Data: any) => boolean {
-  const str = returnParseString("&&", query, "===", "&&");
-  return new Function(" return (Data) => { return " + str + " }")();
-}
-
-export function returnParseString(
-  key: string,
-  value: any,
-  sign = "===",
-  join = "&&"
-): string {
-  if (key === "value" || key === "key" || key === "ttl") {
-    if (sign === "$sw") {
-      return `Data.${key}.startsWith(${value})`;
-    }
-    if (sign === "$ew") {
-      return `Data.${key}.endsWith(${value})`;
-    }
-    if (sign === "$i") {
-      return `Data.${key}.includes(${value})`;
-    }
-    if (sign === "$re") {
-      return `Data.${key}.match(${value})`;
-    }
-    return `Data.${key} ${sign} ${value}`;
-  }
-  if (key === "=") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "===", join))
-      .join(join);
-  }
-  if (key === "!=") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "!==", join))
-      .join(join);
-  }
-  if (key === ">") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], ">", join))
-      .join(join);
-  }
-  if (key === "<") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "<", join))
-      .join(join);
-  }
-  if (key === ">=") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], ">=", join))
-      .join(join);
-  }
-  if (key === "<=") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "<=", join))
-      .join(join);
-  }
-  if (key === "$sw") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "$sw", join))
-      .join(join);
-  }
-  if (key === "$ew") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "$ew", join))
-      .join(join);
-  }
-  if (key === "$i") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "$i", join))
-      .join(join);
-  }
-  if (key === "$re") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "$re", join))
-      .join(join);
-  }
-  if (key === "||") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "===", join))
-      .join("||");
-  }
-  if (key === "&&") {
-    const keys = Object.keys(value);
-    return keys
-      .map((x) => returnParseString(x, value[x], "===", join))
-      .join("&&");
-  }
-  return "";
+export function checkIfTargetPresentInBitWiseOr( num: number, target: number) {
+  return (num & target) === target;
 }
 
 export function stringify(data: any) {

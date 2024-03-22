@@ -1,512 +1,719 @@
 import EventEmitter from "node:events";
-import { Server, createServer, isIPv4, isIPv6 } from "node:net";
+import { Server, Socket, createServer, isIPv6 } from "node:net";
 import {
-    ReceiverDataFormat,
-    ReceiverOptions,
-    TransmitterDataFormat,
+	ISocket,
+	ReceiverDataFormat,
+	ReceiverOptions,
+	TransmitterDataFormat,
 } from "../typings/interface.js";
 import {
-    DatabaseEvents,
-    DatabaseMethod,
-    KeyValue,
-    decrypt,
-    encrypt,
-    parseTransmitterQuery,
+	DatabaseEvents,
+	DatabaseMethod,
+	KeyValue,
 } from "../../index.js";
+import { DatabaseOptions } from "../typings/type.js";
 import {
-    DatabaseOptions,
-    PossibleDatabaseTypes,
-} from "../typings/type.js";
-import { ReceiverOpCodes, TransmitterOpCodes } from "../typings/enum.js";
-import { existsSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
-import { inspect } from "node:util";
+	Permissions,
+	ReceiverOpCodes,
+	TransmitterOpCodes,
+} from "../typings/enum.js";
+import { randomBytes } from "node:crypto";
+import { Group } from "@akarui/structures";
 
 export default class Receiver extends EventEmitter {
-    server: Server;
-    options: ReceiverOptions;
-    allowList: Set<string> = new Set();
-    connections: Map<string, KeyValue> = new Map();
+	server: Server;
+	#options: ReceiverOptions;
+	allowList: Set<string> = new Set();
+	clients: Group<string, Socket> = new Group(Infinity);
+	usersMap: Group<string, KeyValue> = new Group(Infinity);
+	constructor(options: ReceiverOptions) {
+		super();
+		this.#options = options;
+		this.server = createServer();
+		this.server.listen(options.port, options.host, options.backlog, () => {
+			this.emit(DatabaseEvents.Connect);
+		});
+		this.#init(options);
+		this.#bindEvents();
+	}
 
-    constructor(options: ReceiverOptions) {
-        super();
-        this.options = options;
-        this.server = createServer();
-        this.server.listen(options.port, options.host, options.backlog, () => {
-            this.emit(DatabaseEvents.Connect);
-        });
+	async #init(options: ReceiverOptions) {
+		// create database and setup user config
+		const { userConfig, databaseType, databaseOptions } = options;
+		let db: KeyValue | null = null;
+		if (databaseType === "KeyValue") {
+			db = await this.#createKeyValue(databaseOptions);
+		}
+
+		if (!db) {
+			throw new Error("Database type not found");
+		}
+
+		for (const user of userConfig) {
+			this.usersMap.set(user.username, db);
+		}
+	}
+
+	async #createKeyValue(options: DatabaseOptions<"KeyValue">) {
+		const db = new KeyValue(options);
+		await db.connect();
+		return db;
+	}
+
+	isAllowed(address: string) {
+		let ipv6 = isIPv6(address) ? address : "::ffff:" + address;
+		return this.allowList.has("*") || this.allowList.has(ipv6);
+	}
+
+	async #bindEvents() {
+		this.server.on("connection", (socket: ISocket) => {
+			socket.on("connect", () => this.#handleConnect(socket));
+
+			socket.on("data", (data: Buffer) => this.#handleData(data, socket));
+
+            socket.on("error", (err) => this.#handleError(err, socket));
+
+            socket.on("close", () => this.#handleClose(socket));
+		});
+	}
+
+    #handleClose(socket: ISocket) {
+        this.emit(DatabaseEvents.Disconnect, socket);
     }
 
-    allowAddress(address: string) {
-        if (address === "*") this.allowList.add("*");
-        else if (isIPv4(address)) {
-            //convert it to ipv6
-            const ipv6 = "::ffff:" + address;
-            this.allowList.add(ipv6);
-        } else if (isIPv6(address)) {
-            this.allowList.add(address);
-        } else {
-            throw new Error("Invalid IP Address Provided");
+    #handleError(err: Error, socket: ISocket) {
+        this.emit(DatabaseEvents.Error, err, socket);
+    }
+
+	#handleConnect(socket: Socket) {
+		this.emit(DatabaseEvents.Connection, socket);
+	}
+
+	async #handleData(data: Buffer, socket: ISocket) {
+		const dataFormat = this.transmitterDataFormat(data);
+		const op = dataFormat.op;
+
+		switch (op) {
+			case TransmitterOpCodes.Connect:
+				this.#handleConnectRequest(dataFormat, socket);
+				break;
+			case TransmitterOpCodes.Ping:
+				this.#handlePingRequest(dataFormat, socket);
+				break;
+			case TransmitterOpCodes.Disconnect:
+				this.#handleDisconnectRequest(dataFormat, socket);
+				break;
+			case TransmitterOpCodes.Operation:
+				await this.#handleOperationRequest(dataFormat, socket);
+				break;
+			default:
+				this.#handleUnknownRequest(dataFormat, socket);
+				break;
+		}
+	}
+
+	#handleConnectRequest(dataFormat: TransmitterDataFormat, socket: ISocket) {
+		const { s, d, h } = dataFormat;
+		const { username, password } = d;
+		const db = this.usersMap.get(username);
+		if (!this.isAllowed(socket.remoteAddress!)) {
+			return this.#sendResponse(
+				{
+					op: ReceiverOpCodes.ConnectionDenied,
+					method: DatabaseMethod.NOOP,
+					seq: s,
+					data: "Connection Denied",
+					cost: 0,
+					hash: h,
+					session: "",
+				},
+				socket
+			);
+		}
+		if (!db) {
+			this.#sendResponse(
+				{
+					op: ReceiverOpCodes.ConnectionDenied,
+					method: DatabaseMethod.NOOP,
+					seq: s,
+					data: "User not found",
+					cost: 0,
+					hash: h,
+					session: "",
+				},
+				socket
+			);
+			return;
+		}
+
+		if (
+			!this.#options.userConfig.find(
+				(user) =>
+					user.username === username && user.password === password
+			)
+		) {
+			this.#sendResponse(
+				{
+					op: ReceiverOpCodes.ConnectionDenied,
+					method: DatabaseMethod.NOOP,
+					seq: s,
+					data: "Invalid password",
+					cost: 0,
+					hash: h,
+					session: "",
+				},
+				socket
+			);
+			return;
+		}
+		const session = randomBytes(16).toString("hex");
+		// @ts-ignore
+		socket.userData = {
+			username,
+			session,
+			permissions: this.#options.userConfig.find(
+				(user) => user.username === username
+			)?.permissions as Permissions,
+		};
+		this.clients.set(session, socket);
+
+		this.#sendResponse(
+			{
+				op: ReceiverOpCodes.AckConnect,
+				method: DatabaseMethod.NOOP,
+				seq: s,
+				data: "Connected",
+				cost: 0,
+				hash: h,
+				session,
+			},
+			socket
+		);
+	}
+
+	#handlePingRequest(dataFormat: TransmitterDataFormat, socket: ISocket) {
+		const { s, h, se } = dataFormat;
+		this.#sendResponse(
+			{
+				op: ReceiverOpCodes.Pong,
+				method: DatabaseMethod.NOOP,
+				seq: s,
+				data: "Pong",
+				cost: 0,
+				hash: h,
+				session: se,
+			},
+			socket
+		);
+	}
+
+	#handleDisconnectRequest(
+		dataFormat: TransmitterDataFormat,
+		socket: ISocket
+	) {
+		const { s, h, se } = dataFormat;
+		this.clients.delete(se);
+		this.#sendResponse(
+			{
+				op: ReceiverOpCodes.AckDisconnect,
+				method: DatabaseMethod.NOOP,
+				seq: s,
+				data: "Disconnected",
+				cost: 0,
+				hash: h,
+				session: se,
+			},
+			socket
+		);
+	}
+
+	async #handleOperationRequest(
+		dataFormat: TransmitterDataFormat,
+		socket: ISocket
+	) {
+		const { se, s, h, m } = dataFormat;
+		const db = this.usersMap.get(se);
+		if (!db) {
+			return this.#sendResponse(
+				{
+					op: ReceiverOpCodes.ConnectionDenied,
+					method: DatabaseMethod.NOOP,
+					seq: s,
+					data: "User not found",
+					cost: 0,
+					hash: h,
+					session: se,
+				},
+				socket
+			);
+		}
+
+		switch (m) {
+			case DatabaseMethod.Set:
+				await this.#handleOperationSet(dataFormat, socket);
+				break;
+			case DatabaseMethod.Get:
+				await this.#handleOperationGet(dataFormat, socket);
+				break;
+			case DatabaseMethod.Delete:
+				await this.#handleOperationDelete(dataFormat, socket);
+				break;
+			case DatabaseMethod.All:
+				await this.#handleOperationAll(dataFormat, socket);
+				break;
+			case DatabaseMethod.FindMany:
+                await this.#handleOperationFindMany(dataFormat, socket);
+                break;
+            case DatabaseMethod.FindOne:
+                await this.#handleOperationFindOne(dataFormat, socket);
+                break;
+            case DatabaseMethod.Has:
+                await this.#handleOperationHas(dataFormat, socket);
+                break;
+            case DatabaseMethod.DeleteMany:
+                await this.#handleOperationDeleteMany(dataFormat, socket);
+                break;
+			default: {
+				this.#sendResponse(
+					{
+						op: ReceiverOpCodes.ConnectionDenied,
+						method: DatabaseMethod.NOOP,
+						seq: s,
+						data: "Unknown Operation",
+						cost: 0,
+						hash: h,
+						session: se,
+					},
+					socket
+				);
+				break;
+			}
+		}
+	}
+
+	#handleUnknownRequest(dataFormat: TransmitterDataFormat, socket: ISocket) {
+		const { s, h, se } = dataFormat;
+		this.#sendResponse(
+			{
+				op: ReceiverOpCodes.ConnectionDenied,
+				method: DatabaseMethod.NOOP,
+				seq: s,
+				data: "Unknown Request",
+				cost: 0,
+				hash: h,
+				session: se,
+			},
+			socket
+		);
+	}
+
+	async #handleOperationSet(
+		dataFormat: TransmitterDataFormat,
+		socket: ISocket
+	) {
+		const { s, m, d, h, se } = dataFormat;
+		if (socket.userData.permissions === Permissions.ROnly) {
+			return this.#sendResponse(
+				{
+					op: ReceiverOpCodes.ConnectionDenied,
+					method: DatabaseMethod.NOOP,
+					seq: s,
+					data: "Permission Denied",
+					cost: 0,
+					hash: h,
+					session: se,
+				},
+				socket
+			);
+		}
+		const { table, key, value } = d;
+		const db = this.usersMap.get(se) as KeyValue;
+		const startTime = performance.now();
+		await db.set(table, key, {
+			value,
+		});
+		const endTime = performance.now();
+		const cost = endTime - startTime;
+
+		this.#sendResponse(
+			{
+				op: ReceiverOpCodes.AckOperation,
+				method: DatabaseMethod.Set,
+				seq: s + 1,
+				data: "",
+				cost: cost,
+				hash: h,
+				session: se,
+			},
+			socket
+		);
+	}
+
+	async #handleOperationGet(
+		dataFormat: TransmitterDataFormat,
+		socket: ISocket
+	) {
+		const { s, m, d, h, se } = dataFormat;
+		if (socket.userData.permissions === Permissions.WOnly) {
+			return this.#sendResponse(
+				{
+					op: ReceiverOpCodes.ConnectionDenied,
+					method: DatabaseMethod.NOOP,
+					seq: s,
+					data: "Permission Denied",
+					cost: 0,
+					hash: h,
+					session: se,
+				},
+				socket
+			);
+		}
+
+		const { table, key } = d;
+		const db = this.usersMap.get(se) as KeyValue;
+		const startTime = performance.now();
+		const res = await db.get(table, key);
+		const endTime = performance.now();
+		const cost = endTime - startTime;
+
+		this.#sendResponse(
+			{
+				op: ReceiverOpCodes.AckOperation,
+				method: DatabaseMethod.Get,
+				seq: s,
+				data: res?.toJSON(),
+				cost: cost,
+				hash: h,
+				session: se,
+			},
+			socket
+		);
+	}
+
+	async #handleOperationDelete(
+		dataFormat: TransmitterDataFormat,
+		socket: ISocket
+	) {
+		const { s, m, d, h, se } = dataFormat;
+		if (socket.userData.permissions === Permissions.ROnly) {
+			return this.#sendResponse(
+				{
+					op: ReceiverOpCodes.ConnectionDenied,
+					method: DatabaseMethod.NOOP,
+					seq: s,
+					data: "Permission Denied",
+					cost: 0,
+					hash: h,
+					session: se,
+				},
+				socket
+			);
+		}
+
+		const { table, key } = d;
+		const db = this.usersMap.get(se) as KeyValue;
+
+		const startTime = performance.now();
+		const res = await db.delete(table, key);
+		const endTime = performance.now();
+		const cost = endTime - startTime;
+
+		this.#sendResponse(
+			{
+				op: ReceiverOpCodes.AckOperation,
+				method: DatabaseMethod.Delete,
+				seq: s,
+				data: res,
+				cost: cost,
+				hash: h,
+				session: se,
+			},
+			socket
+		);
+	}
+
+	async #handleOperationAll(
+		dataFormat: TransmitterDataFormat,
+		socket: ISocket
+	) {
+		const { s, m, d, h, se } = dataFormat;
+		if (socket.userData.permissions === Permissions.WOnly) {
+			return this.#sendResponse(
+				{
+					op: ReceiverOpCodes.ConnectionDenied,
+					method: DatabaseMethod.NOOP,
+					seq: s,
+					data: "Permission Denied",
+					cost: 0,
+					hash: h,
+					session: se,
+				},
+				socket
+			);
+		}
+
+		const { table, query, limit, order } = d;
+		const db = this.usersMap.get(se) as KeyValue;
+		const startTime = performance.now();
+		const res = await eval(`db.all(table, ${query}, ${limit},order)`);
+		const endTime = performance.now();
+		const cost = endTime - startTime;
+
+		this.#sendResponse(
+			{
+				op: ReceiverOpCodes.AckOperation,
+				method: DatabaseMethod.All,
+				seq: s,
+				data: res,
+				cost: cost,
+				hash: h,
+				session: se,
+			},
+			socket
+		);
+	}
+
+    async #handleOperationFindMany(dataFormat: TransmitterDataFormat, socket: ISocket) {
+        const { s, m, d, h, se } = dataFormat;
+        if (socket.userData.permissions === Permissions.WOnly) {
+            return this.#sendResponse(
+                {
+                    op: ReceiverOpCodes.ConnectionDenied,
+                    method: DatabaseMethod.NOOP,
+                    seq: s,
+                    data: "Permission Denied",
+                    cost: 0,
+                    hash: h,
+                    session: se,
+                },
+                socket
+            );
         }
+
+        const { table, query } = d;
+        const db = this.usersMap.get(se) as KeyValue;
+        const startTime = performance.now();
+        const res = await eval(`db.findMany(table, ${query})`);
+        const endTime = performance.now();
+        const cost = endTime - startTime;
+
+        this.#sendResponse(
+            {
+                op: ReceiverOpCodes.AckOperation,
+                method: DatabaseMethod.FindMany,
+                seq: s,
+                data: res,
+                cost: cost,
+                hash: h,
+                session: se,
+            },
+            socket
+        );
+    
     }
 
-    isAllowed(address: string) {
-        let ipv6 = isIPv6(address) ? address : "::ffff:" + address;
-        return this.allowList.has("*") || this.allowList.has(ipv6);
-    }
-    async #createOwner<Type extends PossibleDatabaseTypes>(
-        options: DatabaseOptions<Type>,
-        username: string,
-        password: string,
-    ) {
-        const text = `@name=${username}@pass=${password}`;
-        const hash = encrypt(text, options.encryptionConfig.securityKey);
-        await writeFile(
-            `${options.dataConfig?.path}/owner.hash`,
-            `${hash.iv}:${hash.data}`,
-            { encoding: "utf-8" },
+    async #handleOperationFindOne(dataFormat: TransmitterDataFormat, socket: ISocket) {
+        const { s, m, d, h, se } = dataFormat;
+        if (socket.userData.permissions === Permissions.WOnly) {
+            return this.#sendResponse(
+                {
+                    op: ReceiverOpCodes.ConnectionDenied,
+                    method: DatabaseMethod.NOOP,
+                    seq: s,
+                    data: "Permission Denied",
+                    cost: 0,
+                    hash: h,
+                    session: se,
+                },
+                socket
+            );
+        }
+
+        const { table, query } = d;
+        const db = this.usersMap.get(se) as KeyValue;
+        const startTime = performance.now();
+        const res = await eval(`db.findOne(table, ${query})`);
+        const endTime = performance.now();
+        const cost = endTime - startTime;
+
+        this.#sendResponse(
+            {
+                op: ReceiverOpCodes.AckOperation,
+                method: DatabaseMethod.FindOne,
+                seq: s,
+                data: res,
+                cost: cost,
+                hash: h,
+                session: se,
+            },
+            socket
         );
     }
 
+    async #handleOperationHas(dataFormat: TransmitterDataFormat, socket: ISocket) {
+        const { s, m, d, h, se } = dataFormat;
+        if (socket.userData.permissions === Permissions.WOnly) {
+            return this.#sendResponse(
+                {
+                    op: ReceiverOpCodes.ConnectionDenied,
+                    method: DatabaseMethod.NOOP,
+                    seq: s,
+                    data: "Permission Denied",
+                    cost: 0,
+                    hash: h,
+                    session: se,
+                },
+                socket
+            );
+        }
 
-    #bindEvents() {
-        this.server.on("connection", (socket) => {
-            this.emit(DatabaseEvents.Debug,"[Receiver]: New Connection with ip: "+socket.remoteAddress);
-            socket.on("data", async (buffer) => {
-                const data = this.transmitterDataFormat(buffer);
-                this.emit(DatabaseEvents.Debug,`[Receiver]: Received Data: ${inspect(data)}`);
-                let isAnaylze = false;
-                switch (data.op) {
-                    case TransmitterOpCodes.Connect:
-                        {
-                            if (!this.isAllowed(socket.remoteAddress!)) {
-                                const res = this.sendDataFormat({
-                                    op: ReceiverOpCodes.ConnectionDenied,
-                                    method: data.m,
-                                    seq: data.s,
-                                    data: "IP Address Not Allowed",
-                                    cost: 0,
-                                    hash: data.h,
-                                });
-                                socket.end(res);
-                                return;
-                            }
-                            const username = data.d.u;
-                            const password = data.d.p;
-                            const db = data.d.db.t;
+        const { table, key } = d;
+        const db = this.usersMap.get(se) as KeyValue;
+        const startTime = performance.now();
+        const res = await db.has(table, key);
+        const endTime = performance.now();
+        const cost = endTime - startTime;
 
-                            if (db === "KeyValue") {
-                                const options = data.d.db
-                                    .o as DatabaseOptions<"KeyValue">;
-                                const mainFolder =
-                                    Buffer.from(username).toString("base64url");
-                                const defaultFolder =
-                                    options.dataConfig?.path ?? "database";
-                                options.dataConfig = {
-                                    path: `./${mainFolder}_${defaultFolder}`,
-                                    tables: options.dataConfig?.tables || ['main'],
-                                    referencePath: `./reference`,
-                                };
-                                options.fileConfig = {
-                                    extension:
-                                        options.fileConfig?.extension || ".sql",
-                                    maxSize:
-                                        options.fileConfig?.maxSize ||
-                                        20 * 1024 * 1024,
-                                    transactionLogPath: `./transactions`,
-                                };
-                                const keyvalue = new KeyValue(options);
-
-                                if (existsSync(options.dataConfig.path!)) {
-                                    const ownerHsh = await readFile(
-                                        `${options.dataConfig.path}/owner.hash`,
-                                        { encoding: "utf-8" },
-                                    );
-
-                                    const [iv, ecrypted] = ownerHsh.split(":");
-                                    const hash = { iv, data: ecrypted };
-                                    const decrypted = decrypt(
-                                        hash,
-                                        options.encryptionConfig.securityKey,
-                                    );
-
-                                    const splits = decrypted.split("@").slice(1);
-                                    const [name, pass] = splits.map((x) => {
-                                        const [_, prop] = x.split("=");
-                                        return prop;
-                                    });
-
-                                    if (
-                                        name !== username ||
-                                        pass !== password
-                                    ) {
-                                        const res = this.sendDataFormat({
-                                            op: ReceiverOpCodes.ConnectionDenied,
-                                            method: data.m,
-                                            seq: data.s,
-                                            data: "Invalid Username or Password",
-                                            cost: 0,
-                                            hash: data.h,
-                                        });
-                                        socket.end(res);
-                                        return;
-                                    }
-                                }
-                                await keyvalue.connect();
-
-                                if (
-                                    !existsSync(
-                                        options.dataConfig.path + "/owner.hash",
-                                    )
-                                ) {
-                                    await this.#createOwner(
-                                        options,
-                                        username,
-                                        password,
-                                    );
-                                }
-
-                                this.connections.set(
-                                    socket.remoteAddress!,
-                                    keyvalue,
-                                );
-
-                                const res = this.sendDataFormat({
-                                    op: ReceiverOpCodes.AckConnect,
-                                    method: data.m,
-                                    seq: data.s + 1,
-                                    data: "Connected",
-                                    cost: 0,
-                                    hash: data.h,
-                                });
-
-                                socket.write(res);
-                            }
-                        }
-                        break;
-                    case TransmitterOpCodes.Ping:
-                        {
-                            const res = this.sendDataFormat({
-                                op: ReceiverOpCodes.Pong,
-                                method: data.m,
-                                seq: data.s,
-                                data: "Pong",
-                                cost: 0,
-                                hash: data.h,
-                            });
-
-                            socket.write(res);
-                        }
-                        break;
-                    case TransmitterOpCodes.Analyze:
-                        isAnaylze = true;
-                    /* FALLTHROUGH */
-                    case TransmitterOpCodes.Operation:
-                        {
-                            const db = this.connections.get(
-                                socket.remoteAddress!,
-                            );
-                            if (!db) {
-                                const res = this.sendDataFormat({
-                                    op: ReceiverOpCodes.ConnectionDenied,
-                                    method: data.m,
-                                    seq: data.s,
-                                    data: "Not Connected",
-                                    cost: 0,
-                                    hash: data.h,
-                                });
-                                socket.end(res);
-                                return;
-                            }
-
-                            const method = data.m;
-                            let seq = data.s;
-
-                            switch (method) {
-                                case DatabaseMethod.Set:
-                                    {
-                                        seq++;
-                                        const table = data.d.table;
-                                        const key = data.d.key;
-                                        const value = data.d.value;
-
-                                        const startTime = performance.now();
-                                        const d = await db.set(
-                                            table,
-                                            key,
-                                            value,
-                                        );
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: d,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-                                case DatabaseMethod.Get:
-                                    {
-                                        const table = data.d.table;
-                                        const key = data.d.key;
-
-                                        const startTime = performance.now();
-                                        const d = await db.get(table, key);
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: d,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-
-                                case DatabaseMethod.Delete:
-                                    {
-                                        const table = data.d.table;
-                                        const key = data.d.key;
-
-                                        const startTime = performance.now();
-                                        const d = await db.delete(table, key);
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: (<any>d)?.value ?? null,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-
-                                case DatabaseMethod.Has:
-                                    {
-                                        const table = data.d.table;
-                                        const key = data.d.key;
-
-                                        const startTime = performance.now();
-                                        const d = await db.has(table, key);
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: d ?? false,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-
-                                case DatabaseMethod.Clear:
-                                    {
-                                        const table = data.d.table;
-
-                                        const startTime = performance.now();
-                                        const d = await db.clear(table);
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: d,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-
-                                case DatabaseMethod.All:
-                                    {
-                                        const table = data.d.table;
-                                        const query = parseTransmitterQuery(
-                                            data.d.query,
-                                        );
-
-                                        const startTime = performance.now();
-                                        const d = await db.all(table, query);
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: d,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-
-                                case DatabaseMethod.FindOne:
-                                    {
-                                        const table = data.d.table;
-                                        const query = parseTransmitterQuery(
-                                            data.d.query,
-                                        );
-
-                                        const startTime = performance.now();
-                                        const d = await db.findOne(
-                                            table,
-                                            query,
-                                        );
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: d,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-
-                                case DatabaseMethod.FindMany:
-                                    {
-                                        const table = data.d.table;
-                                        const query = parseTransmitterQuery(
-                                            data.d.query,
-                                        );
-
-                                        const startTime = performance.now();
-                                        const d = await db.findMany(
-                                            table,
-                                            query,
-                                        );
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: d,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-
-                                case DatabaseMethod.DeleteMany:
-                                    {
-                                        seq++;
-                                        const table = data.d.table;
-                                        const query = parseTransmitterQuery(
-                                            data.d.query,
-                                        );
-
-                                        const startTime = performance.now();
-                                        const d = await db.deleteMany(
-                                            table,
-                                            query,
-                                        );
-                                        const cost =
-                                            performance.now() - startTime;
-
-                                        const res = this.sendDataFormat({
-                                            op: isAnaylze
-                                                ? ReceiverOpCodes.AckAnalyze
-                                                : ReceiverOpCodes.AckOperation,
-                                            method: data.m,
-                                            seq: seq,
-                                            data: d,
-                                            cost: cost,
-                                            hash: data.h,
-                                        });
-
-                                        socket.write(res);
-                                    }
-                                    break;
-                            }
-                        }
-                        break;
-                }
-            });
-        });
-    }
-    sendDataFormat({
-        op,
-        method,
-        seq,
-        data,
-        cost,
-        hash,
-    }: {
-        op: ReceiverOpCodes;
-        method: DatabaseMethod;
-        seq: number;
-        data: any;
-        cost: number;
-        hash: string;
-    }) {
-        const res = {
-            op: op,
-            m: method,
-            t: Date.now(),
-            s: seq,
-            d: data,
-            c: cost,
-            h: hash,
-        } as ReceiverDataFormat;
-        return Buffer.from(JSON.stringify(res));
-    }
-    transmitterDataFormat(buffer: Buffer) {
-        return JSON.parse(buffer.toString()) as TransmitterDataFormat;
+        this.#sendResponse(
+            {
+                op: ReceiverOpCodes.AckOperation,
+                method: DatabaseMethod.Has,
+                seq: s,
+                data: res,
+                cost: cost,
+                hash: h,
+                session: se,
+            },
+            socket
+        );
     }
 
-    connect() {
-        return this.#bindEvents();
+    async #handleOperationDeleteMany(dataFormat: TransmitterDataFormat, socket: ISocket) {
+        const { s, m, d, h, se } = dataFormat;
+        if (socket.userData.permissions === Permissions.ROnly) {
+            return this.#sendResponse(
+                {
+                    op: ReceiverOpCodes.ConnectionDenied,
+                    method: DatabaseMethod.NOOP,
+                    seq: s,
+                    data: "Permission Denied",
+                    cost: 0,
+                    hash: h,
+                    session: se,
+                },
+                socket
+            );
+        }
+
+        const { table, query } = d;
+        const db = this.usersMap.get(se) as KeyValue;
+        const startTime = performance.now();
+        const res = await eval(`db.deleteMany(table, ${query})`);
+        const endTime = performance.now();
+        const cost = endTime - startTime;
+
+        this.#sendResponse(
+            {
+                op: ReceiverOpCodes.AckOperation,
+                method: DatabaseMethod.DeleteMany,
+                seq: s,
+                data: res,
+                cost: cost,
+                hash: h,
+                session: se,
+            },
+            socket
+        );
     }
+
+    async #handleOperationClear(dataFormat: TransmitterDataFormat, socket: ISocket) {
+        const { s, m, d, h, se } = dataFormat;
+        if (socket.userData.permissions === Permissions.ROnly) {
+            return this.#sendResponse(
+                {
+                    op: ReceiverOpCodes.ConnectionDenied,
+                    method: DatabaseMethod.NOOP,
+                    seq: s,
+                    data: "Permission Denied",
+                    cost: 0,
+                    hash: h,
+                    session: se,
+                },
+                socket
+            );
+        }
+
+        const { table } = d;
+        const db = this.usersMap.get(se) as KeyValue;
+        const startTime = performance.now();
+        const res = await db.clear(table);
+        const endTime = performance.now();
+        const cost = endTime - startTime;
+
+        this.#sendResponse(
+            {
+                op: ReceiverOpCodes.AckOperation,
+                method: DatabaseMethod.Clear,
+                seq: s,
+                data: res,
+                cost: cost,
+                hash: h,
+                session: se,
+            },
+            socket
+        );
+    }
+
+	#sendResponse(
+		data: {
+			op: ReceiverOpCodes;
+			method: DatabaseMethod;
+			seq: number;
+			data: any;
+			cost: number;
+			hash: string;
+			session: string;
+		},
+		socket: Socket
+	) {
+		const buffer = this.sendDataFormat(data);
+		socket.write(buffer);
+	}
+
+	sendDataFormat({
+		op,
+		method,
+		seq,
+		data,
+		cost,
+		hash,
+		session,
+	}: {
+		op: ReceiverOpCodes;
+		method: DatabaseMethod;
+		seq: number;
+		data: any;
+		cost: number;
+		hash: string;
+		session: string;
+	}) {
+		const res = {
+			op: op,
+			m: method,
+			t: Date.now(),
+			s: seq,
+			d: data,
+			c: cost,
+			h: hash,
+			se: session,
+		} as ReceiverDataFormat;
+		return Buffer.from(JSON.stringify(res));
+	}
+	transmitterDataFormat(buffer: Buffer) {
+		return JSON.parse(buffer.toString()) as TransmitterDataFormat;
+	}
+
+	connect() {
+		return this.#bindEvents();
+	}
 }

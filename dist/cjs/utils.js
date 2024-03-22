@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parse = exports.stringify = exports.returnParseString = exports.parseTransmitterQuery = exports.convertV1KeyValuetov2 = exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
+exports.parse = exports.stringify = exports.checkIfTargetPresentInBitWiseOr = exports.convertV1KeyValuetov2 = exports.JSONParser = exports.decodeHash = exports.createHash = exports.createHashRawString = exports.ReferenceConstantSpace = exports.decrypt = exports.encrypt = void 0;
 const crypto_1 = require("crypto");
 const fs_1 = require("fs");
 const algorithm = "aes-256-ctr";
@@ -100,102 +100,10 @@ async function convertV1KeyValuetov2(oldDbFolder, db) {
     }
 }
 exports.convertV1KeyValuetov2 = convertV1KeyValuetov2;
-function parseTransmitterQuery(query) {
-    const str = returnParseString("&&", query, "===", "&&");
-    return new Function(" return (Data) => { return " + str + " }")();
+function checkIfTargetPresentInBitWiseOr(num, target) {
+    return (num & target) === target;
 }
-exports.parseTransmitterQuery = parseTransmitterQuery;
-function returnParseString(key, value, sign = "===", join = "&&") {
-    if (key === "value" || key === "key" || key === "ttl") {
-        if (sign === "$sw") {
-            return `Data.${key}.startsWith(${value})`;
-        }
-        if (sign === "$ew") {
-            return `Data.${key}.endsWith(${value})`;
-        }
-        if (sign === "$i") {
-            return `Data.${key}.includes(${value})`;
-        }
-        if (sign === "$re") {
-            return `Data.${key}.match(${value})`;
-        }
-        return `Data.${key} ${sign} ${value}`;
-    }
-    if (key === "=") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "===", join))
-            .join(join);
-    }
-    if (key === "!=") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "!==", join))
-            .join(join);
-    }
-    if (key === ">") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], ">", join))
-            .join(join);
-    }
-    if (key === "<") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "<", join))
-            .join(join);
-    }
-    if (key === ">=") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], ">=", join))
-            .join(join);
-    }
-    if (key === "<=") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "<=", join))
-            .join(join);
-    }
-    if (key === "$sw") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "$sw", join))
-            .join(join);
-    }
-    if (key === "$ew") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "$ew", join))
-            .join(join);
-    }
-    if (key === "$i") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "$i", join))
-            .join(join);
-    }
-    if (key === "$re") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "$re", join))
-            .join(join);
-    }
-    if (key === "||") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "===", join))
-            .join("||");
-    }
-    if (key === "&&") {
-        const keys = Object.keys(value);
-        return keys
-            .map((x) => returnParseString(x, value[x], "===", join))
-            .join("&&");
-    }
-    return "";
-}
-exports.returnParseString = returnParseString;
+exports.checkIfTargetPresentInBitWiseOr = checkIfTargetPresentInBitWiseOr;
 function stringify(data) {
     if (typeof data === "string")
         return data;

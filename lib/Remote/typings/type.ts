@@ -10,21 +10,3 @@ export type Key<Type extends PossibleDatabaseTypes> = Type extends "KeyValue" ? 
 export type Value<Type extends PossibleDatabaseTypes> = Type extends "KeyValue" ? KeyValueData["value"] : never;
 
 export type PossibleDatabaseTypes = "KeyValue";
-
-
-export type TransmitterQuery = {
-    value?: any;
-    key?: string;
-    ttl?: number;
-    "||" : TransmitterQuery;
-    "&&" : TransmitterQuery;
-    "!=" : TransmitterQuery;
-    '>' : TransmitterQuery;
-    '<' : TransmitterQuery;
-    '>=' : TransmitterQuery;
-    '<=' : TransmitterQuery;
-    "$sw": TransmitterQuery;
-    "$ew": TransmitterQuery;
-    "$i": TransmitterQuery;
-    "$re": TransmitterQuery;
-}
