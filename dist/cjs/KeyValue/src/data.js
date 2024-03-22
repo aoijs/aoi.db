@@ -59,7 +59,7 @@ class Data {
                     : data.type === "boolean"
                         ? Boolean(data.value)
                         : data.type === "object"
-                            ? JSON.parse(data.value)
+                            ? (typeof data.value === "string" ? JSON.parse(data.value) : data.value)
                             : data.value;
     }
     /**
