@@ -119,8 +119,8 @@ export default class Receiver extends EventEmitter {
 
 	#handleConnectRequest(dataFormat: TransmitterDataFormat, socket: ISocket) {
 		const { s, d, h } = dataFormat;
-		const { username, password } = d;
-		const db = this.usersMap.get(username);
+		const { u, p } = d;
+		const db = this.usersMap.get(u);
 		if (!this.isAllowed(socket.remoteAddress!)) {
 			return this.#sendResponse(
 				{
@@ -154,7 +154,7 @@ export default class Receiver extends EventEmitter {
 		if (
 			!this.#options.userConfig.find(
 				(user) =>
-					user.username === username && user.password === password
+					user.username === u && user.password === p
 			)
 		) {
 			this.#sendResponse(
@@ -174,10 +174,10 @@ export default class Receiver extends EventEmitter {
 		const session = randomBytes(16).toString("hex");
 		// @ts-ignore
 		socket.userData = {
-			username,
+			username:u,
 			session,
 			permissions: this.#options.userConfig.find(
-				(user) => user.username === username
+				(user) => user.username === u
 			)?.permissions as Permissions,
 		};
 		this.clients.set(session, socket);
@@ -683,7 +683,7 @@ export default class Receiver extends EventEmitter {
 	) {
 		const buffer = this.sendDataFormat(data);
 		socket.write(buffer);
-        
+
 	}
 
 	sendDataFormat({

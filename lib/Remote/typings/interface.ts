@@ -40,6 +40,7 @@ export interface ReceiverDataFormat {
     d: any;
     c: number;
     h: string;
+    se: string;
 }
 
 export interface TransmitterDataFormat {

@@ -91,8 +91,8 @@ class Receiver extends node_events_1.default {
     }
     #handleConnectRequest(dataFormat, socket) {
         const { s, d, h } = dataFormat;
-        const { username, password } = d;
-        const db = this.usersMap.get(username);
+        const { u, p } = d;
+        const db = this.usersMap.get(u);
         if (!this.isAllowed(socket.remoteAddress)) {
             return this.#sendResponse({
                 op: enum_js_1.ReceiverOpCodes.ConnectionDenied,
@@ -116,7 +116,7 @@ class Receiver extends node_events_1.default {
             }, socket);
             return;
         }
-        if (!this.#options.userConfig.find((user) => user.username === username && user.password === password)) {
+        if (!this.#options.userConfig.find((user) => user.username === u && user.password === p)) {
             this.#sendResponse({
                 op: enum_js_1.ReceiverOpCodes.ConnectionDenied,
                 method: index_js_1.DatabaseMethod.NOOP,
@@ -131,9 +131,9 @@ class Receiver extends node_events_1.default {
         const session = (0, node_crypto_1.randomBytes)(16).toString("hex");
         // @ts-ignore
         socket.userData = {
-            username,
+            username: u,
             session,
-            permissions: this.#options.userConfig.find((user) => user.username === username)?.permissions,
+            permissions: this.#options.userConfig.find((user) => user.username === u)?.permissions,
         };
         this.clients.set(session, socket);
         this.#sendResponse({

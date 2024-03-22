@@ -59,6 +59,7 @@ class Transmitter extends events_1.default {
                 }
                 case enum_js_2.ReceiverOpCodes.AckConnect:
                     {
+                        this.session = data.se;
                         this.emit("AckConnect", data.d);
                     }
                     break;
@@ -99,6 +100,7 @@ class Transmitter extends events_1.default {
             d: data,
             s: seq,
             h: (0, crypto_1.randomBytes)(16).toString("hex"),
+            se: this.session,
         }));
     }
     ping() {

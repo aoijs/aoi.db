@@ -83,6 +83,7 @@ export default class Transmitter<
 				}
 				case ReceiverOpCodes.AckConnect:
 					{
+                        this.session = data.se;
 						this.emit("AckConnect", data.d);
 					}
 					break;
@@ -133,6 +134,7 @@ export default class Transmitter<
 				d: data,
 				s: seq,
 				h: randomBytes(16).toString("hex"),
+                se: this.session,
 			})
 		);
 	}
