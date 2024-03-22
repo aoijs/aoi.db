@@ -29,6 +29,7 @@ export default class Transmitter<
 	};
 	pingInterval: NodeJS.Timeout | null = null;
 	readyAt = -1;
+    session!: string;
 	constructor(options: TransmitterOptions<Type>) {
 		super();
 		this.client = createConnection(options, () => {
@@ -78,6 +79,7 @@ export default class Transmitter<
 				case ReceiverOpCodes.ConnectionDenied: {
 					this.emit(DatabaseEvents.Disconnect, data.d);
 					this.data.ping = Date.now() - this.data.lastPingTimestamp;
+                    return ;
 				}
 				case ReceiverOpCodes.AckConnect:
 					{

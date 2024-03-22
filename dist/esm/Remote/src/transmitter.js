@@ -15,6 +15,7 @@ export default class Transmitter extends EventEmitter {
     };
     pingInterval = null;
     readyAt = -1;
+    session;
     constructor(options) {
         super();
         this.client = createConnection(options, () => {
@@ -49,6 +50,7 @@ export default class Transmitter extends EventEmitter {
                 case ReceiverOpCodes.ConnectionDenied: {
                     this.emit(DatabaseEvents.Disconnect, data.d);
                     this.data.ping = Date.now() - this.data.lastPingTimestamp;
+                    return;
                 }
                 case ReceiverOpCodes.AckConnect:
                     {

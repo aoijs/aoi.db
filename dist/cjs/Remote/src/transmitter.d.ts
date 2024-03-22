@@ -20,6 +20,7 @@ export default class Transmitter<Type extends PossibleDatabaseTypes> extends Eve
     };
     pingInterval: NodeJS.Timeout | null;
     readyAt: number;
+    session: string;
     constructor(options: TransmitterOptions<Type>);
     static createConnection<Type extends PossibleDatabaseTypes>(options: TransmitterCreateOptions<Type>): Transmitter<"KeyValue">;
     connect(): void;

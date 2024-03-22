@@ -683,6 +683,7 @@ export default class Receiver extends EventEmitter {
 	) {
 		const buffer = this.sendDataFormat(data);
 		socket.write(buffer);
+        
 	}
 
 	sendDataFormat({

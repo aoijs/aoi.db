@@ -20,6 +20,7 @@ class Transmitter extends events_1.default {
     };
     pingInterval = null;
     readyAt = -1;
+    session;
     constructor(options) {
         super();
         this.client = (0, net_1.createConnection)(options, () => {
@@ -54,6 +55,7 @@ class Transmitter extends events_1.default {
                 case enum_js_2.ReceiverOpCodes.ConnectionDenied: {
                     this.emit(enum_js_1.DatabaseEvents.Disconnect, data.d);
                     this.data.ping = Date.now() - this.data.lastPingTimestamp;
+                    return;
                 }
                 case enum_js_2.ReceiverOpCodes.AckConnect:
                     {
