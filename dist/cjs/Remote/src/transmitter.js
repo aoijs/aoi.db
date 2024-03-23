@@ -21,6 +21,9 @@ class Transmitter extends events_1.default {
     pingInterval = null;
     readyAt = -1;
     session;
+    #maxRetries = 10;
+    #retries = 0;
+    #waitTime = 1000;
     constructor(options) {
         super();
         this.client = (0, net_1.createConnection)(options, () => {
@@ -74,19 +77,48 @@ class Transmitter extends events_1.default {
         });
         this.client.on("close", () => {
             this.emit(enum_js_1.DatabaseEvents.Disconnect, "Connection Closed");
+            this.#reconnect();
         });
         this.client.on("error", (err) => {
             this.emit(enum_js_1.DatabaseEvents.Error, err);
+            this.#reconnect();
         });
         this.client.on("connect", () => {
             this.emit(enum_js_1.DatabaseEvents.Connect, "Connected");
         });
+    }
+    #reconnect() {
+        try {
+            clearInterval(this.pingInterval);
+            this.client = (0, net_1.createConnection)(this.options, () => {
+                const reqData = this.sendDataFormat(enum_js_2.TransmitterOpCodes.Connect, enum_js_1.DatabaseMethod.NOOP, Date.now(), this.data.seq, {
+                    u: this.options.username,
+                    p: this.options.password,
+                });
+                this.data.lastPingTimestamp = Date.now();
+                this.client.write(reqData);
+            });
+            this.connect();
+        }
+        catch (err) {
+            if (this.#retries < this.#maxRetries) {
+                this.#retries++;
+                setTimeout(() => {
+                    this.#reconnect();
+                }, this.#waitTime * this.#retries);
+            }
+            else {
+                this.emit(enum_js_1.DatabaseEvents.Disconnect, "Max Retries Reached");
+            }
+        }
     }
     connect() {
         this.#bindEvents();
         this.pingInterval = setInterval(() => {
             this.ping();
         }, 30000);
+        this.readyAt = Date.now();
+        this.#retries = 0;
     }
     receiveDataFormat(buffer) {
         const data = JSON.parse(buffer.toString());

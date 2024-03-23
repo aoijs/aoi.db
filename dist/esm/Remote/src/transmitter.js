@@ -16,6 +16,9 @@ export default class Transmitter extends EventEmitter {
     pingInterval = null;
     readyAt = -1;
     session;
+    #maxRetries = 10;
+    #retries = 0;
+    #waitTime = 1000;
     constructor(options) {
         super();
         this.client = createConnection(options, () => {
@@ -69,19 +72,48 @@ export default class Transmitter extends EventEmitter {
         });
         this.client.on("close", () => {
             this.emit(DatabaseEvents.Disconnect, "Connection Closed");
+            this.#reconnect();
         });
         this.client.on("error", (err) => {
             this.emit(DatabaseEvents.Error, err);
+            this.#reconnect();
         });
         this.client.on("connect", () => {
             this.emit(DatabaseEvents.Connect, "Connected");
         });
+    }
+    #reconnect() {
+        try {
+            clearInterval(this.pingInterval);
+            this.client = createConnection(this.options, () => {
+                const reqData = this.sendDataFormat(TransmitterOpCodes.Connect, DatabaseMethod.NOOP, Date.now(), this.data.seq, {
+                    u: this.options.username,
+                    p: this.options.password,
+                });
+                this.data.lastPingTimestamp = Date.now();
+                this.client.write(reqData);
+            });
+            this.connect();
+        }
+        catch (err) {
+            if (this.#retries < this.#maxRetries) {
+                this.#retries++;
+                setTimeout(() => {
+                    this.#reconnect();
+                }, this.#waitTime * this.#retries);
+            }
+            else {
+                this.emit(DatabaseEvents.Disconnect, "Max Retries Reached");
+            }
+        }
     }
     connect() {
         this.#bindEvents();
         this.pingInterval = setInterval(() => {
             this.ping();
         }, 30000);
+        this.readyAt = Date.now();
+        this.#retries = 0;
     }
     receiveDataFormat(buffer) {
         const data = JSON.parse(buffer.toString());

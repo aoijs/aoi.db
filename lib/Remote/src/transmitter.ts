@@ -7,11 +7,7 @@ import {
 	TransmitterOptions,
 	TransmitterAnaylzeDataFormat,
 } from "../typings/interface.js";
-import {
-	Key,
-	PossibleDatabaseTypes,
-	Value,
-} from "../typings/type.js";
+import { Key, PossibleDatabaseTypes, Value } from "../typings/type.js";
 import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
 import { KeyValueData } from "../../index.js";
 import { randomBytes } from "crypto";
@@ -29,7 +25,10 @@ export default class Transmitter<
 	};
 	pingInterval: NodeJS.Timeout | null = null;
 	readyAt = -1;
-    session!: string;
+	session!: string;
+	#maxRetries = 10;
+	#retries = 0;
+	#waitTime = 1000;
 	constructor(options: TransmitterOptions<Type>) {
 		super();
 		this.client = createConnection(options, () => {
@@ -79,11 +78,11 @@ export default class Transmitter<
 				case ReceiverOpCodes.ConnectionDenied: {
 					this.emit(DatabaseEvents.Disconnect, data.d);
 					this.data.ping = Date.now() - this.data.lastPingTimestamp;
-                    return ;
+					return;
 				}
 				case ReceiverOpCodes.AckConnect:
 					{
-                        this.session = data.se;
+						this.session = data.se;
 						this.emit("AckConnect", data.d);
 					}
 					break;
@@ -99,13 +98,45 @@ export default class Transmitter<
 		});
 		this.client.on("close", () => {
 			this.emit(DatabaseEvents.Disconnect, "Connection Closed");
+			this.#reconnect();
 		});
 		this.client.on("error", (err) => {
 			this.emit(DatabaseEvents.Error, err);
+			this.#reconnect();
 		});
 		this.client.on("connect", () => {
 			this.emit(DatabaseEvents.Connect, "Connected");
 		});
+	}
+
+	#reconnect() {
+		try {
+			clearInterval(this.pingInterval!);
+			this.client = createConnection(this.options, () => {
+				const reqData = this.sendDataFormat(
+					TransmitterOpCodes.Connect,
+					DatabaseMethod.NOOP,
+					Date.now(),
+					this.data.seq,
+					{
+						u: this.options.username,
+						p: this.options.password,
+					}
+				);
+				this.data.lastPingTimestamp = Date.now();
+				this.client.write(reqData);
+			});
+			this.connect();
+		} catch (err) {
+			if (this.#retries < this.#maxRetries) {
+				this.#retries++;
+				setTimeout(() => {
+					this.#reconnect();
+				}, this.#waitTime * this.#retries);
+			} else {
+				this.emit(DatabaseEvents.Disconnect, "Max Retries Reached");
+			}
+		}
 	}
 
 	connect() {
@@ -113,6 +144,8 @@ export default class Transmitter<
 		this.pingInterval = setInterval(() => {
 			this.ping();
 		}, 30000);
+		this.readyAt = Date.now();
+		this.#retries = 0;
 	}
 
 	receiveDataFormat(buffer: Buffer) {
@@ -134,7 +167,7 @@ export default class Transmitter<
 				d: data,
 				s: seq,
 				h: randomBytes(16).toString("hex"),
-                se: this.session,
+				se: this.session,
 			})
 		);
 	}
@@ -188,8 +221,8 @@ export default class Transmitter<
 			})
 		).d;
 
-        if(!data) return null;
-        return new KeyValueData(data);
+		if (!data) return null;
+		return new KeyValueData(data);
 	}
 
 	async set(table: string, key: Key<Type>, value: Value<Type>) {
@@ -253,7 +286,7 @@ export default class Transmitter<
 	async findOne(
 		table: string,
 		query: (data: KeyValueData) => boolean
-	): Promise< KeyValueData | null> {
+	): Promise<KeyValueData | null> {
 		const data = (
 			await this.#req(
 				TransmitterOpCodes.Operation,
@@ -263,9 +296,9 @@ export default class Transmitter<
 					query: query.toString(),
 				}
 			)
-		).d
-        if(!data) return null;
-        return new KeyValueData(data);
+		).d;
+		if (!data) return null;
+		return new KeyValueData(data);
 	}
 	async findMany(table: string, query: (data: KeyValueData) => boolean) {
 		return (
