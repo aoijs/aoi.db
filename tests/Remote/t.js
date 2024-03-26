@@ -28,6 +28,8 @@ receiver.on(DatabaseEvents.Connect, () => console.log("Server Is Ready"));
 
 receiver.on(DatabaseEvents.Debug, (data) => console.log(data));
 
+receiver.on(DatabaseEvents.Data , (data) => console.log(data));
+
 receiver.connect();
 
 
@@ -43,6 +45,8 @@ tr.on(DatabaseEvents.Connect, () => console.log("Connected"));
 tr.on(DatabaseEvents.Debug, (data) => console.log(data));
 
 tr.on(DatabaseEvents.Disconnect, (d) => console.log("Disconnected",d));
+
+tr.on(DatabaseEvents.Data , (data) => console.log(data));
 
 tr.connect();
 setInterval(() => {

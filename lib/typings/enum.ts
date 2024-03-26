@@ -44,6 +44,7 @@ export enum DatabaseEvents {
     TableReady = "tableReady",
     Debug = "debug",
     Connection = "connection",
+    Data = "data",
 }
 
 export enum ReferenceType {

@@ -39,7 +39,8 @@ export declare enum DatabaseEvents {
     Disconnect = "disconnect",
     TableReady = "tableReady",
     Debug = "debug",
-    Connection = "connection"
+    Connection = "connection",
+    Data = "data"
 }
 export declare enum ReferenceType {
     Cache = 0,

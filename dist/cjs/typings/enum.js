@@ -47,6 +47,7 @@ var DatabaseEvents;
     DatabaseEvents["TableReady"] = "tableReady";
     DatabaseEvents["Debug"] = "debug";
     DatabaseEvents["Connection"] = "connection";
+    DatabaseEvents["Data"] = "data";
 })(DatabaseEvents || (exports.DatabaseEvents = DatabaseEvents = {}));
 var ReferenceType;
 (function (ReferenceType) {

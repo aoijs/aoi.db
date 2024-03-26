@@ -63,10 +63,17 @@ export default class Transmitter<
 			password,
 		});
 	}
-	#createDebug(data: ReceiverDataFormat) {
+	#createDebug(data: TransmitterDataFormat) {
 		this.emit(
 			DatabaseEvents.Debug,
-			`[Debug: Received Data] ${inspect(data)}`
+			`[Debug: Transmitter -> Sent Data]: ${inspect(data)}`
+		);
+	}
+
+	#createData(data: ReceiverDataFormat) {
+		this.emit(
+			DatabaseEvents.Data,
+			`[Debug: Transmitter -> Received Data]: ${inspect(data)}`
 		);
 	}
 
@@ -94,7 +101,7 @@ export default class Transmitter<
 					break;
 			}
 
-			this.#createDebug(data);
+			this.#createData(data);
 		});
 		this.client.on("close", () => {
 			this.emit(DatabaseEvents.Disconnect, "Connection Closed");
@@ -113,6 +120,7 @@ export default class Transmitter<
 		try {
 			clearInterval(this.pingInterval!);
 			this.client = createConnection(this.options, () => {
+				this.#retries = 0;
 				const reqData = this.sendDataFormat(
 					TransmitterOpCodes.Connect,
 					DatabaseMethod.NOOP,
@@ -141,6 +149,7 @@ export default class Transmitter<
 
 	connect() {
 		this.#bindEvents();
+		this.ping();
 		this.pingInterval = setInterval(() => {
 			this.ping();
 		}, 30000);
@@ -210,6 +219,7 @@ export default class Transmitter<
 			};
 
 			this.client.write(sendData);
+			this.#createDebug(data);
 			this.client.on("data", _req);
 		});
 	}

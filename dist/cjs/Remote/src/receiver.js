@@ -88,6 +88,7 @@ class Receiver extends node_events_1.default {
                 this.#handleUnknownRequest(dataFormat, socket);
                 break;
         }
+        this.#createData(dataFormat);
     }
     #handleConnectRequest(dataFormat, socket) {
         const { s, d, h } = dataFormat;
@@ -505,7 +506,10 @@ class Receiver extends node_events_1.default {
         this.#createDebug(data);
     }
     #createDebug(data) {
-        this.emit(index_js_1.DatabaseEvents.Debug, `[Debug: Received Data] ${(0, node_util_1.inspect)(data)}`);
+        this.emit(index_js_1.DatabaseEvents.Debug, `[Debug: Reciever ->  Sent Data]: ${(0, node_util_1.inspect)(data)}`);
+    }
+    #createData(data) {
+        this.emit(index_js_1.DatabaseEvents.Data, `[Debug: Receiver -> Received Data]: ${(0, node_util_1.inspect)(data)}`);
     }
     sendDataFormat({ op, method, seq, data, cost, hash, session, }) {
         const res = {

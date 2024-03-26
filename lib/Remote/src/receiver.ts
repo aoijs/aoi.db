@@ -115,6 +115,8 @@ export default class Receiver extends EventEmitter {
 				this.#handleUnknownRequest(dataFormat, socket);
 				break;
 		}
+
+		this.#createData(dataFormat);
 	}
 
 	#handleConnectRequest(dataFormat: TransmitterDataFormat, socket: ISocket) {
@@ -697,10 +699,16 @@ export default class Receiver extends EventEmitter {
     }) {
 		this.emit(
 			DatabaseEvents.Debug,
-			`[Debug: Received Data] ${inspect(data)}`
+			`[Debug: Reciever ->  Sent Data]: ${inspect(data)}`
 		);
 	}
 
+	#createData(data: TransmitterDataFormat) {
+		this.emit(
+			DatabaseEvents.Data,
+			`[Debug: Receiver -> Received Data]: ${inspect(data)}`
+		);
+	}
 
 	sendDataFormat({
 		op,

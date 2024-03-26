@@ -43,7 +43,10 @@ export default class Transmitter extends EventEmitter {
         });
     }
     #createDebug(data) {
-        this.emit(DatabaseEvents.Debug, `[Debug: Received Data] ${inspect(data)}`);
+        this.emit(DatabaseEvents.Debug, `[Debug: Transmitter -> Sent Data]: ${inspect(data)}`);
+    }
+    #createData(data) {
+        this.emit(DatabaseEvents.Data, `[Debug: Transmitter -> Received Data]: ${inspect(data)}`);
     }
     #bindEvents() {
         this.client.on("data", (buffer) => {
@@ -68,7 +71,7 @@ export default class Transmitter extends EventEmitter {
                     }
                     break;
             }
-            this.#createDebug(data);
+            this.#createData(data);
         });
         this.client.on("close", () => {
             this.emit(DatabaseEvents.Disconnect, "Connection Closed");
@@ -86,6 +89,7 @@ export default class Transmitter extends EventEmitter {
         try {
             clearInterval(this.pingInterval);
             this.client = createConnection(this.options, () => {
+                this.#retries = 0;
                 const reqData = this.sendDataFormat(TransmitterOpCodes.Connect, DatabaseMethod.NOOP, Date.now(), this.data.seq, {
                     u: this.options.username,
                     p: this.options.password,
@@ -109,6 +113,7 @@ export default class Transmitter extends EventEmitter {
     }
     connect() {
         this.#bindEvents();
+        this.ping();
         this.pingInterval = setInterval(() => {
             this.ping();
         }, 30000);
@@ -146,6 +151,7 @@ export default class Transmitter extends EventEmitter {
                 this.client.off("data", _req);
             };
             this.client.write(sendData);
+            this.#createDebug(data);
             this.client.on("data", _req);
         });
     }

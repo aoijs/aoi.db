@@ -83,6 +83,7 @@ export default class Receiver extends EventEmitter {
                 this.#handleUnknownRequest(dataFormat, socket);
                 break;
         }
+        this.#createData(dataFormat);
     }
     #handleConnectRequest(dataFormat, socket) {
         const { s, d, h } = dataFormat;
@@ -500,7 +501,10 @@ export default class Receiver extends EventEmitter {
         this.#createDebug(data);
     }
     #createDebug(data) {
-        this.emit(DatabaseEvents.Debug, `[Debug: Received Data] ${inspect(data)}`);
+        this.emit(DatabaseEvents.Debug, `[Debug: Reciever ->  Sent Data]: ${inspect(data)}`);
+    }
+    #createData(data) {
+        this.emit(DatabaseEvents.Data, `[Debug: Receiver -> Received Data]: ${inspect(data)}`);
     }
     sendDataFormat({ op, method, seq, data, cost, hash, session, }) {
         const res = {
