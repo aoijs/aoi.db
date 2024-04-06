@@ -48,7 +48,7 @@ class File {
         if (this.#isDirty)
             return;
         this.#interval = setInterval(async () => {
-            if (this.#flushQueue.length === 0) {
+            if (this.#flushQueue.length === 0 && this.#removeQueue.length === 0) {
                 return;
             }
             if (this.#locked) {
