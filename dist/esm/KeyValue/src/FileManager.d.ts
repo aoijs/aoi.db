@@ -6,7 +6,7 @@ export default class FileManager {
     initialize(): void;
     get maxHashArraySize(): number;
     get hashSize(): number;
-    add(data: KeyValueData): void;
+    add(data: KeyValueData): Promise<void>;
     remove(data: KeyValueData["key"]): void;
     get(key: KeyValueData["key"]): Promise<KeyValueData | undefined>;
     clear(): void;

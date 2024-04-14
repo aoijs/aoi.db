@@ -36,13 +36,17 @@ export default class File {
       this.#path,
       fs.constants.O_RDWR | fs.constants.O_CREAT
     );
-    if (fs.fstatSync(this.#fd).size === 0)
-      fs.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
-    this.#checkIntegrity().catch((e) => {
-      this.#isDirty = true;
-      console.error(e);
-    });
-    this.#enableInterval();
+    
+  }
+
+  async init() {
+	if (fs.fstatSync(this.#fd).size === 0)
+		fs.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
+	  await this.#checkIntegrity().catch((e) => {
+		this.#isDirty = true;
+		throw e;
+	  });
+	  this.#enableInterval();
   }
 
   get name() {

@@ -28,11 +28,13 @@ export default class File {
         this.#removeQueue = [];
         // Open file
         this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+    }
+    async init() {
         if (fs.fstatSync(this.#fd).size === 0)
             fs.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
-        this.#checkIntegrity().catch((e) => {
+        await this.#checkIntegrity().catch((e) => {
             this.#isDirty = true;
-            console.error(e);
+            throw e;
         });
         this.#enableInterval();
     }

@@ -33,11 +33,13 @@ class File {
         this.#removeQueue = [];
         // Open file
         this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+    }
+    async init() {
         if (node_fs_1.default.fstatSync(this.#fd).size === 0)
             node_fs_1.default.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
-        this.#checkIntegrity().catch((e) => {
+        await this.#checkIntegrity().catch((e) => {
             this.#isDirty = true;
-            console.error(e);
+            throw e;
         });
         this.#enableInterval();
     }

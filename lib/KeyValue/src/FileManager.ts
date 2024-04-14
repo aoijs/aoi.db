@@ -53,11 +53,11 @@ export default class FileManager {
 		return hash.toString(16);
 	}
 
-	add(data: KeyValueData) {
+	async add(data: KeyValueData) {
 		const hash = this.#hash(data.key);
 		const index = this.#getHashIndex(hash);
 		data.file = this.#array[index].name;
-		this.#array[index].put(data.key, data);
+		await this.#array[index].put(data.key, data);
 		if (this.#array[index].size > this.#maxSize) {
 			this.#rehash();
 		}
@@ -70,7 +70,7 @@ export default class FileManager {
 	async #rehash() {
 		const datas = [];
 		for (const file of this.#array) {
-			const data = await file.getAll();
+			const data = await file.getAll(() => true);
 			for (const value of data) {
 				datas.push(value);
 			}
@@ -98,6 +98,14 @@ export default class FileManager {
 				);
 			}
 		);
+
+		for(const file of newArray){
+			await file.init();
+
+			if(file.isDirty) {
+				throw new Error(`File ${file.name} is dirty!`);
+			}
+		}
 
 		for (const data of datas) {
 			const hash = this.#hash(data.key);

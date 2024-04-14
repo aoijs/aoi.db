@@ -5,6 +5,7 @@ import Table from "./Table.js";
 export default class File {
     #private;
     constructor(path: string, capacity: number, table: Table);
+    init(): Promise<void>;
     get name(): string;
     get size(): number;
     get path(): string;
