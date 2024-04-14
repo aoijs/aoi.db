@@ -83,6 +83,7 @@ export default class FileManager {
 
 		const relativeSize = datas.length / this.#maxSize;
 		const newArraySize = 10*(relativeSize+1);
+		this.#hashSize = newArraySize;
 		const newArray = Array.from(
 			{ length: newArraySize },
 			(_, i: number) => {
@@ -102,11 +103,10 @@ export default class FileManager {
 			const hash = this.#hash(data.key);
 			const index = this.#getHashIndex(hash);
 			data.file = newArray[index].name;
-			newArray[index].put(data.key, data);
+			await newArray[index].put(data.key, data);
 		}
 
 		this.#array = newArray;
-		this.#hashSize = newArraySize;
 	}
 
 	remove(data: KeyValueData["key"]) {

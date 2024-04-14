@@ -65,6 +65,7 @@ class FileManager {
         }
         const relativeSize = datas.length / this.#maxSize;
         const newArraySize = 10 * (relativeSize + 1);
+        this.#hashSize = newArraySize;
         const newArray = Array.from({ length: newArraySize }, (_, i) => {
             return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#maxSize / 4, this.#table);
         });
@@ -72,10 +73,9 @@ class FileManager {
             const hash = this.#hash(data.key);
             const index = this.#getHashIndex(hash);
             data.file = newArray[index].name;
-            newArray[index].put(data.key, data);
+            await newArray[index].put(data.key, data);
         }
         this.#array = newArray;
-        this.#hashSize = newArraySize;
     }
     remove(data) {
         const hash = this.#hash(data);
