@@ -22,5 +22,6 @@ export default class File {
     has(key: string): Promise<boolean>;
     removeMany(query: (d: Data) => boolean): Promise<void>;
     ping(): Promise<number>;
+    unlink(): Promise<void>;
 }
 //# sourceMappingURL=File.d.ts.map

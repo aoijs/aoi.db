@@ -417,4 +417,9 @@ export default class File {
     await this.findOne(() => true);
     return performance.now() - startTime;
   }
+
+  async unlink() {
+	clearInterval(this.#interval);
+	await fs.promises.unlink(this.#path);
+  }
 }

@@ -61,10 +61,10 @@ class FileManager {
         }
         // clear all files
         for (const file of this.#array) {
-            await file.clear();
+            await file.unlink();
         }
         const relativeSize = datas.length / this.#maxSize;
-        const newArraySize = Math.max(this.#hashSize, 2 * Math.ceil(relativeSize));
+        const newArraySize = 20 * (relativeSize + 1);
         const newArray = Array.from({ length: newArraySize }, (_, i) => {
             return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#maxSize / 4, this.#table);
         });

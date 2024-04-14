@@ -331,6 +331,10 @@ class File {
         await this.findOne(() => true);
         return performance.now() - startTime;
     }
+    async unlink() {
+        clearInterval(this.#interval);
+        await node_fs_1.default.promises.unlink(this.#path);
+    }
 }
 exports.default = File;
 //# sourceMappingURL=File.js.map
