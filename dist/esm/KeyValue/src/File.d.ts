@@ -24,5 +24,8 @@ export default class File {
     removeMany(query: (d: Data) => boolean): Promise<void>;
     ping(): Promise<number>;
     unlink(): Promise<void>;
+    lockAndsync(): Promise<void>;
+    getAllinLock(query?: (d: Data) => boolean): Promise<Data[]>;
+    unlock(): Promise<void>;
 }
 //# sourceMappingURL=File.d.ts.map

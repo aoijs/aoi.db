@@ -3,19 +3,19 @@ import Table from "./Table.js";
 export default class FileManager {
     #private;
     constructor(maxSize: number, hashSize: number | undefined, table: Table);
-    initialize(): void;
+    initialize(): Promise<void>;
     get maxHashArraySize(): number;
     get hashSize(): number;
-    add(data: KeyValueData): Promise<void>;
-    remove(data: KeyValueData["key"]): void;
-    get(key: KeyValueData["key"]): Promise<KeyValueData | undefined>;
-    clear(): void;
-    has(key: KeyValueData["key"]): Promise<boolean>;
-    all(query: (d: KeyValueData) => boolean, limit: number, order: "firstN" | "asc" | "desc"): Promise<KeyValueData[]>;
-    findOne(query: (d: KeyValueData) => boolean): Promise<KeyValueData | undefined>;
-    findMany(query: (d: KeyValueData) => boolean): Promise<KeyValueData[]>;
-    getFirstN(query: (d: KeyValueData) => boolean, limit: number): Promise<KeyValueData[]>;
-    removeMany(query: (d: KeyValueData) => boolean): Promise<void>;
-    ping(): Promise<number>;
+    add(data: KeyValueData): Promise<unknown>;
+    remove(data: KeyValueData["key"]): Promise<unknown> | undefined;
+    get(key: KeyValueData["key"]): Promise<unknown>;
+    clear(): Promise<unknown> | undefined;
+    has(key: KeyValueData["key"]): Promise<unknown>;
+    all(query: (d: KeyValueData) => boolean, limit: number, order: "firstN" | "asc" | "desc"): Promise<unknown>;
+    findOne(query: (d: KeyValueData) => boolean): Promise<unknown>;
+    findMany(query: (d: KeyValueData) => boolean): Promise<unknown>;
+    getFirstN(query: (d: KeyValueData) => boolean, limit: number): Promise<unknown>;
+    removeMany(query: (d: KeyValueData) => boolean): Promise<unknown>;
+    ping(): Promise<unknown>;
 }
 //# sourceMappingURL=FileManager.d.ts.map

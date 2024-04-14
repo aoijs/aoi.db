@@ -10,6 +10,7 @@ export default class FileManager {
 	#hashSize: number;
 	#array!: File[];
 	#table: Table;
+	#rehashing: boolean = false;
 	constructor(maxSize: number, hashSize = 20, table: Table) {
 		this.#maxSize = maxSize;
 		this.#hashSize = hashSize;
@@ -17,7 +18,7 @@ export default class FileManager {
 		this.#table = table;
 	}
 
-	initialize() {
+	async initialize() {
 		const filesCount = readdirSync(this.#table.paths.table).length;
 		this.#hashSize = Math.max(this.#hashSize, filesCount);
 		this.#array = Array.from({ length: this.#hashSize }, (_, i: number) => {
@@ -31,6 +32,10 @@ export default class FileManager {
 				this.#table
 			);
 		});
+
+		for (const file of this.#array) {
+			await file.init();
+		}
 
 		if (this.#table.db.options.fileConfig.reHashOnStartup) {
 			this.#rehash();
@@ -54,6 +59,21 @@ export default class FileManager {
 	}
 
 	async add(data: KeyValueData) {
+		if (this.#rehashing) {
+			return new Promise((res) => {
+				let timeout: string | number | NodeJS.Timeout | undefined;
+				const fn = async () => {
+					if (!this.#rehashing) {
+						clearTimeout(timeout);
+						res(await this.add(data));
+					} else {
+						timeout = setTimeout(fn, 100);
+					}
+				};
+
+				timeout = setTimeout(fn, 100);
+			});
+		}
 		const hash = this.#hash(data.key);
 		const index = this.#getHashIndex(hash);
 		data.file = this.#array[index].name;
@@ -68,21 +88,24 @@ export default class FileManager {
 	}
 
 	async #rehash() {
+		if(this.#rehashing) return;
+		this.#rehashing = true;
 		const datas = [];
 		for (const file of this.#array) {
-			const data = await file.getAll(() => true);
+			await file.lockAndsync();
+			const data = await file.getAllinLock(() => true);
 			for (const value of data) {
 				datas.push(value);
 			}
+			file.unlock();
 		}
 
-		// clear all files
 		for (const file of this.#array) {
 			await file.unlink();
 		}
 
 		const relativeSize = datas.length / this.#maxSize;
-		const newArraySize = 10*(relativeSize+1);
+		const newArraySize = 10 * Math.ceil(relativeSize+1);
 		this.#hashSize = newArraySize;
 		const newArray = Array.from(
 			{ length: newArraySize },
@@ -99,10 +122,10 @@ export default class FileManager {
 			}
 		);
 
-		for(const file of newArray){
+		for (const file of newArray) {
 			await file.init();
 
-			if(file.isDirty) {
+			if (file.isDirty) {
 				throw new Error(`File ${file.name} is dirty!`);
 			}
 		}
@@ -115,27 +138,82 @@ export default class FileManager {
 		}
 
 		this.#array = newArray;
+		this.#rehashing = false;
 	}
 
 	remove(data: KeyValueData["key"]) {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.remove(data));
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
 		const hash = this.#hash(data);
 		const index = this.#getHashIndex(hash);
 		this.#array[index].remove(data);
 	}
 
 	get(key: KeyValueData["key"]) {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.get(key));
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
 		const hash = this.#hash(key);
 		const index = this.#getHashIndex(hash);
 		return this.#array[index].get(key);
 	}
 
 	clear() {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.clear());
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
+
 		for (const file of this.#array) {
 			file.clear();
 		}
 	}
 
 	has(key: KeyValueData["key"]) {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.has(key));
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
+
 		const hash = this.#hash(key);
 		const index = this.#getHashIndex(hash);
 		return this.#array[index].has(key);
@@ -146,6 +224,20 @@ export default class FileManager {
 		limit: number,
 		order: "firstN" | "asc" | "desc"
 	) {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.all(query, limit, order));
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
+
 		if (order === "firstN") {
 			const data: Set<Data> = new Set();
 			for (const file of this.#array) {
@@ -181,6 +273,20 @@ export default class FileManager {
 	}
 
 	async findOne(query: (d: KeyValueData) => boolean) {
+		if(this.#rehashing) return new Promise<Data | undefined>((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.findOne(query));
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
+
 		for (const file of this.#array) {
 			const d = await file.findOne(query);
 			if (d) return d;
@@ -188,6 +294,20 @@ export default class FileManager {
 	}
 
 	async findMany(query: (d: KeyValueData) => boolean) {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.findMany(query));
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
+
 		const data: Data[] = [];
 		for (const file of this.#array) {
 			const d = await file.getAll(query);
@@ -199,6 +319,20 @@ export default class FileManager {
 	}
 
 	async getFirstN(query: (d: KeyValueData) => boolean, limit: number) {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.getFirstN(query, limit));
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
+
 		const data: Data[] = [];
 		for (const file of this.#array) {
 			const d = await file.getAll(query);
@@ -211,12 +345,40 @@ export default class FileManager {
 	}
 
 	async removeMany(query: (d: KeyValueData) => boolean) {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.removeMany(query));
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
+
 		for (const file of this.#array) {
 			await file.removeMany(query);
 		}
 	}
 
 	async ping() {
+		if(this.#rehashing) return new Promise((res) => {
+			let timeout: string | number | NodeJS.Timeout | undefined;
+			const fn = async () => {
+				if (!this.#rehashing) {
+					clearTimeout(timeout);
+					res(await this.ping());
+				} else {
+					timeout = setTimeout(fn, 100);
+				}
+			};
+
+			timeout = setTimeout(fn, 100);
+		});
+
 		let sum = 0;
 		for (const file of this.#array) {
 			sum += await file.ping();

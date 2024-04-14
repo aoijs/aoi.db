@@ -4,7 +4,8 @@ import fs from "node:fs";
 //@ts-ignore
 import JSONStream from "JSONStream";
 import { decrypt, encrypt } from "../../utils.js";
-import { close, ftruncate, open, write } from "../../promisifiers.js";
+import { fsync, ftruncate, open, write } from "../../promisifiers.js";
+import { DatabaseMethod } from "../../typings/enum.js";
 export default class File {
     #cache;
     #path;
@@ -151,6 +152,7 @@ export default class File {
     }
     async #atomicFlush() {
         const tempFile = `${this.#path}.tmp`;
+        const tmpfd = fs.openSync(tempFile, fs.constants.O_RDWR | fs.constants.O_CREAT);
         let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
@@ -169,12 +171,15 @@ export default class File {
         else {
             writeData = JSON.stringify(json);
         }
-        await fs.promises.writeFile(tempFile, writeData);
-        await close(this.#fd);
+        const buffer = Buffer.from(writeData);
+        await write(tmpfd, buffer, 0, buffer.length, 0);
+        await fsync(tmpfd);
+        // await close(this.#fd);
         await this.#retry(async () => await fs.promises.rename(tempFile, this.#path), 10, 100);
         this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         this.#flushQueue = [];
         this.#removeQueue = [];
+        await this.#table.wal(Data.emptyData(), DatabaseMethod.Flush);
         this.#locked = false;
     }
     async #retry(fn, maxRetries = 10, delay = 100) {
@@ -188,7 +193,7 @@ export default class File {
             }
             await new Promise((resolve) => setTimeout(resolve, delay));
             this.#retries++;
-            return await this.#retry(fn, maxRetries, delay * 2);
+            return await this.#retry(fn, maxRetries, delay);
         }
     }
     async getAll(query) {
@@ -315,8 +320,12 @@ export default class File {
     async #atomicWrite(data) {
         this.#locked = true;
         const tempFile = `${this.#path}.tmp`;
-        await fs.promises.writeFile(tempFile, data);
-        await close(this.#fd);
+        const tmpfd = fs.openSync(tempFile, fs.constants.O_RDWR | fs.constants.O_CREAT);
+        const buffer = Buffer.from(data);
+        await write(tmpfd, buffer, 0, buffer.length, 0);
+        await fsync(tmpfd);
+        // await close(tmpfd);
+        // await close(this.#fd);
         await this.#retry(async () => await fs.promises.rename(tempFile, this.#path).then(() => {
             this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         }), 10, 100);
@@ -331,6 +340,40 @@ export default class File {
     async unlink() {
         clearInterval(this.#interval);
         await fs.promises.unlink(this.#path);
+    }
+    async lockAndsync() {
+        this.#locked = true;
+        await this.#atomicFlush();
+        await fsync(this.#fd);
+        this.#locked = true;
+    }
+    async getAllinLock(query) {
+        if (!this.#locked)
+            return [];
+        if (!query)
+            query = () => true;
+        let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
+        const arr = [];
+        if (this.#table.db.options.encryptionConfig.encriptData) {
+            const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
+            json = JSON.parse(decryptedData);
+        }
+        for (const key in json) {
+            if (query(json[key])) {
+                const data = new Data({
+                    key: json[key].key,
+                    value: json[key].value,
+                    type: json[key].type,
+                    file: this.#path,
+                });
+                this.#cache.put(key, data);
+                arr.push(data);
+            }
+        }
+        return arr;
+    }
+    async unlock() {
+        this.#locked = false;
     }
 }
 //# sourceMappingURL=File.js.map

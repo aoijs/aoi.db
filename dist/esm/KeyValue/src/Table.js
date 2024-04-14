@@ -33,8 +33,8 @@ export default class Table extends EventEmitter {
     }
     async initialize() {
         this.#getPaths();
-        this.#fileManager.initialize();
         await this.#getLogData();
+        await this.#fileManager.initialize();
         await setTimeout(100);
         await this.#syncWithLog();
         this.readyAt = Date.now();
@@ -146,6 +146,9 @@ export default class Table extends EventEmitter {
             resolve();
             return;
         });
+    }
+    async wal(data, method) {
+        return this.#wal(data, method);
     }
     async set(key, value, type) {
         const data = new Data({ key, value, type, file: "" });

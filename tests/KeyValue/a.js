@@ -6,13 +6,16 @@ const db = new KeyValue({
         encriptData: false,
         securityKey: "a-32-characters-long-string-here",
     },
+	fileConfig: {
+		reHashOnStartup: true,
+	},
     debug: true,
 });
 
 db.on(DatabaseEvents.Connect, async () => {
     console.log("ready");
     await st(1000);
-    for(let i =0;i < 100000;i++) {
+    for(let i =0;i < 200000;i++) {
         await db.set("main", "key" + i, { value: 1 });
     }
 console.log("done")

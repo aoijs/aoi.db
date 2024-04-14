@@ -59,8 +59,8 @@ export default class Table extends EventEmitter {
 
   async initialize() {
     this.#getPaths();
-    this.#fileManager.initialize();
-    await this.#getLogData();
+	await this.#getLogData();
+    await this.#fileManager.initialize();
     await setTimeout(100);
     await this.#syncWithLog();
     this.readyAt = Date.now();
@@ -199,6 +199,10 @@ export default class Table extends EventEmitter {
       resolve();
       return;
     });
+  }
+
+  async wal(data: Data, method: DatabaseMethod) {
+	return this.#wal(data, method);
   }
 
   async set(key:string,value:KeyValueDataValueType, type?: KeyValueTypeList) {

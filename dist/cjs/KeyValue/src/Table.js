@@ -38,8 +38,8 @@ class Table extends node_events_1.default {
     }
     async initialize() {
         this.#getPaths();
-        this.#fileManager.initialize();
         await this.#getLogData();
+        await this.#fileManager.initialize();
         await (0, promises_2.setTimeout)(100);
         await this.#syncWithLog();
         this.readyAt = Date.now();
@@ -151,6 +151,9 @@ class Table extends node_events_1.default {
             resolve();
             return;
         });
+    }
+    async wal(data, method) {
+        return this.#wal(data, method);
     }
     async set(key, value, type) {
         const data = new data_js_1.default({ key, value, type, file: "" });

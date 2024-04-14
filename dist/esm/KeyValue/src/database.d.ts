@@ -72,7 +72,7 @@ export default class KeyValue extends EventEmitter {
      * <KeyValue>.get("main","key");
      * ```
      */
-    get(table: string, key: string): Promise<Data | undefined>;
+    get(table: string, key: string): Promise<unknown>;
     /**
      * @description delete data from database
      * @param table table where data is saved
@@ -107,7 +107,7 @@ export default class KeyValue extends EventEmitter {
      * <KeyValue>.has("main","key");
      * ```
      */
-    has(table: string, key: string): Promise<boolean | undefined>;
+    has(table: string, key: string): Promise<unknown>;
     /**
      * @description clear all tables
      * @returns
@@ -131,7 +131,7 @@ export default class KeyValue extends EventEmitter {
      * })
      * ```
      */
-    findOne(table: string, query: (value: Data) => boolean): Promise<Data | undefined>;
+    findOne(table: string, query: (value: Data) => boolean): Promise<unknown>;
     /**
      * @description find all data that matches the query
      * @param table table to find
@@ -145,7 +145,7 @@ export default class KeyValue extends EventEmitter {
      * })
      * ```
      */
-    findMany(table: string, query: (value: Data) => boolean): Promise<Data[] | undefined>;
+    findMany(table: string, query: (value: Data) => boolean): Promise<unknown>;
     /**
      * @description get all data from table
      * @param table table to get
@@ -160,7 +160,7 @@ export default class KeyValue extends EventEmitter {
      * },10)
      * ```
      */
-    all(table: string, query?: (value: Data) => boolean, limit?: number, order?: 'firstN' | 'asc' | 'desc'): Promise<Data[] | undefined>;
+    all(table: string, query?: (value: Data) => boolean, limit?: number, order?: 'firstN' | 'asc' | 'desc'): Promise<unknown>;
     /**
      * @description perform a backup of database
      * @returns
@@ -196,8 +196,8 @@ export default class KeyValue extends EventEmitter {
      * })
      * ```
      */
-    deleteMany(table: string, query?: (value: Data) => boolean): Promise<void>;
-    ping(table: string): Promise<number>;
+    deleteMany(table: string, query?: (value: Data) => boolean): Promise<unknown>;
+    ping(table: string): Promise<unknown>;
     avgPing(): Promise<number>;
 }
 //# sourceMappingURL=database.d.ts.map

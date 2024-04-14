@@ -10,6 +10,7 @@ import {
 	DatabaseEvents,
 	DatabaseMethod,
 	KeyValue,
+	KeyValueData,
 } from "../../index.js";
 import { DatabaseOptions } from "../typings/type.js";
 import {
@@ -379,7 +380,7 @@ export default class Receiver extends EventEmitter {
 		const { table, key } = d;
 		const db = this.usersMap.get(socket.userData.username) as KeyValue;
 		const startTime = performance.now();
-		const res = await db.get(table, key);
+		const res = await db.get(table, key) as KeyValueData;
 		const endTime = performance.now();
 		const cost = endTime - startTime;
 

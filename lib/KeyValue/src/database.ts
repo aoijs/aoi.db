@@ -559,7 +559,7 @@ export default class KeyValue extends EventEmitter {
     async avgPing() {
         let total = 0;
         for(const table of Object.keys(this.tables)) {
-            total += await this.ping(table);
+            total += await this.ping(table) as number;
         }
         return total/Object.keys(this.tables).length;
     }
