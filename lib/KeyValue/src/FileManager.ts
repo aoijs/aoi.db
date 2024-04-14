@@ -82,7 +82,7 @@ export default class FileManager {
 		}
 
 		const relativeSize = datas.length / this.#maxSize;
-		const newArraySize = 20*(relativeSize+1);
+		const newArraySize = 10*(relativeSize+1);
 		const newArray = Array.from(
 			{ length: newArraySize },
 			(_, i: number) => {

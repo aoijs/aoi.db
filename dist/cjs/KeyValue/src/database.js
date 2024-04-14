@@ -54,7 +54,7 @@ class KeyValue extends events_1.EventEmitter {
                 reHashOnStartup: false,
                 transactionLogPath: "./transaction/",
                 maxSize: 10000,
-                minFileCount: 20,
+                minFileCount: 10,
             },
             encryptionConfig: {
                 securityKey: "a-32-characters-long-string-here",
