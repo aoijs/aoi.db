@@ -47,17 +47,27 @@ export default class FileManager {
         return hashValue % this.#hashSize;
     }
     async #rehash() {
-        const newArraySize = this.#hashSize * 2;
-        const newArray = Array.from({ length: newArraySize }, (_, i) => {
-            return new File(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
-        });
+        const datas = [];
         for (const file of this.#array) {
             const data = await file.getAll();
             for (const value of data) {
-                const hash = this.#hash(value.key);
-                const index = this.#getHashIndex(hash);
-                newArray[index].put(value.key, value);
+                datas.push(value);
             }
+        }
+        // clear all files
+        for (const file of this.#array) {
+            await file.clear();
+        }
+        const relativeSize = datas.length / this.#maxSize;
+        const newArraySize = Math.max(this.#hashSize, 2 * Math.ceil(relativeSize));
+        const newArray = Array.from({ length: newArraySize }, (_, i) => {
+            return new File(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#maxSize / 4, this.#table);
+        });
+        for (const data of datas) {
+            const hash = this.#hash(data.key);
+            const index = this.#getHashIndex(hash);
+            data.file = newArray[index].name;
+            newArray[index].put(data.key, data);
         }
         this.#array = newArray;
         this.#hashSize = newArraySize;
