@@ -131,7 +131,7 @@ export default class KeyValue extends EventEmitter {
      * })
      * ```
      */
-    findOne(table: string, query: (value: Data) => boolean): Promise<unknown>;
+    findOne(table: string, query: (value: Data) => boolean): Promise<Data | undefined>;
     /**
      * @description find all data that matches the query
      * @param table table to find

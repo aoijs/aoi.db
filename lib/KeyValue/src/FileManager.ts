@@ -264,9 +264,9 @@ export default class FileManager {
 				}
 			}
 			if (order === "asc") {
-				data.sort((a, b) => a.key.localeCompare(b.key));
+				data.sort((a,b) => this.#table.db.options.cacheConfig.sortFunction(a,b));
 			} else {
-				data.sort((a, b) => b.key.localeCompare(a.key));
+				data.sort((a,b) => this.#table.db.options.cacheConfig.sortFunction(a,b)).reverse();
 			}
 			return data.slice(0, limit);
 		}

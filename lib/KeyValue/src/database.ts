@@ -80,7 +80,7 @@ export default class KeyValue extends EventEmitter {
                 limit: 1000,
                 sorted: false,
                 sortFunction: (a, b) => {
-                    return 0;
+                    return a.value - b.value;
                 },
             },
             debug: false,

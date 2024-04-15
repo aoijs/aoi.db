@@ -34,7 +34,7 @@ export default class Table extends EventEmitter {
     clear(): Promise<void>;
     has(key: string): Promise<unknown>;
     all(query: (d: Data) => boolean, limit: number, order: "firstN" | "asc" | "desc"): Promise<unknown>;
-    findOne(query: (d: Data) => boolean): Promise<unknown>;
+    findOne(query: (d: Data) => boolean): Promise<Data | undefined>;
     findMany(query: (d: Data) => boolean): Promise<unknown>;
     removeMany(query: (d: Data) => boolean): Promise<unknown>;
     ping(): Promise<unknown>;
