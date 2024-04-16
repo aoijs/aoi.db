@@ -66,6 +66,7 @@ export default class KeyValue extends EventEmitter {
             fileConfig: {
                 extension: ".sql",
                 reHashOnStartup: false,
+				staticRehash : true,
                 transactionLogPath: "./transaction/",
                 maxSize: 10000,
                 minFileCount: 10,
@@ -119,6 +120,7 @@ export default class KeyValue extends EventEmitter {
                         defaultOptions.fileConfig.transactionLogPath,
                 ),
                 reHashOnStartup: options?.fileConfig?.reHashOnStartup ?? false,
+				staticRehash: options?.fileConfig?.staticRehash ?? defaultOptions.fileConfig.staticRehash,
                 maxSize:
                     options?.fileConfig?.maxSize ??
                     defaultOptions.fileConfig.maxSize,

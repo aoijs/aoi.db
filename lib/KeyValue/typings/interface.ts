@@ -21,6 +21,7 @@ export interface KeyValueFileConfig {
     transactionLogPath?: string;
     maxSize?: number;
     reHashOnStartup?: boolean;
+	staticRehash?: boolean;
     minFileCount?: number;
 }
 

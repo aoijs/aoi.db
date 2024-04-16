@@ -37,8 +37,14 @@ export default class FileManager {
 			await file.init();
 		}
 
-		if (this.#table.db.options.fileConfig.reHashOnStartup) {
+		if (this.#table.db.options.fileConfig.reHashOnStartup && !this.#table.db.options.fileConfig.staticRehash) {
 			this.#rehash();
+		}
+
+		if(this.#table.db.options.fileConfig.staticRehash){
+			if(this.#table.db.options.fileConfig.minFileCount !== this.#hashSize){
+				this.#rehash();
+			}
 		}
 	}
 
@@ -78,7 +84,7 @@ export default class FileManager {
 		const index = this.#getHashIndex(hash);
 		data.file = this.#array[index].name;
 		await this.#array[index].put(data.key, data);
-		if (this.#array[index].size > this.#maxSize) {
+		if (this.#array[index].size > this.#maxSize && !this.#table.db.options.fileConfig.staticRehash) {
 			this.#rehash();
 		}
 	}
@@ -105,7 +111,7 @@ export default class FileManager {
 		}
 
 		const relativeSize = datas.length / this.#maxSize;
-		const newArraySize = 10 * Math.ceil(relativeSize+1);
+		const newArraySize = this.#table.db.options.fileConfig.staticRehash ? this.#table.db.options.fileConfig.minFileCount : 10 * Math.ceil(relativeSize+1);
 		this.#hashSize = newArraySize;
 		const newArray = Array.from(
 			{ length: newArraySize },

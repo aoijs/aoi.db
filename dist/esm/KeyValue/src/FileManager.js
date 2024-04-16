@@ -20,8 +20,13 @@ export default class FileManager {
         for (const file of this.#array) {
             await file.init();
         }
-        if (this.#table.db.options.fileConfig.reHashOnStartup) {
+        if (this.#table.db.options.fileConfig.reHashOnStartup && !this.#table.db.options.fileConfig.staticRehash) {
             this.#rehash();
+        }
+        if (this.#table.db.options.fileConfig.staticRehash) {
+            if (this.#table.db.options.fileConfig.minFileCount !== this.#hashSize) {
+                this.#rehash();
+            }
         }
     }
     get maxHashArraySize() {
@@ -57,7 +62,7 @@ export default class FileManager {
         const index = this.#getHashIndex(hash);
         data.file = this.#array[index].name;
         await this.#array[index].put(data.key, data);
-        if (this.#array[index].size > this.#maxSize) {
+        if (this.#array[index].size > this.#maxSize && !this.#table.db.options.fileConfig.staticRehash) {
             this.#rehash();
         }
     }
@@ -82,7 +87,7 @@ export default class FileManager {
             await file.unlink();
         }
         const relativeSize = datas.length / this.#maxSize;
-        const newArraySize = 10 * Math.ceil(relativeSize + 1);
+        const newArraySize = this.#table.db.options.fileConfig.staticRehash ? this.#table.db.options.fileConfig.minFileCount : 10 * Math.ceil(relativeSize + 1);
         this.#hashSize = newArraySize;
         const newArray = Array.from({ length: newArraySize }, (_, i) => {
             return new File(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#maxSize / 4, this.#table);
