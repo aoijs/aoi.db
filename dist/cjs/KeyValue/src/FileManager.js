@@ -22,14 +22,18 @@ class FileManager {
         this.#array = Array.from({ length: this.#hashSize }, (_, i) => {
             return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
         });
+        const promises = [];
         for (const file of this.#array) {
-            await file.init();
+            promises.push(file.init());
         }
-        if (this.#table.db.options.fileConfig.reHashOnStartup && !this.#table.db.options.fileConfig.staticRehash) {
+        await Promise.all(promises);
+        if (this.#table.db.options.fileConfig.reHashOnStartup &&
+            !this.#table.db.options.fileConfig.staticRehash) {
             this.#rehash();
         }
         if (this.#table.db.options.fileConfig.staticRehash) {
-            if (this.#table.db.options.fileConfig.minFileCount !== this.#hashSize) {
+            if (this.#table.db.options.fileConfig.minFileCount !==
+                this.#hashSize) {
                 this.#rehash();
             }
         }
@@ -67,7 +71,8 @@ class FileManager {
         const index = this.#getHashIndex(hash);
         data.file = this.#array[index].name;
         await this.#array[index].put(data.key, data);
-        if (this.#array[index].size > this.#maxSize && !this.#table.db.options.fileConfig.staticRehash) {
+        if (this.#array[index].size > this.#maxSize &&
+            !this.#table.db.options.fileConfig.staticRehash) {
             this.#rehash();
         }
     }
@@ -80,6 +85,7 @@ class FileManager {
             return;
         this.#rehashing = true;
         const datas = [];
+        let promises = [];
         for (const file of this.#array) {
             await file.lockAndsync();
             const data = await file.getAllinLock(() => true);
@@ -89,20 +95,27 @@ class FileManager {
             file.unlock();
         }
         for (const file of this.#array) {
-            await file.unlink();
+            promises.push(file.unlink());
         }
+        await Promise.all(promises);
         const relativeSize = datas.length / this.#maxSize;
-        const newArraySize = this.#table.db.options.fileConfig.staticRehash ? this.#table.db.options.fileConfig.minFileCount : 10 * Math.ceil(relativeSize + 1);
+        const newArraySize = this.#table.db.options.fileConfig.staticRehash
+            ? this.#table.db.options.fileConfig.minFileCount
+            : 10 * Math.ceil(relativeSize + 1);
         this.#hashSize = newArraySize;
         const newArray = Array.from({ length: newArraySize }, (_, i) => {
             return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#maxSize / 4, this.#table);
         });
+        promises = [];
         for (const file of newArray) {
-            await file.init();
-            if (file.isDirty) {
-                throw new Error(`File ${file.name} is dirty!`);
-            }
+            promises.push(async () => {
+                await file.init();
+                if (file.isDirty) {
+                    throw new Error(`File ${file.name} is dirty!`);
+                }
+            });
         }
+        await Promise.all(promises);
         for (const data of datas) {
             const hash = this.#hash(data.key);
             const index = this.#getHashIndex(hash);
