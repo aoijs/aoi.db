@@ -36,8 +36,10 @@ class File {
         this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
     }
     async init() {
-        if (node_fs_1.default.fstatSync(this.#fd).size === 0)
-            node_fs_1.default.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
+        const statSize = await (0, promisifiers_js_1.fstat)(this.#fd);
+        if (statSize.size === 0) {
+            await (0, promisifiers_js_1.write)(this.#fd, Buffer.from("{}"), 0, 2, 0);
+        }
         await this.#checkIntegrity().catch((e) => {
             this.#isDirty = true;
             throw e;
@@ -51,7 +53,8 @@ class File {
         if (this.#isDirty)
             return;
         this.#interval = setInterval(async () => {
-            if (this.#flushQueue.length === 0 && this.#removeQueue.length === 0) {
+            if (this.#flushQueue.length === 0 &&
+                this.#removeQueue.length === 0) {
                 return;
             }
             if (this.#locked) {
@@ -83,23 +86,29 @@ class File {
         return this.#interval;
     }
     async #checkIntegrity() {
-        await new Promise((resolve, reject) => {
+        await new Promise(async (resolve, reject) => {
             try {
-                const jsonstream = JSONStream_1.default.parse("*");
-                const stream = node_fs_1.default.createReadStream(this.#path);
-                stream.pipe(jsonstream);
-                jsonstream.on("data", (data) => {
-                    this.#size++;
-                    this.#cache.put(data.key, new data_js_1.default({
-                        key: data.key,
-                        value: data.value,
-                        type: data.type,
-                        file: this.#path,
-                    }));
-                });
-                jsonstream.on("end", () => {
+                if (!this.#table.db.options.fileConfig.staticRehash) {
+                    await this.getAll();
                     resolve();
-                });
+                }
+                else {
+                    const jsonstream = JSONStream_1.default.parse("*");
+                    const stream = node_fs_1.default.createReadStream(this.#path);
+                    stream.pipe(jsonstream);
+                    jsonstream.on("data", (data) => {
+                        this.#size++;
+                        this.#cache.put(data.key, new data_js_1.default({
+                            key: data.key,
+                            value: data.value,
+                            type: data.type,
+                            file: this.#path,
+                        }));
+                    });
+                    jsonstream.on("end", () => {
+                        resolve();
+                    });
+                }
             }
             catch (e) {
                 this.#isDirty = true;

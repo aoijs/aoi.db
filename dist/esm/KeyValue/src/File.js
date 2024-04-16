@@ -4,7 +4,7 @@ import fs from "node:fs";
 //@ts-ignore
 import JSONStream from "JSONStream";
 import { decrypt, encrypt } from "../../utils.js";
-import { fsync, ftruncate, open, write } from "../../promisifiers.js";
+import { fstat, fsync, ftruncate, open, write, } from "../../promisifiers.js";
 import { DatabaseMethod } from "../../typings/enum.js";
 export default class File {
     #cache;
@@ -31,8 +31,10 @@ export default class File {
         this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
     }
     async init() {
-        if (fs.fstatSync(this.#fd).size === 0)
-            fs.writeSync(this.#fd, Buffer.from("{}"), 0, 2, 0);
+        const statSize = await fstat(this.#fd);
+        if (statSize.size === 0) {
+            await write(this.#fd, Buffer.from("{}"), 0, 2, 0);
+        }
         await this.#checkIntegrity().catch((e) => {
             this.#isDirty = true;
             throw e;
@@ -46,7 +48,8 @@ export default class File {
         if (this.#isDirty)
             return;
         this.#interval = setInterval(async () => {
-            if (this.#flushQueue.length === 0 && this.#removeQueue.length === 0) {
+            if (this.#flushQueue.length === 0 &&
+                this.#removeQueue.length === 0) {
                 return;
             }
             if (this.#locked) {
@@ -78,23 +81,29 @@ export default class File {
         return this.#interval;
     }
     async #checkIntegrity() {
-        await new Promise((resolve, reject) => {
+        await new Promise(async (resolve, reject) => {
             try {
-                const jsonstream = JSONStream.parse("*");
-                const stream = fs.createReadStream(this.#path);
-                stream.pipe(jsonstream);
-                jsonstream.on("data", (data) => {
-                    this.#size++;
-                    this.#cache.put(data.key, new Data({
-                        key: data.key,
-                        value: data.value,
-                        type: data.type,
-                        file: this.#path,
-                    }));
-                });
-                jsonstream.on("end", () => {
+                if (!this.#table.db.options.fileConfig.staticRehash) {
+                    await this.getAll();
                     resolve();
-                });
+                }
+                else {
+                    const jsonstream = JSONStream.parse("*");
+                    const stream = fs.createReadStream(this.#path);
+                    stream.pipe(jsonstream);
+                    jsonstream.on("data", (data) => {
+                        this.#size++;
+                        this.#cache.put(data.key, new Data({
+                            key: data.key,
+                            value: data.value,
+                            type: data.type,
+                            file: this.#path,
+                        }));
+                    });
+                    jsonstream.on("end", () => {
+                        resolve();
+                    });
+                }
             }
             catch (e) {
                 this.#isDirty = true;
