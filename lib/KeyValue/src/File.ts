@@ -17,6 +17,7 @@ import {
 	write,
 } from "../../promisifiers.js";
 import { DatabaseMethod } from "../../typings/enum.js";
+import { platform } from "node:os";
 
 export default class File {
 	#cache: LRUCache;
@@ -240,7 +241,15 @@ export default class File {
 		// await close(this.#fd);
 
 		await this.#retry(
-			async () => await fs.promises.rename(tempFile, this.#path),
+			async () => {
+				if(platform() === "win32") {
+					await fs.promises.unlink(this.#path);
+					await fs.promises.rename(tempFile, this.#path);
+				}
+				else {
+					await fs.promises.rename(tempFile, this.#path)
+				}
+			},
 			10,
 			100
 		);
@@ -434,12 +443,17 @@ export default class File {
 
 		await this.#retry(
 			async () =>
-				await fs.promises.rename(tempFile, this.#path).then(() => {
-					this.#fd = fs.openSync(
-						this.#path,
-						fs.constants.O_RDWR | fs.constants.O_CREAT
-					);
-				}),
+				{
+					if(platform() === "win32") {
+						await fs.promises.unlink(this.#path);
+						await fs.promises.rename(tempFile, this.#path);
+						this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+					}
+					else {
+						await fs.promises.rename(tempFile, this.#path)
+						this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+					}
+				}
 			10,
 			100
 		);

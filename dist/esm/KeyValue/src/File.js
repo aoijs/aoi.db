@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { decrypt, encrypt } from "../../utils.js";
 import { fstat, fsync, ftruncate, open, write, } from "../../promisifiers.js";
 import { DatabaseMethod } from "../../typings/enum.js";
+import { platform } from "node:os";
 export default class File {
     #cache;
     #path;
@@ -187,7 +188,15 @@ export default class File {
         await write(tmpfd, buffer, 0, buffer.length, 0);
         await fsync(tmpfd);
         // await close(this.#fd);
-        await this.#retry(async () => await fs.promises.rename(tempFile, this.#path), 10, 100);
+        await this.#retry(async () => {
+            if (platform() === "win32") {
+                await fs.promises.unlink(this.#path);
+                await fs.promises.rename(tempFile, this.#path);
+            }
+            else {
+                await fs.promises.rename(tempFile, this.#path);
+            }
+        }, 10, 100);
         this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         this.#flushQueue = [];
         this.#removeQueue = [];
@@ -338,9 +347,17 @@ export default class File {
         await fsync(tmpfd);
         // await close(tmpfd);
         // await close(this.#fd);
-        await this.#retry(async () => await fs.promises.rename(tempFile, this.#path).then(() => {
-            this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
-        }), 10, 100);
+        await this.#retry(async () => {
+            if (platform() === "win32") {
+                await fs.promises.unlink(this.#path);
+                await fs.promises.rename(tempFile, this.#path);
+                this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+            }
+            else {
+                await fs.promises.rename(tempFile, this.#path);
+                this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+            }
+        }, 10, 100);
         this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         this.#locked = false;
     }
