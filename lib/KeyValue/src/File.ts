@@ -453,7 +453,7 @@ export default class File {
 						await fs.promises.rename(tempFile, this.#path)
 						this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
 					}
-				}
+				},
 			10,
 			100
 		);

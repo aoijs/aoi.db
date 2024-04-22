@@ -9,6 +9,7 @@ const node_fs_1 = __importDefault(require("node:fs"));
 const utils_js_1 = require("../../utils.js");
 const promisifiers_js_1 = require("../../promisifiers.js");
 const enum_js_1 = require("../../typings/enum.js");
+const node_os_1 = require("node:os");
 class File {
     #cache;
     #path;
@@ -192,7 +193,15 @@ class File {
         await (0, promisifiers_js_1.write)(tmpfd, buffer, 0, buffer.length, 0);
         await (0, promisifiers_js_1.fsync)(tmpfd);
         // await close(this.#fd);
-        await this.#retry(async () => await node_fs_1.default.promises.rename(tempFile, this.#path), 10, 100);
+        await this.#retry(async () => {
+            if ((0, node_os_1.platform)() === "win32") {
+                await node_fs_1.default.promises.unlink(this.#path);
+                await node_fs_1.default.promises.rename(tempFile, this.#path);
+            }
+            else {
+                await node_fs_1.default.promises.rename(tempFile, this.#path);
+            }
+        }, 10, 100);
         this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         this.#flushQueue = [];
         this.#removeQueue = [];
@@ -343,9 +352,17 @@ class File {
         await (0, promisifiers_js_1.fsync)(tmpfd);
         // await close(tmpfd);
         // await close(this.#fd);
-        await this.#retry(async () => await node_fs_1.default.promises.rename(tempFile, this.#path).then(() => {
-            this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
-        }), 10, 100);
+        await this.#retry(async () => {
+            if ((0, node_os_1.platform)() === "win32") {
+                await node_fs_1.default.promises.unlink(this.#path);
+                await node_fs_1.default.promises.rename(tempFile, this.#path);
+                this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+            }
+            else {
+                await node_fs_1.default.promises.rename(tempFile, this.#path);
+                this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+            }
+        }, 10, 100);
         this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         this.#locked = false;
     }
