@@ -40,7 +40,7 @@ export default class Table extends EventEmitter {
         this.readyAt = Date.now();
         this.#db.emit(DatabaseEvents.TableReady, this);
     }
-    async #getPaths() {
+    #getPaths() {
         const { path } = this.#db.options.dataConfig;
         const { transactionLogPath } = this.#db.options.fileConfig;
         const { name } = this.#options;

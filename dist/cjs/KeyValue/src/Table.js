@@ -45,7 +45,7 @@ class Table extends node_events_1.default {
         this.readyAt = Date.now();
         this.#db.emit(enum_js_1.DatabaseEvents.TableReady, this);
     }
-    async #getPaths() {
+    #getPaths() {
         const { path } = this.#db.options.dataConfig;
         const { transactionLogPath } = this.#db.options.fileConfig;
         const { name } = this.#options;

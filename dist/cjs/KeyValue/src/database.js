@@ -52,7 +52,7 @@ class KeyValue extends events_1.EventEmitter {
             fileConfig: {
                 extension: ".sql",
                 reHashOnStartup: false,
-                staticRehash: true,
+                staticRehash: false,
                 transactionLogPath: "./transaction/",
                 maxSize: 10000,
                 minFileCount: 10,
@@ -200,6 +200,7 @@ class KeyValue extends events_1.EventEmitter {
                 recursive: true
             });
         }
+        const promises = [];
         for (const table of this.#options.dataConfig.tables) {
             const t = new Table_js_1.default({
                 name: table,
@@ -208,8 +209,9 @@ class KeyValue extends events_1.EventEmitter {
                 table: t,
                 ready: false,
             };
-            await t.initialize();
+            promises.push(t.initialize());
         }
+        await Promise.all(promises);
     }
     get options() {
         return this.#options;

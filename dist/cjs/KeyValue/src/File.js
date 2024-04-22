@@ -6,8 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const data_js_1 = __importDefault(require("./data.js"));
 const LRUcache_js_1 = __importDefault(require("./LRUcache.js"));
 const node_fs_1 = __importDefault(require("node:fs"));
-//@ts-ignore
-const JSONStream_1 = __importDefault(require("JSONStream"));
 const utils_js_1 = require("../../utils.js");
 const promisifiers_js_1 = require("../../promisifiers.js");
 const enum_js_1 = require("../../typings/enum.js");
@@ -93,21 +91,26 @@ class File {
                     resolve();
                 }
                 else {
-                    const jsonstream = JSONStream_1.default.parse("*");
-                    const stream = node_fs_1.default.createReadStream(this.#path);
-                    stream.pipe(jsonstream);
-                    jsonstream.on("data", (data) => {
-                        this.#size++;
-                        this.#cache.put(data.key, new data_js_1.default({
-                            key: data.key,
-                            value: data.value,
-                            type: data.type,
-                            file: this.#path,
-                        }));
-                    });
-                    jsonstream.on("end", () => {
-                        resolve();
-                    });
+                    // const jsonstream = JSONStream.parse("*");
+                    // const stream = fs.createReadStream(this.#path);
+                    // stream.pipe(jsonstream);
+                    // jsonstream.on("data", (data: KeyValueJSONOption) => {
+                    // 	this.#size++;
+                    // 	this.#cache.put(
+                    // 		data.key,
+                    // 		new Data({
+                    // 			key: data.key,
+                    // 			value: data.value,
+                    // 			type: data.type,
+                    // 			file: this.#path,
+                    // 		})
+                    // 	);
+                    // });
+                    // jsonstream.on("end", () => {
+                    // 	resolve();
+                    // });
+                    const json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8"));
+                    resolve();
                 }
             }
             catch (e) {

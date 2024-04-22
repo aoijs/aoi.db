@@ -22,19 +22,17 @@ class FileManager {
         this.#array = Array.from({ length: this.#hashSize }, (_, i) => {
             return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#table.db.options.fileConfig.maxSize / 4, this.#table);
         });
-        const promises = [];
         for (const file of this.#array) {
-            promises.push(file.init());
+            await file.init();
         }
-        await Promise.all(promises);
         if (this.#table.db.options.fileConfig.reHashOnStartup &&
             !this.#table.db.options.fileConfig.staticRehash) {
-            this.#rehash();
+            await this.#rehash();
         }
         if (this.#table.db.options.fileConfig.staticRehash) {
             if (this.#table.db.options.fileConfig.minFileCount !==
                 this.#hashSize) {
-                this.#rehash();
+                await this.#rehash();
             }
         }
     }
@@ -85,19 +83,15 @@ class FileManager {
             return;
         this.#rehashing = true;
         const datas = [];
-        let promises = [];
         for (const file of this.#array) {
             await file.lockAndsync();
             const data = await file.getAllinLock(() => true);
             for (const value of data) {
                 datas.push(value);
             }
-            file.unlock();
+            await file.unlock();
+            await file.unlink();
         }
-        for (const file of this.#array) {
-            promises.push(file.unlink());
-        }
-        await Promise.all(promises);
         const relativeSize = datas.length / this.#maxSize;
         const newArraySize = this.#table.db.options.fileConfig.staticRehash
             ? this.#table.db.options.fileConfig.minFileCount
@@ -106,16 +100,12 @@ class FileManager {
         const newArray = Array.from({ length: newArraySize }, (_, i) => {
             return new File_js_1.default(`${this.#table.paths.table}/${this.#table.options.name}_scheme_${i + 1}${this.#table.db.options.fileConfig.extension}`, this.#maxSize / 4, this.#table);
         });
-        promises = [];
         for (const file of newArray) {
-            promises.push(async () => {
-                await file.init();
-                if (file.isDirty) {
-                    throw new Error(`File ${file.name} is dirty!`);
-                }
-            });
+            await file.init();
+            if (file.isDirty) {
+                throw new Error(`File ${file.name} is dirty!`);
+            }
         }
-        await Promise.all(promises);
         for (const data of datas) {
             const hash = this.#hash(data.key);
             const index = this.#getHashIndex(hash);

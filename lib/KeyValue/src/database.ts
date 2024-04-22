@@ -66,7 +66,7 @@ export default class KeyValue extends EventEmitter {
             fileConfig: {
                 extension: ".sql",
                 reHashOnStartup: false,
-				staticRehash : true,
+				staticRehash : false,
                 transactionLogPath: "./transaction/",
                 maxSize: 10000,
                 minFileCount: 10,
@@ -266,6 +266,8 @@ export default class KeyValue extends EventEmitter {
             })
         }
 
+		const promises = [];
+
         for (const table of this.#options.dataConfig.tables) {
             const t = new Table(
                 {
@@ -278,8 +280,9 @@ export default class KeyValue extends EventEmitter {
                 ready: false,
             };
 
-            await t.initialize();
+            promises.push(t.initialize());
         }
+		await Promise.all(promises);
     }
     get options() {
         return this.#options;

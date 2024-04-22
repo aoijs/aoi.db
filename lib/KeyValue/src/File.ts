@@ -13,6 +13,7 @@ import {
 	fsync,
 	ftruncate,
 	open,
+	read,
 	write,
 } from "../../promisifiers.js";
 import { DatabaseMethod } from "../../typings/enum.js";
@@ -114,25 +115,27 @@ export default class File {
 					await this.getAll();
 					resolve();
 				} else {
-					const jsonstream = JSONStream.parse("*");
-					const stream = fs.createReadStream(this.#path);
-					stream.pipe(jsonstream);
-					jsonstream.on("data", (data: KeyValueJSONOption) => {
-						this.#size++;
-						this.#cache.put(
-							data.key,
-							new Data({
-								key: data.key,
-								value: data.value,
-								type: data.type,
-								file: this.#path,
-							})
-						);
-					});
+					// const jsonstream = JSONStream.parse("*");
+					// const stream = fs.createReadStream(this.#path);
+					// stream.pipe(jsonstream);
+					// jsonstream.on("data", (data: KeyValueJSONOption) => {
+					// 	this.#size++;
+					// 	this.#cache.put(
+					// 		data.key,
+					// 		new Data({
+					// 			key: data.key,
+					// 			value: data.value,
+					// 			type: data.type,
+					// 			file: this.#path,
+					// 		})
+					// 	);
+					// });
 
-					jsonstream.on("end", () => {
-						resolve();
-					});
+					// jsonstream.on("end", () => {
+					// 	resolve();
+					// });
+					const json = JSON.parse( await fs.promises.readFile(this.#path, "utf-8"));
+					resolve();
 				}
 			} catch (e) {
 				this.#isDirty = true;

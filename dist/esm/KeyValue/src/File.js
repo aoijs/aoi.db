@@ -1,8 +1,6 @@
 import Data from "./data.js";
 import LRUCache from "./LRUcache.js";
 import fs from "node:fs";
-//@ts-ignore
-import JSONStream from "JSONStream";
 import { decrypt, encrypt } from "../../utils.js";
 import { fstat, fsync, ftruncate, open, write, } from "../../promisifiers.js";
 import { DatabaseMethod } from "../../typings/enum.js";
@@ -88,21 +86,26 @@ export default class File {
                     resolve();
                 }
                 else {
-                    const jsonstream = JSONStream.parse("*");
-                    const stream = fs.createReadStream(this.#path);
-                    stream.pipe(jsonstream);
-                    jsonstream.on("data", (data) => {
-                        this.#size++;
-                        this.#cache.put(data.key, new Data({
-                            key: data.key,
-                            value: data.value,
-                            type: data.type,
-                            file: this.#path,
-                        }));
-                    });
-                    jsonstream.on("end", () => {
-                        resolve();
-                    });
+                    // const jsonstream = JSONStream.parse("*");
+                    // const stream = fs.createReadStream(this.#path);
+                    // stream.pipe(jsonstream);
+                    // jsonstream.on("data", (data: KeyValueJSONOption) => {
+                    // 	this.#size++;
+                    // 	this.#cache.put(
+                    // 		data.key,
+                    // 		new Data({
+                    // 			key: data.key,
+                    // 			value: data.value,
+                    // 			type: data.type,
+                    // 			file: this.#path,
+                    // 		})
+                    // 	);
+                    // });
+                    // jsonstream.on("end", () => {
+                    // 	resolve();
+                    // });
+                    const json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
+                    resolve();
                 }
             }
             catch (e) {

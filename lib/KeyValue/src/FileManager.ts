@@ -33,19 +33,15 @@ export default class FileManager {
 			);
 		});
 
-		const promises = [];
-
 		for (const file of this.#array) {
-			promises.push(file.init());
+			await file.init();
 		}
-
-		await Promise.all(promises);
 
 		if (
 			this.#table.db.options.fileConfig.reHashOnStartup &&
 			!this.#table.db.options.fileConfig.staticRehash
 		) {
-			this.#rehash();
+			await this.#rehash();
 		}
 
 		if (this.#table.db.options.fileConfig.staticRehash) {
@@ -53,7 +49,7 @@ export default class FileManager {
 				this.#table.db.options.fileConfig.minFileCount !==
 				this.#hashSize
 			) {
-				this.#rehash();
+				await this.#rehash();
 			}
 		}
 	}
@@ -110,21 +106,15 @@ export default class FileManager {
 		if (this.#rehashing) return;
 		this.#rehashing = true;
 		const datas = [];
-		let promises = [];
 		for (const file of this.#array) {
 			await file.lockAndsync();
 			const data = await file.getAllinLock(() => true);
 			for (const value of data) {
 				datas.push(value);
 			}
-			file.unlock();
+			await file.unlock();
+			await file.unlink();
 		}
-
-		for (const file of this.#array) {
-			promises.push(file.unlink());
-		}
-
-		await Promise.all(promises);
 
 		const relativeSize = datas.length / this.#maxSize;
 		const newArraySize = this.#table.db.options.fileConfig.staticRehash
@@ -145,17 +135,12 @@ export default class FileManager {
 				);
 			}
 		);
-		promises = [];
 		for (const file of newArray) {
-			promises.push(async () => {
-				await file.init();
-				if (file.isDirty) {
-					throw new Error(`File ${file.name} is dirty!`);
-				}
-			});
+			await file.init();
+			if (file.isDirty) {
+				throw new Error(`File ${file.name} is dirty!`);
+			}
 		}
-
-		await Promise.all(promises);
 
 		for (const data of datas) {
 			const hash = this.#hash(data.key);
