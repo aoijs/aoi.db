@@ -20,6 +20,5 @@ __exportStar(require("./typings/enum.js"), exports);
 __exportStar(require("./KeyValue/index.js"), exports);
 __exportStar(require("./utils.js"), exports);
 __exportStar(require("./WideColumnar/index.js"), exports);
-__exportStar(require("./OldKeyValue/index.js"), exports);
 __exportStar(require("./Remote/index.js"), exports);
 //# sourceMappingURL=index.js.map

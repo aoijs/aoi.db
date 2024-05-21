@@ -25,7 +25,5 @@ export default class File {
     ping(): Promise<number>;
     unlink(): Promise<void>;
     lockAndsync(): Promise<void>;
-    getAllinLock(query?: (d: Data) => boolean): Promise<Data[]>;
-    unlock(): Promise<void>;
 }
 //# sourceMappingURL=File.d.ts.map

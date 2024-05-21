@@ -108,11 +108,10 @@ export default class FileManager {
 		const datas = [];
 		for (const file of this.#array) {
 			await file.lockAndsync();
-			const data = await file.getAllinLock(() => true);
+			const data = await file.getAll()
 			for (const value of data) {
 				datas.push(value);
 			}
-			await file.unlock();
 			await file.unlink();
 		}
 

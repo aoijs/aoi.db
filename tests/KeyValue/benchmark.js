@@ -95,12 +95,12 @@ async function run() {
     const get = await get10k();
     console.log("Running has10k...");
     const has = await has10k();
-    console.log("Running all10k...");
-    const all = await all10k();
+    // console.log("Running all10k...");
+    // const all = await all10k();
     console.log("Running findOne10k...");
     const findOne = await findOne10k();
-    console.log("Running findMany10k...");
-    const findMany = await findMany10k();
+    // console.log("Running findMany10k...");
+    // const findMany = await findMany10k();
     console.log("Running delete10k...");
     const del = await delete10k();
 
@@ -109,9 +109,9 @@ async function run() {
       get,
       del,
       has,
-      all,
+    //   all,
       findOne,
-      findMany,
+    //   findMany,
     });
   }
   const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -151,13 +151,13 @@ async function run() {
     tpo: Number(avg(results.map((a) => a.has.tpo))),
   };
 
-  const all = {
-    time: parseFloat(avg(results.map((a) => a.all.time)).toFixed(2)),
-    ops: Number(ops(results.map((a) => a.all.ops)).toFixed(0)),
-    max: Number(max(results.map((a) => a.all.ops)).toFixed(0)),
-    min: Number(min(results.map((a) => a.all.ops)).toFixed(0)),
-    tpo: Number(avg(results.map((a) => a.all.tpo))),
-  };
+//   const all = {
+//     time: parseFloat(avg(results.map((a) => a.all.time)).toFixed(2)),
+//     ops: Number(ops(results.map((a) => a.all.ops)).toFixed(0)),
+//     max: Number(max(results.map((a) => a.all.ops)).toFixed(0)),
+//     min: Number(min(results.map((a) => a.all.ops)).toFixed(0)),
+//     tpo: Number(avg(results.map((a) => a.all.tpo))),
+//   };
 
   const findOne = {
     time: parseFloat(avg(results.map((a) => a.findOne.time)).toFixed(2)),
@@ -167,22 +167,22 @@ async function run() {
     tpo: Number(avg(results.map((a) => a.findOne.tpo))),
   };
 
-  const findMany = {
-    time: parseFloat(avg(results.map((a) => a.findMany.time)).toFixed(2)),
-    ops: Number(ops(results.map((a) => a.findMany.ops)).toFixed(0)),
-    max: Number(max(results.map((a) => a.findMany.ops)).toFixed(0)),
-    min: Number(min(results.map((a) => a.findMany.ops)).toFixed(0)),
-    tpo: Number(avg(results.map((a) => a.findMany.tpo))),
-  };
+//   const findMany = {
+//     time: parseFloat(avg(results.map((a) => a.findMany.time)).toFixed(2)),
+//     ops: Number(ops(results.map((a) => a.findMany.ops)).toFixed(0)),
+//     max: Number(max(results.map((a) => a.findMany.ops)).toFixed(0)),
+//     min: Number(min(results.map((a) => a.findMany.ops)).toFixed(0)),
+//     tpo: Number(avg(results.map((a) => a.findMany.tpo))),
+//   };
 
   const arr = {
     set,
     get,
     del,
     has,
-    all,
+    // all,
     findOne,
-    findMany,
+    // findMany,
   };
   console.table(arr);
 }

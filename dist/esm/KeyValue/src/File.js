@@ -2,28 +2,30 @@ import Data from "./data.js";
 import LRUCache from "./LRUcache.js";
 import fs from "node:fs";
 import { decrypt, encrypt } from "../../utils.js";
-import { fstat, fsync, ftruncate, open, write, } from "../../promisifiers.js";
+import { close, fstat, fsync, ftruncate, open, write, } from "../../promisifiers.js";
 import { DatabaseMethod } from "../../typings/enum.js";
 import { platform } from "node:os";
+import path from "node:path";
+import Mutex from "./Mutex.js";
 export default class File {
     #cache;
     #path;
     #fd;
     #size;
+    #locked = false;
     #isDirty;
-    #locked;
     #flushQueue;
     #removeQueue;
     #interval;
     #retries = 0;
     #table;
+    #mutex = new Mutex();
     constructor(path, capacity, table) {
         this.#cache = new LRUCache(capacity);
         this.#path = path;
         this.#table = table;
         this.#size = 0;
         this.#isDirty = false;
-        this.#locked = false;
         this.#flushQueue = [];
         this.#removeQueue = [];
         // Open file
@@ -51,10 +53,6 @@ export default class File {
                 this.#removeQueue.length === 0) {
                 return;
             }
-            if (this.#locked) {
-                return;
-            }
-            this.#locked = true;
             await this.#atomicFlush();
         }, 500);
     }
@@ -71,7 +69,7 @@ export default class File {
         return this.#isDirty;
     }
     get locked() {
-        return this.#locked;
+        return this.#mutex.isLocked();
     }
     get flushQueue() {
         return this.#flushQueue;
@@ -126,16 +124,11 @@ export default class File {
         if (this.#isDirty) {
             return;
         }
-        if (this.#locked) {
-            setTimeout(() => this.get(key), 100);
-        }
-        this.#locked = true;
         const value = await this.#getFromDisk(key);
-        // this.#locked = false;
         return value;
     }
     async #getFromDisk(key) {
-        this.#locked = true;
+        await this.#mutex.lock();
         let value;
         try {
             let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
@@ -154,7 +147,7 @@ export default class File {
             }
         }
         finally {
-            this.#locked = false;
+            this.#mutex.unlock();
         }
         return value;
     }
@@ -164,6 +157,9 @@ export default class File {
         this.#flushQueue.push(value);
     }
     async #atomicFlush() {
+        await this.#mutex.lock();
+        const dir = path.dirname(this.#path);
+        const opendir = await fs.promises.open(dir, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY);
         const tempFile = `${this.#path}.tmp`;
         const tmpfd = fs.openSync(tempFile, fs.constants.O_RDWR | fs.constants.O_CREAT);
         let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
@@ -187,21 +183,26 @@ export default class File {
         const buffer = Buffer.from(writeData);
         await write(tmpfd, buffer, 0, buffer.length, 0);
         await fsync(tmpfd);
-        // await close(this.#fd);
+        await close(tmpfd);
+        await close(this.#fd);
         await this.#retry(async () => {
             if (platform() === "win32") {
                 await fs.promises.unlink(this.#path);
                 await fs.promises.rename(tempFile, this.#path);
+                await opendir.sync();
+                await opendir.close();
             }
             else {
                 await fs.promises.rename(tempFile, this.#path);
+                await opendir.sync();
+                await opendir.close();
             }
         }, 10, 100);
         this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         this.#flushQueue = [];
         this.#removeQueue = [];
         await this.#table.wal(Data.emptyData(), DatabaseMethod.Flush);
-        this.#locked = false;
+        this.#mutex.unlock();
     }
     async #retry(fn, maxRetries = 10, delay = 100) {
         try {
@@ -220,6 +221,7 @@ export default class File {
     async getAll(query) {
         if (!query)
             query = () => true;
+        await this.#mutex.lock();
         let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
         const arr = [];
         if (this.#table.db.options.encryptionConfig.encriptData) {
@@ -238,6 +240,7 @@ export default class File {
                 arr.push(data);
             }
         }
+        this.#mutex.unlock();
         return arr;
     }
     async findOne(query) {
@@ -246,7 +249,9 @@ export default class File {
         const f = this.#cache.findOne(query);
         if (f)
             return f;
+        await this.#mutex.lock();
         let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
+        this.#mutex.unlock();
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
@@ -279,11 +284,13 @@ export default class File {
         await write(this.#fd, buffer, 0, buffer.length, 0);
     }
     async #has(key) {
+        await this.#mutex.lock();
         let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
         }
+        this.#mutex.unlock();
         return !!json[key];
     }
     async has(key) {
@@ -296,16 +303,13 @@ export default class File {
         if (this.#isDirty) {
             return false;
         }
-        if (this.#locked) {
-            setTimeout(() => this.has(key), 100);
-        }
-        this.#locked = true;
         const value = await this.#has(key).catch((_) => false);
-        this.#locked = false;
         return value ? true : false;
     }
     async removeMany(query) {
+        await this.#mutex.lock();
         let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
+        this.#mutex.unlock();
         if (this.#table.db.options.encryptionConfig.encriptData) {
             const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
             json = JSON.parse(decryptedData);
@@ -322,44 +326,36 @@ export default class File {
         else {
             writeData = JSON.stringify(json);
         }
-        const f = () => {
-            if (this.#locked)
-                setTimeout(() => f(), 100);
-            else
-                this.#atomicWrite(writeData);
-        };
-        if (this.#locked)
-            setTimeout(() => {
-                if (this.#locked)
-                    setTimeout(() => f(), 100);
-                else
-                    this.#atomicWrite(writeData);
-            }, 100);
-        else
-            await this.#atomicWrite(writeData);
+        await this.#atomicWrite(writeData);
     }
     async #atomicWrite(data) {
-        this.#locked = true;
+        await this.#mutex.lock();
+        const dir = path.dirname(this.#path);
+        const opendir = await fs.promises.open(dir, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY);
         const tempFile = `${this.#path}.tmp`;
         const tmpfd = fs.openSync(tempFile, fs.constants.O_RDWR | fs.constants.O_CREAT);
         const buffer = Buffer.from(data);
         await write(tmpfd, buffer, 0, buffer.length, 0);
         await fsync(tmpfd);
-        // await close(tmpfd);
-        // await close(this.#fd);
+        await close(tmpfd);
+        await close(this.#fd);
         await this.#retry(async () => {
             if (platform() === "win32") {
                 await fs.promises.unlink(this.#path);
                 await fs.promises.rename(tempFile, this.#path);
                 this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+                await opendir.sync();
+                await opendir.close();
             }
             else {
                 await fs.promises.rename(tempFile, this.#path);
                 this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+                await opendir.sync();
+                await opendir.close();
             }
         }, 10, 100);
         this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
-        this.#locked = false;
+        this.#mutex.unlock();
     }
     async ping() {
         const startTime = performance.now();
@@ -371,38 +367,9 @@ export default class File {
         await fs.promises.unlink(this.#path);
     }
     async lockAndsync() {
-        this.#locked = true;
-        await this.#atomicFlush();
+        // remove interval
+        clearInterval(this.#interval);
         await fsync(this.#fd);
-        this.#locked = true;
-    }
-    async getAllinLock(query) {
-        if (!this.#locked)
-            return [];
-        if (!query)
-            query = () => true;
-        let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
-        const arr = [];
-        if (this.#table.db.options.encryptionConfig.encriptData) {
-            const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
-            json = JSON.parse(decryptedData);
-        }
-        for (const key in json) {
-            if (query(json[key])) {
-                const data = new Data({
-                    key: json[key].key,
-                    value: json[key].value,
-                    type: json[key].type,
-                    file: this.#path,
-                });
-                this.#cache.put(key, data);
-                arr.push(data);
-            }
-        }
-        return arr;
-    }
-    async unlock() {
-        this.#locked = false;
     }
 }
 //# sourceMappingURL=File.js.map

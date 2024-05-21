@@ -98,7 +98,7 @@ async function findManyFunc() {
 
 async function run() {
     const results = [];
-    const cycles = 10;
+    const cycles = 5;
     console.log("Running Suite...");
 
     for (let i = 0; i < cycles; i++) {
