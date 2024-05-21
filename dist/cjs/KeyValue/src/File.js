@@ -370,8 +370,11 @@ class File {
         return performance.now() - startTime;
     }
     async unlink() {
+        const opendir = await node_fs_1.default.promises.open(node_path_1.default.dirname(this.#path), node_fs_1.default.constants.O_RDONLY | node_fs_1.default.constants.O_DIRECTORY);
         clearInterval(this.#interval);
         await node_fs_1.default.promises.unlink(this.#path);
+        await opendir.sync();
+        await opendir.close();
     }
     async lockAndsync() {
         // remove interval

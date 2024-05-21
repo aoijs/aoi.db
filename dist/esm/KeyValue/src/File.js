@@ -365,8 +365,11 @@ export default class File {
         return performance.now() - startTime;
     }
     async unlink() {
+        const opendir = await fs.promises.open(path.dirname(this.#path), fs.constants.O_RDONLY | fs.constants.O_DIRECTORY);
         clearInterval(this.#interval);
         await fs.promises.unlink(this.#path);
+        await opendir.sync();
+        await opendir.close();
     }
     async lockAndsync() {
         // remove interval
