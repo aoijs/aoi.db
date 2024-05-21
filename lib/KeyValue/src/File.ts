@@ -133,7 +133,9 @@ export default class File {
 					// jsonstream.on("end", () => {
 					// 	resolve();
 					// });
-					const json = JSON.parse( await fs.promises.readFile(this.#path, "utf-8"));
+					const json = JSON.parse(
+						await fs.promises.readFile(this.#path, "utf-8")
+					);
 					resolve();
 				}
 			} catch (e) {
@@ -199,7 +201,10 @@ export default class File {
 	async #atomicFlush() {
 		await this.#mutex.lock();
 		const dir = path.dirname(this.#path);
-		const opendir = await fs.promises.open(dir, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY);
+		const opendir = await fs.promises.open(
+			dir,
+			fs.constants.O_RDONLY | fs.constants.O_DIRECTORY
+		);
 		const tempFile = `${this.#path}.tmp`;
 		const tmpfd = fs.openSync(
 			tempFile,
@@ -238,19 +243,9 @@ export default class File {
 
 		await this.#retry(
 			async () => {
-				if(platform() === "win32") {
-					await fs.promises.unlink(this.#path);
-					await opendir.sync()
-					await fs.promises.rename(tempFile, this.#path);
-					await opendir.sync()
-					await opendir.close()
-					
-				}
-				else {
-					await fs.promises.rename(tempFile, this.#path);
-					await opendir.sync()
-					await opendir.close()
-				}
+				await fs.promises.rename(tempFile, this.#path);
+				await opendir.sync();
+				await opendir.close();
 			},
 			10,
 			100
@@ -426,7 +421,10 @@ export default class File {
 	async #atomicWrite(data: string) {
 		await this.#mutex.lock();
 		const dir = path.dirname(this.#path);
-		const opendir = await fs.promises.open(dir, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY);
+		const opendir = await fs.promises.open(
+			dir,
+			fs.constants.O_RDONLY | fs.constants.O_DIRECTORY
+		);
 		const tempFile = `${this.#path}.tmp`;
 		const tmpfd = fs.openSync(
 			tempFile,
@@ -439,23 +437,17 @@ export default class File {
 		await close(this.#fd);
 
 		await this.#retry(
-			async () =>
-				{
-					if(platform() === "win32") {
-						await fs.promises.unlink(this.#path);
-						await fs.promises.rename(tempFile, this.#path);
-						await opendir.sync()
-						this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
-						await opendir.sync()
-						await opendir.close()
-					}
-					else {
-						await fs.promises.rename(tempFile, this.#path)
-						this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
-						await opendir.sync()
-						await opendir.close()
-					}
-				},
+			async () => {
+				
+					await fs.promises.rename(tempFile, this.#path);
+					this.#fd = await open(
+						this.#path,
+						fs.constants.O_RDWR | fs.constants.O_CREAT
+					);
+					await opendir.sync();
+					await opendir.close();
+				
+			},
 			10,
 			100
 		);
@@ -472,11 +464,14 @@ export default class File {
 	}
 
 	async unlink() {
-		const opendir = await fs.promises.open(path.dirname(this.#path), fs.constants.O_RDONLY | fs.constants.O_DIRECTORY);
+		const opendir = await fs.promises.open(
+			path.dirname(this.#path),
+			fs.constants.O_RDONLY | fs.constants.O_DIRECTORY
+		);
 		clearInterval(this.#interval);
 		await fs.promises.unlink(this.#path);
-		await opendir.sync()
-		await opendir.close()
+		await opendir.sync();
+		await opendir.close();
 	}
 
 	async lockAndsync() {
@@ -484,5 +479,4 @@ export default class File {
 		clearInterval(this.#interval);
 		await fsync(this.#fd);
 	}
-
 }

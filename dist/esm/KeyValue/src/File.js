@@ -4,7 +4,6 @@ import fs from "node:fs";
 import { decrypt, encrypt } from "../../utils.js";
 import { close, fstat, fsync, ftruncate, open, write, } from "../../promisifiers.js";
 import { DatabaseMethod } from "../../typings/enum.js";
-import { platform } from "node:os";
 import path from "node:path";
 import Mutex from "./Mutex.js";
 export default class File {
@@ -186,18 +185,9 @@ export default class File {
         await close(tmpfd);
         await close(this.#fd);
         await this.#retry(async () => {
-            if (platform() === "win32") {
-                await fs.promises.unlink(this.#path);
-                await opendir.sync();
-                await fs.promises.rename(tempFile, this.#path);
-                await opendir.sync();
-                await opendir.close();
-            }
-            else {
-                await fs.promises.rename(tempFile, this.#path);
-                await opendir.sync();
-                await opendir.close();
-            }
+            await fs.promises.rename(tempFile, this.#path);
+            await opendir.sync();
+            await opendir.close();
         }, 10, 100);
         this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         this.#flushQueue = [];
@@ -341,20 +331,10 @@ export default class File {
         await close(tmpfd);
         await close(this.#fd);
         await this.#retry(async () => {
-            if (platform() === "win32") {
-                await fs.promises.unlink(this.#path);
-                await fs.promises.rename(tempFile, this.#path);
-                await opendir.sync();
-                this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
-                await opendir.sync();
-                await opendir.close();
-            }
-            else {
-                await fs.promises.rename(tempFile, this.#path);
-                this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
-                await opendir.sync();
-                await opendir.close();
-            }
+            await fs.promises.rename(tempFile, this.#path);
+            this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
+            await opendir.sync();
+            await opendir.close();
         }, 10, 100);
         this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
         this.#mutex.unlock();

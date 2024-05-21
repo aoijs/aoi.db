@@ -9,7 +9,6 @@ const node_fs_1 = __importDefault(require("node:fs"));
 const utils_js_1 = require("../../utils.js");
 const promisifiers_js_1 = require("../../promisifiers.js");
 const enum_js_1 = require("../../typings/enum.js");
-const node_os_1 = require("node:os");
 const node_path_1 = __importDefault(require("node:path"));
 const Mutex_js_1 = __importDefault(require("./Mutex.js"));
 class File {
@@ -191,18 +190,9 @@ class File {
         await (0, promisifiers_js_1.close)(tmpfd);
         await (0, promisifiers_js_1.close)(this.#fd);
         await this.#retry(async () => {
-            if ((0, node_os_1.platform)() === "win32") {
-                await node_fs_1.default.promises.unlink(this.#path);
-                await opendir.sync();
-                await node_fs_1.default.promises.rename(tempFile, this.#path);
-                await opendir.sync();
-                await opendir.close();
-            }
-            else {
-                await node_fs_1.default.promises.rename(tempFile, this.#path);
-                await opendir.sync();
-                await opendir.close();
-            }
+            await node_fs_1.default.promises.rename(tempFile, this.#path);
+            await opendir.sync();
+            await opendir.close();
         }, 10, 100);
         this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         this.#flushQueue = [];
@@ -346,20 +336,10 @@ class File {
         await (0, promisifiers_js_1.close)(tmpfd);
         await (0, promisifiers_js_1.close)(this.#fd);
         await this.#retry(async () => {
-            if ((0, node_os_1.platform)() === "win32") {
-                await node_fs_1.default.promises.unlink(this.#path);
-                await node_fs_1.default.promises.rename(tempFile, this.#path);
-                await opendir.sync();
-                this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
-                await opendir.sync();
-                await opendir.close();
-            }
-            else {
-                await node_fs_1.default.promises.rename(tempFile, this.#path);
-                this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
-                await opendir.sync();
-                await opendir.close();
-            }
+            await node_fs_1.default.promises.rename(tempFile, this.#path);
+            this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
+            await opendir.sync();
+            await opendir.close();
         }, 10, 100);
         this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
         this.#mutex.unlock();
