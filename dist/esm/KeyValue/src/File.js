@@ -188,6 +188,7 @@ export default class File {
         await this.#retry(async () => {
             if (platform() === "win32") {
                 await fs.promises.unlink(this.#path);
+                await opendir.sync();
                 await fs.promises.rename(tempFile, this.#path);
                 await opendir.sync();
                 await opendir.close();
@@ -343,6 +344,7 @@ export default class File {
             if (platform() === "win32") {
                 await fs.promises.unlink(this.#path);
                 await fs.promises.rename(tempFile, this.#path);
+                await opendir.sync();
                 this.#fd = await open(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
                 await opendir.sync();
                 await opendir.close();

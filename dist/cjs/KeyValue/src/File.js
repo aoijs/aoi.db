@@ -193,6 +193,7 @@ class File {
         await this.#retry(async () => {
             if ((0, node_os_1.platform)() === "win32") {
                 await node_fs_1.default.promises.unlink(this.#path);
+                await opendir.sync();
                 await node_fs_1.default.promises.rename(tempFile, this.#path);
                 await opendir.sync();
                 await opendir.close();
@@ -348,6 +349,7 @@ class File {
             if ((0, node_os_1.platform)() === "win32") {
                 await node_fs_1.default.promises.unlink(this.#path);
                 await node_fs_1.default.promises.rename(tempFile, this.#path);
+                await opendir.sync();
                 this.#fd = await (0, promisifiers_js_1.open)(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
                 await opendir.sync();
                 await opendir.close();
