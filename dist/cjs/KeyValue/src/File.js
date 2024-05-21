@@ -161,6 +161,8 @@ class File {
         this.#flushQueue.push(value);
     }
     async #atomicFlush() {
+        if (!this.#flushQueue.length && !this.#removeQueue.length)
+            return;
         await this.#mutex.lock();
         const dir = node_path_1.default.dirname(this.#path);
         const opendir = await node_fs_1.default.promises.open(dir, node_fs_1.default.constants.O_RDONLY | node_fs_1.default.constants.O_DIRECTORY);
@@ -189,15 +191,18 @@ class File {
         await (0, promisifiers_js_1.fsync)(tmpfd);
         await (0, promisifiers_js_1.close)(tmpfd);
         await (0, promisifiers_js_1.close)(this.#fd);
+        let renameFailed = false;
         await this.#retry(async () => {
             await node_fs_1.default.promises.rename(tempFile, this.#path);
             await opendir.sync();
             await opendir.close();
-        }, 10, 100);
+        }, 10, 100).catch((e) => {
+            renameFailed = true;
+        });
         this.#fd = node_fs_1.default.openSync(this.#path, node_fs_1.default.constants.O_RDWR | node_fs_1.default.constants.O_CREAT);
-        this.#flushQueue = [];
-        this.#removeQueue = [];
-        await this.#table.wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
+        this.#flushQueue = renameFailed ? this.#flushQueue : [];
+        this.#removeQueue = renameFailed ? this.#removeQueue : [];
+        renameFailed && await this.#table.wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
         this.#mutex.unlock();
     }
     async #retry(fn, maxRetries = 10, delay = 100) {

@@ -156,6 +156,8 @@ export default class File {
         this.#flushQueue.push(value);
     }
     async #atomicFlush() {
+        if (!this.#flushQueue.length && !this.#removeQueue.length)
+            return;
         await this.#mutex.lock();
         const dir = path.dirname(this.#path);
         const opendir = await fs.promises.open(dir, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY);
@@ -184,15 +186,18 @@ export default class File {
         await fsync(tmpfd);
         await close(tmpfd);
         await close(this.#fd);
+        let renameFailed = false;
         await this.#retry(async () => {
             await fs.promises.rename(tempFile, this.#path);
             await opendir.sync();
             await opendir.close();
-        }, 10, 100);
+        }, 10, 100).catch((e) => {
+            renameFailed = true;
+        });
         this.#fd = fs.openSync(this.#path, fs.constants.O_RDWR | fs.constants.O_CREAT);
-        this.#flushQueue = [];
-        this.#removeQueue = [];
-        await this.#table.wal(Data.emptyData(), DatabaseMethod.Flush);
+        this.#flushQueue = renameFailed ? this.#flushQueue : [];
+        this.#removeQueue = renameFailed ? this.#removeQueue : [];
+        renameFailed && await this.#table.wal(Data.emptyData(), DatabaseMethod.Flush);
         this.#mutex.unlock();
     }
     async #retry(fn, maxRetries = 10, delay = 100) {
