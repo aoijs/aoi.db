@@ -163,11 +163,12 @@ export default class File {
         const tempFile = `${this.#path}.tmp`;
         const tmpfd = await fsp.open(tempFile, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
         let failed = false;
-        let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8")).catch(async (e) => {
+        let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8").catch(async (e) => {
             console.log(e);
             await tmpfd.close();
             failed = true;
-        });
+            return "{}";
+        }));
         if (failed) {
             this.#mutex.unlock();
             return;

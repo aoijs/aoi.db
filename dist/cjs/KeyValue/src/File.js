@@ -168,11 +168,12 @@ class File {
         const tempFile = `${this.#path}.tmp`;
         const tmpfd = await promises_1.default.open(tempFile, promises_1.default.constants.O_RDWR | promises_1.default.constants.O_CREAT);
         let failed = false;
-        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8")).catch(async (e) => {
+        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8").catch(async (e) => {
             console.log(e);
             await tmpfd.close();
             failed = true;
-        });
+            return "{}";
+        }));
         if (failed) {
             this.#mutex.unlock();
             return;
