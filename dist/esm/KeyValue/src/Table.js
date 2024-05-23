@@ -1,11 +1,9 @@
 import EventEmitter from "node:events";
 import FileManager from "./FileManager.js";
-import fs from "node:fs";
+import fsp from "node:fs/promises";
 import { DatabaseEvents, DatabaseMethod } from "../../typings/enum.js";
 import { createHash, createHashRawString, decodeHash, stringify, } from "../../utils.js";
 import Data from "./data.js";
-import { createInterface } from "node:readline/promises";
-import { ftruncate, write } from "../../promisifiers.js";
 import { setTimeout } from "node:timers/promises";
 export default class Table extends EventEmitter {
     #options;
@@ -50,57 +48,46 @@ export default class Table extends EventEmitter {
         };
     }
     async #getLogData() {
+        const filehandle = await fsp.open(this.paths.log, "a+");
         let size = 0;
         let logIV = "";
-        const stream = fs.createReadStream(this.paths.log, {
-            encoding: "utf-8",
-            highWaterMark: 33,
-        });
-        const rl = createInterface({
-            input: stream,
-            crlfDelay: Infinity,
-        });
-        for await (const line of rl) {
+        for await (const line of filehandle.readLines({
+            autoClose: false,
+            emitClose: false,
+        })) {
             size++;
             if (size === 1) {
                 logIV = line;
+                size++;
             }
         }
         this.logData = {
-            fd: fs.openSync(this.paths.log, "a+"),
+            fd: filehandle,
             size,
-            fileSize: fs.statSync(this.paths.log).size,
+            fileSize: (await filehandle.stat()).size,
             logIV,
         };
     }
     async getLogs() {
         const logs = [];
-        let ignoreFirstLine = true;
         const { securityKey } = this.#db.options.encryptionConfig;
-        const stream = fs.createReadStream(this.paths.log, {
-            encoding: "utf-8",
-        });
-        const rl = createInterface({
-            input: stream,
-            crlfDelay: Infinity,
-        });
-        for await (const line of rl) {
-            if (ignoreFirstLine)
-                ignoreFirstLine = false;
-            else {
-                const [key, value, type, ttl, method] = decodeHash(line, securityKey, this.logData.logIV);
-                let parsedMethod;
-                if (!method)
-                    parsedMethod = Number(ttl);
-                else
-                    parsedMethod = Number(method);
-                logs.push({
-                    key,
-                    value,
-                    type: type,
-                    method: parsedMethod,
-                });
-            }
+        for await (const line of this.logData.fd.readLines({
+            autoClose: false,
+            emitClose: false,
+            start: 33,
+        })) {
+            const [key, value, type, ttl, method] = decodeHash(line, securityKey, this.logData.logIV);
+            let parsedMethod;
+            if (!method)
+                parsedMethod = Number(ttl);
+            else
+                parsedMethod = Number(method);
+            logs.push({
+                key,
+                value,
+                type: type,
+                method: parsedMethod,
+            });
         }
         return logs;
     }
@@ -126,26 +113,23 @@ export default class Table extends EventEmitter {
         await this.#wal(Data.emptyData(), DatabaseMethod.Flush);
     }
     async #wal(data, method) {
-        return new Promise(async (resolve) => {
-            const { key, type, value } = data.toJSON();
-            const { securityKey } = this.#db.options.encryptionConfig;
-            const delimitedString = createHashRawString([
-                key,
-                stringify(value),
-                type,
-                method.toString(),
-            ]);
-            const logHash = createHash(delimitedString, securityKey, this.logData.logIV);
-            const { bytesWritten } = await write(this.logData.fd, logHash + "\n", this.logData.fileSize, "utf-8");
-            this.logData.fileSize += bytesWritten;
-            this.logData.size++;
-            if (method === DatabaseMethod.Flush &&
-                this.logData.size > this.#db.options.fileConfig.maxSize) {
-                await ftruncate(this.logData.fd, 33);
-            }
-            resolve();
-            return;
+        const { key, type, value } = data.toJSON();
+        const { securityKey } = this.#db.options.encryptionConfig;
+        const delimitedString = createHashRawString([
+            key,
+            stringify(value),
+            type,
+            method.toString(),
+        ]);
+        const logHash = createHash(delimitedString, securityKey, this.logData.logIV);
+        await this.logData.fd.appendFile(logHash + '\n', {
+            flush: true,
         });
+        this.logData.fileSize += logHash.length + 1;
+        this.logData.size++;
+        if (method === DatabaseMethod.Flush && this.logData.size > this.#db.options.fileConfig.maxSize / 4) {
+            await this.logData.fd.truncate(33);
+        }
     }
     async wal(data, method) {
         return this.#wal(data, method);

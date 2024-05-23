@@ -7,24 +7,17 @@ import JSONStream from "JSONStream";
 import { KeyValueJSONOption } from "../typings/interface.js";
 import Table from "./Table.js";
 import { decrypt, encrypt } from "../../utils.js";
-import {
-	close,
-	fstat,
-	fsync,
-	ftruncate,
-	open,
-	read,
-	write,
-} from "../../promisifiers.js";
+
 import { DatabaseMethod } from "../../typings/enum.js";
 import { platform } from "node:os";
 import path from "node:path";
 import Mutex from "./Mutex.js";
+import fsp from "node:fs/promises";
 
 export default class File {
 	#cache: LRUCache;
 	#path: string;
-	#fd!: number;
+	#fd!: fsp.FileHandle;
 	#size: number;
 	#locked = false;
 	#isDirty: boolean;
@@ -43,17 +36,13 @@ export default class File {
 		this.#flushQueue = [];
 		this.#removeQueue = [];
 
-		// Open file
-		this.#fd = fs.openSync(
-			this.#path,
-			fs.constants.O_RDWR | fs.constants.O_CREAT
-		);
 	}
 
 	async init() {
-		const statSize = await fstat(this.#fd);
+		this.#fd = await fsp.open(this.#path, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
+		const statSize = (await this.#fd.stat());
 		if (statSize.size === 0) {
-			await write(this.#fd, Buffer.from("{}"), 0, 2, 0);
+			await this.#fd.write(Buffer.from("{}"), 0, 2, 0);
 		}
 		await this.#checkIntegrity().catch((e) => {
 			this.#isDirty = true;
@@ -207,11 +196,18 @@ export default class File {
 			fs.constants.O_RDONLY | fs.constants.O_DIRECTORY
 		);
 		const tempFile = `${this.#path}.tmp`;
-		const tmpfd = fs.openSync(
-			tempFile,
-			fs.constants.O_RDWR | fs.constants.O_CREAT
-		);
-		let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8"));
+		const tmpfd = await fsp.open(tempFile, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
+
+		let failed = false;
+		let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8")).catch(async (e: any) => {
+			console.log(e);
+			await tmpfd.close();
+			failed = true;
+		});
+		if (failed) {
+			this.#mutex.unlock();
+			return;
+		}
 		if (this.#table.db.options.encryptionConfig.encriptData) {
 			const decryptedData = decrypt(
 				json,
@@ -237,10 +233,11 @@ export default class File {
 			writeData = JSON.stringify(json);
 		}
 		const buffer = Buffer.from(writeData);
-		await write(tmpfd, buffer, 0, buffer.length, 0);
-		await fsync(tmpfd);
-		await close(tmpfd);
-		await close(this.#fd);
+		await tmpfd.write(buffer, 0, buffer.length, 0);
+		await tmpfd.sync();
+		await tmpfd.close();	
+		await this.#fd.close();
+
 		let renameFailed = false;
 		await this.#retry(
 			async () => {
@@ -253,10 +250,7 @@ export default class File {
 		).catch((e) => {
 			renameFailed = true;
 		});
-		this.#fd = fs.openSync(
-			this.#path,
-			fs.constants.O_RDWR | fs.constants.O_CREAT
-		);
+		this.#fd = await fsp.open(this.#path, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
 		this.#flushQueue = renameFailed ? this.#flushQueue : [];
 		this.#removeQueue = renameFailed ? this.#removeQueue : [];
 		renameFailed && await this.#table.wal(Data.emptyData(), DatabaseMethod.Flush);
@@ -352,9 +346,8 @@ export default class File {
 		this.#size = 0;
 		this.#flushQueue = [];
 		this.#removeQueue = [];
-		await ftruncate(this.#fd, 0);
-		const buffer = Buffer.from("{}");
-		await write(this.#fd, buffer, 0, buffer.length, 0);
+		await this.#fd.truncate(0);
+		await this.#fd.write(Buffer.from("{}"), 0, 2, 0);	
 	}
 
 	async #has(key: string): Promise<boolean> {
@@ -429,21 +422,20 @@ export default class File {
 			fs.constants.O_RDONLY | fs.constants.O_DIRECTORY
 		);
 		const tempFile = `${this.#path}.tmp`;
-		const tmpfd = fs.openSync(
-			tempFile,
-			fs.constants.O_RDWR | fs.constants.O_CREAT
-		);
+		const tmpfd = await fsp.open(tempFile , fsp.constants.O_RDWR | fsp.constants.O_CREAT);
 		const buffer = Buffer.from(data);
-		await write(tmpfd, buffer, 0, buffer.length, 0);
-		await fsync(tmpfd);
-		await close(tmpfd);
-		await close(this.#fd);
+		
+		await tmpfd.write(buffer, 0, buffer.length, 0);
+		await tmpfd.sync();
+		await tmpfd.close();
+		await this.#fd.close();
 
+		let renameFailed = false;
 		await this.#retry(
 			async () => {
 				
 					await fs.promises.rename(tempFile, this.#path);
-					this.#fd = await open(
+					this.#fd = await fsp.open(
 						this.#path,
 						fs.constants.O_RDWR | fs.constants.O_CREAT
 					);
@@ -453,8 +445,17 @@ export default class File {
 			},
 			10,
 			100
-		);
-		this.#fd = await open(
+		).catch((e) => {
+			renameFailed = true;
+		});
+
+		if (renameFailed) {
+			this.#mutex.unlock();
+			this.#atomicWrite(data);
+			return;
+		}
+
+		this.#fd = await fsp.open(
 			this.#path,
 			fs.constants.O_RDWR | fs.constants.O_CREAT
 		);
@@ -480,6 +481,6 @@ export default class File {
 	async lockAndsync() {
 		// remove interval
 		clearInterval(this.#interval);
-		await fsync(this.#fd);
+		await this.#fd.sync();
 	}
 }
