@@ -207,6 +207,7 @@ export default class Table extends EventEmitter {
 
 	async delete(key: string) {
 		this.#fileManager.remove(key);
+
 		await this.#wal(Data.emptyData(), DatabaseMethod.Delete);
 	}
 

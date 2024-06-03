@@ -48,6 +48,8 @@ export default class Receiver extends EventEmitter {
     }
     async #bindEvents() {
         this.server.on("connection", (socket) => {
+            // @ts-ignore
+            socket.chunk = "";
             socket.on("connect", () => this.#handleConnect(socket));
             socket.on("data", (data) => this.#handleData(data, socket));
             socket.on("error", (err) => this.#handleError(err, socket));
@@ -63,7 +65,7 @@ export default class Receiver extends EventEmitter {
     #handleConnect(socket) {
         this.emit(DatabaseEvents.Connection, socket);
     }
-    async #handleData(data, socket) {
+    async #processData(data, socket) {
         const dataFormat = this.transmitterDataFormat(data);
         const op = dataFormat.op;
         switch (op) {
@@ -84,6 +86,31 @@ export default class Receiver extends EventEmitter {
                 break;
         }
         this.#createData(dataFormat);
+    }
+    async #handleData(data, socket) {
+        // @ts-ignore
+        socket.chunk += data.toString();
+        // @ts-ignore
+        let d_index = socket.chunk.indexOf(";");
+        while (d_index > -1) {
+            try {
+                // @ts-ignore
+                const string = socket.chunk.substring(0, d_index);
+                const dataBuffer = Buffer.from(string);
+                await this.#processData(dataBuffer, socket);
+                // @ts-ignore
+                socket.chunk = socket.chunk.substring(d_index + 1);
+                // @ts-ignore
+                d_index = socket.chunk.indexOf(";");
+            }
+            catch (e) {
+                // @ts-ignore
+                socket.chunk = socket.chunk.substring(d_index + 1);
+                // @ts-ignore
+                d_index = socket.chunk.indexOf(";");
+                continue;
+            }
+        }
     }
     #handleConnectRequest(dataFormat, socket) {
         const { s, d, h } = dataFormat;

@@ -73,6 +73,8 @@ export default class Receiver extends EventEmitter {
 
 	async #bindEvents() {
 		this.server.on("connection", (socket: ISocket) => {
+			// @ts-ignore
+			socket.chunk = "";
 			socket.on("connect", () => this.#handleConnect(socket));
 
 			socket.on("data", (data: Buffer) => this.#handleData(data, socket));
@@ -95,7 +97,9 @@ export default class Receiver extends EventEmitter {
 		this.emit(DatabaseEvents.Connection, socket);
 	}
 
-	async #handleData(data: Buffer, socket: ISocket) {
+	async #processData(data: Buffer, socket: ISocket) {
+
+
 		const dataFormat = this.transmitterDataFormat(data);
 		const op = dataFormat.op;
 
@@ -118,6 +122,33 @@ export default class Receiver extends EventEmitter {
 		}
 
 		this.#createData(dataFormat);
+	}
+
+	async #handleData(data: Buffer, socket: ISocket) {
+		// @ts-ignore
+		socket.chunk += data.toString();
+		// @ts-ignore
+		let d_index = socket.chunk.indexOf(";");
+
+		while (d_index > -1) {
+			try {
+				// @ts-ignore
+				const string = socket.chunk.substring(0, d_index);
+				const dataBuffer = Buffer.from(string);
+				await this.#processData(dataBuffer, socket);
+				// @ts-ignore
+				socket.chunk = socket.chunk.substring(d_index + 1);
+				// @ts-ignore
+				d_index = socket.chunk.indexOf(";");
+			} catch (e) {
+				// @ts-ignore
+				socket.chunk = socket.chunk.substring(d_index + 1);
+				// @ts-ignore
+				d_index = socket.chunk.indexOf(";");
+				continue;
+			}
+		}
+
 	}
 
 	#handleConnectRequest(dataFormat: TransmitterDataFormat, socket: ISocket) {

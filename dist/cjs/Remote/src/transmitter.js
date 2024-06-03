@@ -87,6 +87,8 @@ class Transmitter extends events_1.default {
                     const string = this.#chunk.substring(0, d_index); // Create string up until the delimiter
                     const dataBuffer = Buffer.from(string); // Convert string to buffer
                     this.#processData(dataBuffer); // Process the buffer
+                    this.#chunk = this.#chunk.substring(d_index + 1); // Cuts off the processed chunk
+                    d_index = this.#chunk.indexOf(";"); // Find the new delimiter
                 }
                 catch (e) {
                     this.#chunk = this.#chunk.substring(d_index + 1); // Cuts off the processed chunk
@@ -155,7 +157,7 @@ class Transmitter extends events_1.default {
             s: seq,
             h: (0, crypto_1.randomBytes)(16).toString("hex"),
             se: this.session,
-        }));
+        }) + ";");
     }
     ping() {
         this.data.lastPingTimestamp = Date.now();
