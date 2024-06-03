@@ -29,6 +29,7 @@ export default class Transmitter<
 	#maxRetries = 10;
 	#retries = 0;
 	#waitTime = 1000;
+	#chunk: string = "";
 	constructor(options: TransmitterOptions<Type>) {
 		super();
 		this.client = createConnection(options, () => {
@@ -77,31 +78,48 @@ export default class Transmitter<
 		);
 	}
 
+	#processData(dataBuffer: Buffer) {
+		const data = this.receiveDataFormat(dataBuffer);
+		this.data.seq = data.s;
+		switch (data.op) {
+			case ReceiverOpCodes.ConnectionDenied: {
+				this.emit(DatabaseEvents.Disconnect, data.d);
+				this.data.ping = Date.now() - this.data.lastPingTimestamp;
+				return;
+			}
+			case ReceiverOpCodes.AckConnect:
+				{
+					this.session = data.se;
+					this.emit("AckConnect", data.d);
+				}
+				break;
+			case ReceiverOpCodes.Pong:
+				{
+					this.data.ping = Date.now() - this.data.lastPingTimestamp;
+				}
+				break;
+		}
+
+		this.#createData(data);
+	}
+
 	#bindEvents() {
 		this.client.on("data", (buffer) => {
-			const data = this.receiveDataFormat(buffer);
-			this.data.seq = data.s;
-			switch (data.op) {
-				case ReceiverOpCodes.ConnectionDenied: {
-					this.emit(DatabaseEvents.Disconnect, data.d);
-					this.data.ping = Date.now() - this.data.lastPingTimestamp;
-					return;
-				}
-				case ReceiverOpCodes.AckConnect:
-					{
-						this.session = data.se;
-						this.emit("AckConnect", data.d);
-					}
-					break;
-				case ReceiverOpCodes.Pong:
-					{
-						this.data.ping =
-							Date.now() - this.data.lastPingTimestamp;
-					}
-					break;
-			}
+			this.#chunk += buffer.toString(); // Add string on the end of the variable 'chunk'
+			let d_index = this.#chunk.indexOf(";"); // Find the delimiter
 
-			this.#createData(data);
+			// While loop to keep going until no delimiter can be found
+			while (d_index > -1) {
+				try {
+					const string = this.#chunk.substring(0, d_index); // Create string up until the delimiter
+					const dataBuffer = Buffer.from(string); // Convert string to buffer
+					this.#processData(dataBuffer); // Process the buffer
+				} catch (e) {
+					this.#chunk = this.#chunk.substring(d_index + 1); // Cuts off the processed chunk
+					d_index = this.#chunk.indexOf(";"); // Find the new delimiter
+					continue; // Restart the loop
+				}
+			}
 		});
 		this.client.on("close", () => {
 			this.emit(DatabaseEvents.Disconnect, "Connection Closed");

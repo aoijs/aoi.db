@@ -166,6 +166,7 @@ export default class File {
         let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8").catch(async (e) => {
             console.log(e);
             await tmpfd.close();
+            await opendir.close();
             failed = true;
             return "{}";
         }));

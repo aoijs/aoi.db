@@ -685,7 +685,7 @@ export default class Receiver extends EventEmitter {
 		socket: Socket
 	) {
 		const buffer = this.sendDataFormat(data);
-		socket.write(buffer);
+		socket.write(buffer) 
         this.#createDebug(data)
 	}
 
@@ -738,7 +738,7 @@ export default class Receiver extends EventEmitter {
 			h: hash,
 			se: session,
 		} as ReceiverDataFormat;
-		return Buffer.from(JSON.stringify(res));
+		return Buffer.from(JSON.stringify(res)+";");
 	}
 	transmitterDataFormat(buffer: Buffer) {
 		return JSON.parse(buffer.toString()) as TransmitterDataFormat;

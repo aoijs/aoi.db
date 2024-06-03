@@ -522,7 +522,7 @@ class Receiver extends node_events_1.default {
             h: hash,
             se: session,
         };
-        return Buffer.from(JSON.stringify(res));
+        return Buffer.from(JSON.stringify(res) + ";");
     }
     transmitterDataFormat(buffer) {
         return JSON.parse(buffer.toString());

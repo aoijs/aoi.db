@@ -517,7 +517,7 @@ export default class Receiver extends EventEmitter {
             h: hash,
             se: session,
         };
-        return Buffer.from(JSON.stringify(res));
+        return Buffer.from(JSON.stringify(res) + ";");
     }
     transmitterDataFormat(buffer) {
         return JSON.parse(buffer.toString());
