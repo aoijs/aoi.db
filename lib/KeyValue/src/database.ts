@@ -9,7 +9,7 @@ import {
     ReferenceType,
     DatabaseEvents,
 } from "../../typings/enum.js";
-import { DeepRequired, KeyValueDataValueType } from "../typings/type.js";
+import { DeepRequired, KeyValueDataValueType } from "../newsrc/typings/type.js";
 import { encrypt } from "../../utils.js";
 import Table from "./Table.js";
 import { EventEmitter } from "events";

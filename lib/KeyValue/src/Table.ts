@@ -10,7 +10,7 @@ import {
 	decodeHash,
 	stringify,
 } from "../../utils.js";
-import { KeyValueDataValueType, KeyValueTypeList } from "../typings/type.js";
+import { KeyValueDataValueType, KeyValueTypeList } from "../newsrc/typings/type.js";
 import Data from "./data.js";
 import { createInterface } from "node:readline/promises";
 import { setTimeout } from "node:timers/promises";

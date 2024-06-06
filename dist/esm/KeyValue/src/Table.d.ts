@@ -6,7 +6,7 @@ import KeyValue from "./database.js";
 import FileManager from "./FileManager.js";
 import fsp from "node:fs/promises";
 import { DatabaseMethod } from "../../typings/enum.js";
-import { KeyValueDataValueType, KeyValueTypeList } from "../typings/type.js";
+import { KeyValueDataValueType, KeyValueTypeList } from "../newsrc/typings/type.js";
 import Data from "./data.js";
 export default class Table extends EventEmitter {
     #private;

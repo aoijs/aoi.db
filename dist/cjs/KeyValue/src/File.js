@@ -35,7 +35,7 @@ class File {
     }
     async init() {
         this.#fd = await promises_1.default.open(this.#path, promises_1.default.constants.O_RDWR | promises_1.default.constants.O_CREAT);
-        const statSize = (await this.#fd.stat());
+        const statSize = await this.#fd.stat();
         if (statSize.size === 0) {
             await this.#fd.write(Buffer.from("{}"), 0, 2, 0);
         }
@@ -120,6 +120,11 @@ class File {
         if (this.#cache.has(key)) {
             return this.#cache.get(key);
         }
+        // check removeQueue first then flushQueue
+        const removeIdx = this.#removeQueue.findIndex((data) => data === key);
+        if (removeIdx !== -1) {
+            return;
+        }
         const idx = this.#flushQueue.findIndex((data) => data.key === key);
         if (idx !== -1) {
             return this.#flushQueue[idx];
@@ -127,8 +132,7 @@ class File {
         if (this.#isDirty) {
             return;
         }
-        const value = await this.#getFromDisk(key);
-        return value;
+        return this.#getFromDisk(key);
     }
     async #getFromDisk(key) {
         await this.#mutex.lock();
@@ -168,7 +172,9 @@ class File {
         const tempFile = `${this.#path}.tmp`;
         const tmpfd = await promises_1.default.open(tempFile, promises_1.default.constants.O_RDWR | promises_1.default.constants.O_CREAT);
         let failed = false;
-        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, "utf-8").catch(async (e) => {
+        let json = JSON.parse(await node_fs_1.default.promises
+            .readFile(this.#path, "utf-8")
+            .catch(async (e) => {
             console.log(e);
             await tmpfd.close();
             await opendir.close();
@@ -212,7 +218,8 @@ class File {
         this.#fd = await promises_1.default.open(this.#path, promises_1.default.constants.O_RDWR | promises_1.default.constants.O_CREAT);
         this.#flushQueue = renameFailed ? this.#flushQueue : [];
         this.#removeQueue = renameFailed ? this.#removeQueue : [];
-        renameFailed && await this.#table.wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush);
+        renameFailed &&
+            (await this.#table.wal(data_js_1.default.emptyData(), enum_js_1.DatabaseMethod.Flush));
         this.#mutex.unlock();
     }
     async #retry(fn, maxRetries = 10, delay = 100) {
@@ -240,7 +247,8 @@ class File {
             json = JSON.parse(decryptedData);
         }
         for (const key in json) {
-            if (query(json[key])) {
+            // check if query is true && this isnt in removeQueue
+            if (query(json[key]) && !this.#removeQueue.includes(key)) {
                 const data = new data_js_1.default({
                     key: json[key].key,
                     value: json[key].value,
@@ -317,26 +325,11 @@ class File {
         return value ? true : false;
     }
     async removeMany(query) {
-        await this.#mutex.lock();
-        let json = JSON.parse(await node_fs_1.default.promises.readFile(this.#path, { encoding: "utf-8" }));
-        this.#mutex.unlock();
-        if (this.#table.db.options.encryptionConfig.encriptData) {
-            const decryptedData = (0, utils_js_1.decrypt)(json, this.#table.db.options.encryptionConfig.securityKey);
-            json = JSON.parse(decryptedData);
+        const allDataq = await this.getAll(query);
+        for (const data of allDataq) {
+            this.#cache.remove(data.key);
         }
-        for (const key in json) {
-            if (query(json[key])) {
-                delete json[key];
-            }
-        }
-        let writeData;
-        if (this.#table.db.options.encryptionConfig.encriptData) {
-            writeData = JSON.stringify((0, utils_js_1.encrypt)(JSON.stringify(json), this.#table.db.options.encryptionConfig.securityKey));
-        }
-        else {
-            writeData = JSON.stringify(json);
-        }
-        await this.#atomicWrite(writeData);
+        this.#removeQueue.push(...allDataq.map((d) => d.key));
     }
     async #atomicWrite(data) {
         await this.#mutex.lock();

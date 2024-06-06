@@ -30,7 +30,7 @@ export default class File {
     }
     async init() {
         this.#fd = await fsp.open(this.#path, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
-        const statSize = (await this.#fd.stat());
+        const statSize = await this.#fd.stat();
         if (statSize.size === 0) {
             await this.#fd.write(Buffer.from("{}"), 0, 2, 0);
         }
@@ -115,6 +115,11 @@ export default class File {
         if (this.#cache.has(key)) {
             return this.#cache.get(key);
         }
+        // check removeQueue first then flushQueue
+        const removeIdx = this.#removeQueue.findIndex((data) => data === key);
+        if (removeIdx !== -1) {
+            return;
+        }
         const idx = this.#flushQueue.findIndex((data) => data.key === key);
         if (idx !== -1) {
             return this.#flushQueue[idx];
@@ -122,8 +127,7 @@ export default class File {
         if (this.#isDirty) {
             return;
         }
-        const value = await this.#getFromDisk(key);
-        return value;
+        return this.#getFromDisk(key);
     }
     async #getFromDisk(key) {
         await this.#mutex.lock();
@@ -163,7 +167,9 @@ export default class File {
         const tempFile = `${this.#path}.tmp`;
         const tmpfd = await fsp.open(tempFile, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
         let failed = false;
-        let json = JSON.parse(await fs.promises.readFile(this.#path, "utf-8").catch(async (e) => {
+        let json = JSON.parse(await fs.promises
+            .readFile(this.#path, "utf-8")
+            .catch(async (e) => {
             console.log(e);
             await tmpfd.close();
             await opendir.close();
@@ -207,7 +213,8 @@ export default class File {
         this.#fd = await fsp.open(this.#path, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
         this.#flushQueue = renameFailed ? this.#flushQueue : [];
         this.#removeQueue = renameFailed ? this.#removeQueue : [];
-        renameFailed && await this.#table.wal(Data.emptyData(), DatabaseMethod.Flush);
+        renameFailed &&
+            (await this.#table.wal(Data.emptyData(), DatabaseMethod.Flush));
         this.#mutex.unlock();
     }
     async #retry(fn, maxRetries = 10, delay = 100) {
@@ -235,7 +242,8 @@ export default class File {
             json = JSON.parse(decryptedData);
         }
         for (const key in json) {
-            if (query(json[key])) {
+            // check if query is true && this isnt in removeQueue
+            if (query(json[key]) && !this.#removeQueue.includes(key)) {
                 const data = new Data({
                     key: json[key].key,
                     value: json[key].value,
@@ -312,26 +320,11 @@ export default class File {
         return value ? true : false;
     }
     async removeMany(query) {
-        await this.#mutex.lock();
-        let json = JSON.parse(await fs.promises.readFile(this.#path, { encoding: "utf-8" }));
-        this.#mutex.unlock();
-        if (this.#table.db.options.encryptionConfig.encriptData) {
-            const decryptedData = decrypt(json, this.#table.db.options.encryptionConfig.securityKey);
-            json = JSON.parse(decryptedData);
+        const allDataq = await this.getAll(query);
+        for (const data of allDataq) {
+            this.#cache.remove(data.key);
         }
-        for (const key in json) {
-            if (query(json[key])) {
-                delete json[key];
-            }
-        }
-        let writeData;
-        if (this.#table.db.options.encryptionConfig.encriptData) {
-            writeData = JSON.stringify(encrypt(JSON.stringify(json), this.#table.db.options.encryptionConfig.securityKey));
-        }
-        else {
-            writeData = JSON.stringify(json);
-        }
-        await this.#atomicWrite(writeData);
+        this.#removeQueue.push(...allDataq.map((d) => d.key));
     }
     async #atomicWrite(data) {
         await this.#mutex.lock();

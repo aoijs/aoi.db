@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { KeyValueDataInterface, KeyValueOptions } from "../typings/interface.js";
-import { DeepRequired } from "../typings/type.js";
+import { DeepRequired } from "../newsrc/typings/type.js";
 import Table from "./Table.js";
 import { EventEmitter } from "events";
 import Data from "./data.js";
