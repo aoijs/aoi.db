@@ -78,7 +78,7 @@ export default class Table extends EventEmitter {
 	}
 
 	async #getLogData() {
-		const filehandle = await fsp.open(this.paths.log, "a+");
+		const filehandle = await fsp.open(this.paths.log, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
 		let size = 0;
 		let logIV = "";
 

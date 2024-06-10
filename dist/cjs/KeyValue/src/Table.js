@@ -53,7 +53,7 @@ class Table extends node_events_1.default {
         };
     }
     async #getLogData() {
-        const filehandle = await promises_1.default.open(this.paths.log, "a+");
+        const filehandle = await promises_1.default.open(this.paths.log, promises_1.default.constants.O_RDWR | promises_1.default.constants.O_CREAT);
         let size = 0;
         let logIV = "";
         for await (const line of filehandle.readLines({

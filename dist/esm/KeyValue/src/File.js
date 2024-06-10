@@ -178,6 +178,7 @@ export default class File {
         }));
         if (failed) {
             this.#mutex.unlock();
+            // close files 
             return;
         }
         if (this.#table.db.options.encryptionConfig.encriptData) {
