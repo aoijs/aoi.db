@@ -167,18 +167,28 @@ export default class File {
         const tempFile = `${this.#path}.tmp`;
         const tmpfd = await fsp.open(tempFile, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
         let failed = false;
-        let json = JSON.parse(await fs.promises
-            .readFile(this.#path, "utf-8")
-            .catch(async (e) => {
+        let json = {};
+        try {
+            json = JSON.parse(await fs.promises
+                .readFile(this.#path, "utf-8")
+                .catch(async (e) => {
+                console.log(e);
+                await tmpfd.close();
+                await opendir.close();
+                failed = true;
+                return "{}";
+            }));
+        }
+        catch (e) {
             console.log(e);
             await tmpfd.close();
             await opendir.close();
             failed = true;
-            return "{}";
-        }));
+            return {};
+        }
         if (failed) {
             this.#mutex.unlock();
-            // close files 
+            // close files
             return;
         }
         if (this.#table.db.options.encryptionConfig.encriptData) {
@@ -208,7 +218,8 @@ export default class File {
             await fs.promises.rename(tempFile, this.#path);
             await opendir.sync();
             await opendir.close();
-        }, 10, 100).catch((e) => {
+        }, 10, 100).catch(async (e) => {
+            await opendir.close();
             renameFailed = true;
         });
         this.#fd = await fsp.open(this.#path, fsp.constants.O_RDWR | fsp.constants.O_CREAT);
