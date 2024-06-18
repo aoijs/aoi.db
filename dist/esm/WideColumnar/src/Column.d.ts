@@ -27,7 +27,7 @@ export default class WideColumnarColumn {
     has(primary: WideColumnarDataType): Promise<boolean>;
     delete(primary: WideColumnarDataType): Promise<void>;
     clear(): Promise<void>;
-    getHeap(): Promise<import("@akarui/structures").Group<WideColumnarDataType, WideColumnarData>>;
+    getHeap(): Promise<import("@aoijs/aoi.structures").Group<WideColumnarDataType, WideColumnarData>>;
     findOne(query: (data: WideColumnarData) => boolean): Promise<WideColumnarData | null>;
     findMany(query: (data: WideColumnarData) => boolean): Promise<WideColumnarData[]>;
     deleteMany(query: (data: WideColumnarData) => boolean): Promise<void>;

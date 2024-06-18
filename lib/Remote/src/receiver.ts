@@ -19,7 +19,7 @@ import {
 	TransmitterOpCodes,
 } from "../typings/enum.js";
 import { randomBytes } from "node:crypto";
-import { Group } from "@akarui/structures";
+import { Group } from "@aoijs/aoi.structures";
 import { inspect } from "node:util";
 
 export default class Receiver extends EventEmitter {

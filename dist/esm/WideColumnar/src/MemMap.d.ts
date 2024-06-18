@@ -1,4 +1,4 @@
-import { Group } from "@akarui/structures";
+import { Group } from "@aoijs/aoi.structures";
 import { MemMapOptions } from "../typings/interface.js";
 import { WideColumnarDataType } from "../typings/types.js";
 import WideColumnarColumn from "./Column.js";

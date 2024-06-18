@@ -1,4 +1,4 @@
-import { PriorityQueue } from "@akarui/structures";
+import { PriorityQueue } from "@aoijs/aoi.structures";
 import Data from "./data.js";
 
 class LRUCache {

@@ -8,14 +8,14 @@ const node_net_1 = require("node:net");
 const index_js_1 = require("../../index.js");
 const enum_js_1 = require("../typings/enum.js");
 const node_crypto_1 = require("node:crypto");
-const structures_1 = require("@akarui/structures");
+const aoi_structures_1 = require("@aoijs/aoi.structures");
 const node_util_1 = require("node:util");
 class Receiver extends node_events_1.default {
     server;
     #options;
     allowList = new Set();
-    clients = new structures_1.Group(Infinity);
-    usersMap = new structures_1.Group(Infinity);
+    clients = new aoi_structures_1.Group(Infinity);
+    usersMap = new aoi_structures_1.Group(Infinity);
     constructor(options) {
         super();
         this.#options = options;

@@ -1,4 +1,4 @@
-import { Group } from "@akarui/structures";
+import { Group } from "@aoijs/aoi.structures";
 import Data from "./data.js";
 export default class Cacher extends Group {
     #cacherOptions;

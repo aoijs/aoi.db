@@ -1,4 +1,4 @@
-import { Group } from "@akarui/structures";
+import { Group } from "@aoijs/aoi.structures";
 import { serialize } from "v8";
 export default class MemMap {
     heap;

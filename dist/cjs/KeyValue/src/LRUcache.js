@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const structures_1 = require("@akarui/structures");
+const aoi_structures_1 = require("@aoijs/aoi.structures");
 class LRUCache {
     capacity;
     cache;
@@ -8,7 +8,7 @@ class LRUCache {
     constructor(capacity) {
         this.capacity = capacity;
         this.cache = new Map();
-        this.queue = new structures_1.PriorityQueue((a, b) => a.timestamp < b.timestamp);
+        this.queue = new aoi_structures_1.PriorityQueue((a, b) => a.timestamp < b.timestamp);
     }
     get(key) {
         if (!this.cache.has(key)) {

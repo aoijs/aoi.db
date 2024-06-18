@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const structures_1 = require("@akarui/structures");
+const aoi_structures_1 = require("@aoijs/aoi.structures");
 const v8_1 = require("v8");
 class MemMap {
     heap;
     #options;
     #column;
     constructor(options, Column) {
-        this.heap = new structures_1.Group(Infinity);
+        this.heap = new aoi_structures_1.Group(Infinity);
         this.#options = options;
         this.#column = Column;
     }

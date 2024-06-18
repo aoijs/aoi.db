@@ -1,4 +1,4 @@
-import { Group } from "@akarui/structures";
+import { Group } from "@aoijs/aoi.structures";
 import { CacherOptions,  KeyValueJSONOption } from "../index.js";
 import Data from "./data.js";
 

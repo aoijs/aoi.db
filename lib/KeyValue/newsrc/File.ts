@@ -8,7 +8,7 @@ import { constants, FileHandle, open, rename } from "node:fs/promises";
 import { IJSONOptions, KeyValueJSONOption } from "./typings/interface.js";
 import Data from "./Data.js";
 import Mutex from "./Mutex.js";
-import { PriorityQueue } from "@akarui/structures";
+import { PriorityQueue } from "@aoijs/aoi.structures";
 
 export default class JSONFile {
 	#options: IJSONOptions;

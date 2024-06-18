@@ -6,7 +6,7 @@ import { Server, Socket } from "node:net";
 import { ReceiverOptions, TransmitterDataFormat } from "../typings/interface.js";
 import { DatabaseMethod, KeyValue } from "../../index.js";
 import { ReceiverOpCodes } from "../typings/enum.js";
-import { Group } from "@akarui/structures";
+import { Group } from "@aoijs/aoi.structures";
 export default class Receiver extends EventEmitter {
     #private;
     server: Server;

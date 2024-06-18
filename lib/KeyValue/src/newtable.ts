@@ -39,7 +39,7 @@ import Data from "./data.js";
 import { setTimeout as wait } from "timers/promises";
 import { randomBytes } from "crypto";
 import { createInterface } from "readline/promises";
-import { Group } from "@akarui/structures";
+import { Group } from "@aoijs/aoi.structures";
 import HashManager from "./FileManager.js";
 
 export default class Table extends EventEmitter {

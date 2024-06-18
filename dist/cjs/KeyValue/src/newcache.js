@@ -3,9 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const structures_1 = require("@akarui/structures");
+const aoi_structures_1 = require("@aoijs/aoi.structures");
 const data_js_1 = __importDefault(require("./data.js"));
-class Cacher extends structures_1.Group {
+class Cacher extends aoi_structures_1.Group {
     #cacherOptions;
     constructor(options) {
         super(options.limit);

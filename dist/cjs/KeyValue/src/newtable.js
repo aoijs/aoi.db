@@ -15,7 +15,7 @@ const data_js_1 = __importDefault(require("./data.js"));
 const promises_2 = require("timers/promises");
 const crypto_1 = require("crypto");
 const promises_3 = require("readline/promises");
-const structures_1 = require("@akarui/structures");
+const aoi_structures_1 = require("@aoijs/aoi.structures");
 const FileManager_js_1 = __importDefault(require("./FileManager.js"));
 class Table extends events_1.default {
     #options;
@@ -770,7 +770,7 @@ Attempting to repair file ${fileObj.name} in table ${this.#options.name}. Data f
             input: (0, fs_1.createReadStream)(this.paths.fullWriter),
             crlfDelay: Infinity,
         });
-        const dataToAdd = new structures_1.Group(Infinity);
+        const dataToAdd = new aoi_structures_1.Group(Infinity);
         for await (const logLine of rl) {
             const [key, value, type, ttl, // ttl for old versions backwards compatibility
             method,] = logLine.split(utils_js_1.ReferenceConstantSpace);
