@@ -55,17 +55,17 @@
     "package.json",
     "README.md"
   ],
-  "homepage": "https://leref.github.io/aoi.db/",
+  "homepage": "https://aoijs.github.io/aoi.db//",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leref/aoi.db.git"
+    "url": "https://github.com/aoijs/aoi.db.git"
   },
   "author": "Leref",
   "maintainers": [
     "USERSATOSHI"
   ],
   "bugs": {
-    "url": "https://github.com/Leref/aoi.db/issues"
+    "url": "https://github.com/aoijs/aoi.db/issues"
   },
-  "readme": "https://github.com/Leref/aoi.db/blob/main/README.md"
+  "readme": "https://github.com/aoijs/aoi.db/blob/v2/README.md"
 }
