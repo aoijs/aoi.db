@@ -4,7 +4,7 @@
   </a>
 </p>
 
-<h1 align="center">@akarui/aoi.db</h1>
+<h1 align="center">@aoijs/aoi.db</h1>
 
 <div align="center">
 
@@ -36,10 +36,10 @@ Aoi.db is a collection of various database types to handle various types of data
 
 ```bash
 #npm
-npm i @akarui/aoi.db
+npm i @aoijs/aoi.db
 
 #yarn
-yarn add @akarui/aoi.db
+yarn add @aoijs/aoi.db
 ```
 
 ## Types
@@ -58,9 +58,9 @@ yarn add @akarui/aoi.db
 ### KeyValue
 
 ```ts
-const { KeyValue } = require("@akarui/aoi.db"); //commonjs
+const { KeyValue } = require("@aoijs/aoi.db"); //commonjs
 // or
-import { KeyValue } from "@akarui/aoi.db"; //esm
+import { KeyValue } from "@aoijs/aoi.db"; //esm
 
 // Basic Setup
 const db = new KeyValue({
@@ -84,9 +84,9 @@ Reference: [KeyValue](https://akaruidevelopment.github.io/aoi.db/classes/KeyValu
 ### WideColumn
 
 ```ts
-const { WideColumn, Column } = require("@akarui/aoi.db"); //commonjs
+const { WideColumn, Column } = require("@aoijs/aoi.db"); //commonjs
 // or
-import { WideColumn, Column } from "@akarui/aoi.db"; //esm
+import { WideColumn, Column } from "@aoijs/aoi.db"; //esm
 
 // Basic Setup
 
@@ -131,9 +131,9 @@ Reference: [WideColumn](https://akaruidevelopment.github.io/aoi.db/classes/WideC
 #### Setting up the database server
 
 ```js
-const { Receiver } = require("@akarui/aoi.db"); //commonjs
+const { Receiver } = require("@aoijs/aoi.db"); //commonjs
 // or
-import { Receiver } from "@akarui/aoi.db"; //esm
+import { Receiver } from "@aoijs/aoi.db"; //esm
 
 const rec = new Receiver({
   logEncrypt: "a-32-characters-long-string-here",
@@ -157,11 +157,11 @@ Reference: [Receiver](https://akaruidevelopment.github.io/aoi.db/classes/Receive
 #### Setting up the client
 
 ```js
-const { Transmitter, TransmitterFlags } = require("@akarui/aoi.db"); //commonjs
+const { Transmitter, TransmitterFlags } = require("@aoijs/aoi.db"); //commonjs
 // or
-import { Transmitter, DatabaseEvents } from "@akarui/aoi.db"; //esm
+import { Transmitter, DatabaseEvents } from "@aoijs/aoi.db"; //esm
 
-cconst db = Transmitter.createConnection({
+const db = Transmitter.createConnection({
     path: `aoidb://usersatoshi:123456@localhost:8080`,
     dbOptions: {
         type: "KeyValue",
@@ -205,7 +205,7 @@ Reference: [Transmitter](https://akaruidevelopment.github.io/aoi.db/classes/Tran
 
 ## Links
 
-- [Documentation](https://akaruidevelopment.github.io/aoi.db/)
+- [Documentation](https://aoijs.github.io/aoi.db/)
 - [Discord Server](https://discord.com/invite/HMUfMXDQsV)
-- [NPM](https://www.npmjs.com/package/@akarui/aoi.db)
-- [Github](https://github.com/Akaruidevelopment/aoi.db)
+- [NPM](https://www.npmjs.com/package/@aoijs/aoi.db)
+- [Github](https://github.com/aoijs/aoi.db)
